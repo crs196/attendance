@@ -1,0 +1,58 @@
+@font-face {
+	src: url("../../resources/fonts/Toonish.ttf");
+}
+
+@font-face {
+    src: url("../../resources/fonts/MontserratMedium.ttf");
+}
+
+@font-face {
+	src: url("../../resources/fonts/PlayfairDisplayRegular.ttf");
+}
+
+.root {
+	-fx-background-color: #f36a26;
+}
+
+.dialog-pane:header .header-panel {
+	-fx-background-color: #f36a26;
+}
+
+#header {
+	-fx-font-family: "Toonish";
+	-fx-font-size: 50px;
+}
+
+.label {
+	-fx-font-family: "Montserrat Medium";
+	-fx-text-fill: white;
+	-fx-font-size: 14px;
+}
+
+.dialog-pane .label {
+	-fx-font-family: "Montserrat Medium";
+	-fx-text-fill: white;
+	-fx-font-size: 12px;
+}
+
+.dialog-pane:header .header-panel .label {
+	-fx-font-size: 20px;
+	-fx-text-fill: white;
+}
+
+.button {
+	-fx-font-family: "Montserrat Medium";
+	-fx-font-size: 12px;
+	-fx-text-fill: white;
+	-fx-background-color: linear-gradient(#8a8aac, #212153);
+}
+
+.button:hover {
+	-fx-background-color: linear-gradient(#212153, #8a8aac);
+}
+
+.radiobutton {
+	-fx-font-family: "Montserrat Medium";
+	-fx-text-fill: white;
+	-fx-font-size: 12px;
+}
