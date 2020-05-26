@@ -80,7 +80,7 @@ public class InitialPane extends GridPane {
 		pm.setToggleGroup(timeGroup);
 		am.setSelected(true);
 		
-		VBox timeBox = new VBox(10);
+		VBox timeBox = new VBox(this.getVgap());
 		timeBox.getChildren().addAll(am, pm);
 		this.add(timeBox, 2, 2);
 		
@@ -93,7 +93,7 @@ public class InitialPane extends GridPane {
 		advance.setDefaultButton(true); // advance button is triggered on ENTER keypress
 		
 		// make buttons grow to fit entire width of row
-		HBox statusBox = new HBox(10);
+		HBox statusBox = new HBox(this.getHgap());
 		HBox.setHgrow(exit, Priority.ALWAYS);
 		HBox.setHgrow(advance, Priority.ALWAYS);
 		exit.setMaxWidth(Double.MAX_VALUE);

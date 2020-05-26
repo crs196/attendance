@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.image.Image;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
 
@@ -35,14 +36,18 @@ public class OzeretMain extends Application {
 		Scene siScene = new Scene(siPane);
 		siScene.getStylesheets().add(OzeretMain.class.getResource("ozeret.css").toExternalForm());
 		
-		// create initial pane and scene
-		InitialPane initial = new InitialPane(primaryStage, siScene); 
-		Scene initialScene = new Scene(initial);
-		initialScene.getStylesheets().add(OzeretMain.class.getResource("ozeret.css").toExternalForm());
+		/* TODO: uncomment this section once layout for SignInPane is complete
+		 * // create initial pane and scene
+		 * InitialPane initial = new InitialPane(primaryStage, siScene); 
+		 * Scene initialScene = new Scene(initial);
+		 * initialScene.getStylesheets().add(OzeretMain.class.getResource("ozeret.css").toExternalForm());
+		 */
 		
 		// set up stage for viewing with inital scene
 		primaryStage.setTitle("Ozeret Sign-In");
-		primaryStage.setScene(initialScene);
+		primaryStage.getIcons().add(new Image("file:resources/images/stage_icon.png"));
+		// primaryStage.setScene(initialScene); // TODO: uncomment this line once layout for SignInPane is complete
+		primaryStage.setScene(siScene); // TODO: delete this line once layout for SignInPane is complete
 		primaryStage.show();
 	}
 	
