@@ -77,7 +77,7 @@ public class SignInPane extends GridPane {
 		this.add(title, 0, 0, 3, 1);
 		
 		
-		/* left column (clock + time to curfew) */
+		/* left column (clock + time to curfew, view unaccounted for, mark shmira/day off) */
 		
 		// clock
 		Clock currentTime = new Clock();
@@ -107,12 +107,42 @@ public class SignInPane extends GridPane {
 		countdownBox.setAlignment(Pos.CENTER);
 		countdownBox.getChildren().addAll(countdownLabel, timeToCurfew);
 		
-		// add clocks to pane
-		VBox clockBox = new VBox(this.getVgap());
+		// add clocks to VBox to hold them
+		VBox clockBox = new VBox(this.getVgap() * 0.5);
 		clockBox.getChildren().addAll(currentTimeBox, curfewBox, countdownBox);
 		
+		VBox listButtons = new VBox(this.getVgap() * 0.75);
+		Button viewUnaccounted = new Button("View Unaccounted-for Staff Members");
+		Button markShmira = new Button("Mark Staff on Shmira");
+		Button markDayOff = new Button("Mark Staff on Day Off");
 		
-		/* central column (sign-in box, confirmation area) */
+		viewUnaccounted.setMinWidth(USE_PREF_SIZE);
+		markShmira.setMinWidth(USE_PREF_SIZE);
+		markDayOff.setMinWidth(USE_PREF_SIZE);
+		
+		HBox.setHgrow(viewUnaccounted, Priority.ALWAYS);
+		HBox.setHgrow(markShmira, Priority.ALWAYS);
+		HBox.setHgrow(markDayOff, Priority.ALWAYS);
+		
+		viewUnaccounted.setMaxWidth(Double.MAX_VALUE);
+		markShmira.setMaxWidth(Double.MAX_VALUE);
+		markDayOff.setMaxWidth(Double.MAX_VALUE);
+		
+		HBox vu = new HBox();
+		vu.getChildren().add(viewUnaccounted);
+		HBox ms = new HBox();
+		ms.getChildren().add(markShmira);
+		HBox md = new HBox();
+		md.getChildren().add(markDayOff);
+		
+		listButtons.getChildren().addAll(vu, ms, md);
+		
+		VBox leftColumn = new VBox(this.getVgap());
+		leftColumn.getChildren().addAll(clockBox, listButtons);
+		this.add(leftColumn, 0, 1);
+		
+		
+		/* right column (sign-in box, confirmation area) */
 		
 		// sign-in instructions and entry point
 		Label scanLabel = new Label("Please enter a staff member's ID");
@@ -153,36 +183,13 @@ public class SignInPane extends GridPane {
 		});
 		
 		
-		/* right column (view unaccounted for, mark shmira/day off) */
-		
-		VBox listButtons = new VBox(this.getVgap() * 0.75);
-		Button viewUnaccounted = new Button("View Unaccounted-for Staff Members");
-		Button markShmira = new Button("Mark Staff on Shmira");
-		Button markDayOff = new Button("Mark Staff on Day Off");
-		
-		viewUnaccounted.setMinWidth(USE_PREF_SIZE);
-		markShmira.setMinWidth(USE_PREF_SIZE);
-		markDayOff.setMinWidth(USE_PREF_SIZE);
-		
-		HBox.setHgrow(viewUnaccounted, Priority.ALWAYS);
-		HBox.setHgrow(markShmira, Priority.ALWAYS);
-		HBox.setHgrow(markDayOff, Priority.ALWAYS);
-		
-		viewUnaccounted.setMaxWidth(Double.MAX_VALUE);
-		markShmira.setMaxWidth(Double.MAX_VALUE);
-		markDayOff.setMaxWidth(Double.MAX_VALUE);
-		
-		HBox vu = new HBox();
-		vu.getChildren().add(viewUnaccounted);
-		HBox ms = new HBox();
-		ms.getChildren().add(markShmira);
-		HBox md = new HBox();
-		md.getChildren().add(markDayOff);
-		
-		listButtons.getChildren().addAll(clockBox, vu, ms, md);
-		this.add(listButtons, 0, 1);
 		
 		// event handlers for right column buttons
+		
+		// stages for right column buttons
+		Stage unaccStage = new Stage();
+		Stage msStage = new Stage();
+		Stage doStage = new Stage();
 		
 		// pulls up list of staff members who have yet to sign in in this session
 		viewUnaccounted.setOnAction(new EventHandler<ActionEvent>() {
@@ -190,21 +197,20 @@ public class SignInPane extends GridPane {
 			@Override
 			public void handle(ActionEvent event) {
 				// TODO Auto-generated method stub
-				
+					
 				GridPane unaccPane = new GridPane();
 				// set up grid layout and sizing
 				unaccPane.setAlignment(Pos.CENTER);
 				unaccPane.setHgap(15);
 				unaccPane.setVgap(20);
 				unaccPane.setPadding(new Insets(30));
-				
+
 				Label temp = new Label("Unaccounted-for staff list tk");
 				unaccPane.add(temp, 0, 0);
-				
-				Stage unaccStage = new Stage();
+
 				Scene unaccScene = new Scene(unaccPane);
 				unaccScene.getStylesheets().add(OzeretMain.class.getResource("ozeret.css").toExternalForm());
-				
+
 				unaccStage.setScene(unaccScene);
 				unaccStage.setTitle("Unaccounted-for staff");
 				unaccStage.getIcons().add(new Image("file:resources/images/stage_icon.png"));
@@ -230,7 +236,6 @@ public class SignInPane extends GridPane {
 				Label temp = new Label("Mark-Shmira staff list tk");
 				msPane.add(temp, 0, 0);
 						
-				Stage msStage = new Stage();
 				Scene msScene = new Scene(msPane);
 				msScene.getStylesheets().add(OzeretMain.class.getResource("ozeret.css").toExternalForm());
 						
@@ -259,7 +264,6 @@ public class SignInPane extends GridPane {
 				Label temp = new Label("Mark-Day-Off staff list tk");
 				doPane.add(temp, 0, 0);
 						
-				Stage doStage = new Stage();
 				Scene doScene = new Scene(doPane);
 				doScene.getStylesheets().add(OzeretMain.class.getResource("ozeret.css").toExternalForm());
 						

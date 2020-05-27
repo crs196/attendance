@@ -137,8 +137,12 @@ public class InitialPane extends GridPane {
 			public void handle(ActionEvent event) {
 				
 				// check to make sure that both fields are properly filled out
-				//  (name field is not empty, curfew field matches an HH:MM time regex)
-				if(!ozNameEntry.getText().equals("") && curfewEntry.getText().matches("\\d{1,2}:\\d\\d")) {
+				//  (name field is not empty, curfew field matches an hh:mm time regex, time is valid)
+				if(!ozNameEntry.getText().equals("") && curfewEntry.getText().matches("\\d{1,2}:\\d\\d") &&
+						Integer.parseInt(curfewEntry.getText().split(":")[0]) >= 1 &&	// check hour of time for validity
+						Integer.parseInt(curfewEntry.getText().split(":")[0]) <= 12 &&
+						Integer.parseInt(curfewEntry.getText().split(":")[1]) >= 0 &&	// check minute of time for validity
+						Integer.parseInt(curfewEntry.getText().split(":")[1]) <= 59) {
 					
 					// open FileChooser for person on ozeret to select which file has the attendance information
 					FileChooser fileChooser = new FileChooser();
