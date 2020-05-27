@@ -29,6 +29,10 @@
 	-fx-font-size: 14px;
 }
 
+#confirmation {
+	-fx-font-size: 20px;
+}
+
 .dialog-pane .label {
 	-fx-font-family: "Montserrat Medium";
 	-fx-text-fill: white;

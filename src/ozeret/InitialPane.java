@@ -41,6 +41,7 @@ public class InitialPane extends GridPane {
 		setup();
 	}
 	
+	// sets up layout and functionality of InitalPane
 	private void setup() {
 		
 		// set up grid layout and sizing
