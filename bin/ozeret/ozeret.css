@@ -29,8 +29,18 @@
 	-fx-font-size: 14px;
 }
 
-#confirmation {
+.textarea {
 	-fx-font-size: 20px;
+	-fx-font-family: "Montserrat Medium";
+	-fx-text-fill: white;
+}
+
+.textarea .content {
+	-fx-background-color: #f36a26;
+}
+
+.textarea:focused {
+	-fx-focus-color: transparent;
 }
 
 .dialog-pane .label {

@@ -16,10 +16,12 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
@@ -66,6 +68,8 @@ public class SignInPane extends GridPane {
 		Clock currentTime = new Clock();
 		Label clockLabel = new Label("Current Time:");
 		HBox currentTimeBox = new HBox(this.getHgap());
+		currentTime.setMinWidth(USE_PREF_SIZE);
+		clockLabel.setMinWidth(USE_PREF_SIZE);
 		currentTimeBox.setAlignment(Pos.CENTER);
 		currentTimeBox.getChildren().addAll(clockLabel, currentTime);
 		
@@ -74,6 +78,8 @@ public class SignInPane extends GridPane {
 		// CountdownTimer timeToCurfew = new CountdownTimer(OzeretMain.getCurfew()); // TODO: uncomment this line once layout of SignInPane is finalized
 		Label countdownLabel = new Label("Time until curfew:");
 		HBox countdownBox = new HBox(this.getHgap());
+		timeToCurfew.setMinWidth(USE_PREF_SIZE);
+		countdownLabel.setMinWidth(USE_PREF_SIZE);
 		countdownBox.setAlignment(Pos.CENTER);
 		countdownBox.getChildren().addAll(countdownLabel, timeToCurfew);
 		
@@ -87,15 +93,20 @@ public class SignInPane extends GridPane {
 		
 		// sign-in instructions and entry point
 		Label scanLabel = new Label("Please enter a staff member's ID");
+		scanLabel.setMinWidth(USE_PREF_SIZE);
 		TextField idField = new TextField();
 		VBox idBox = new VBox(this.getVgap());
 		idBox.getChildren().addAll(scanLabel, idField);
-		this.add(idBox, 1, 1);
 		
 		// confirmation area
-		Label confirmationArea = new Label();
-		confirmationArea.setId("confirmation");
-		this.add(confirmationArea, 1, 2);
+		TextArea confirmation = new TextArea();
+		confirmation.getStyleClass().add("textarea");
+		confirmation.setEditable(false);
+		confirmation.setWrapText(true);
+		confirmation.setPrefWidth(scanLabel.getWidth());
+		confirmation.setPrefRowCount(3);
+		idBox.getChildren().add(confirmation);
+		this.add(idBox, 1, 1);
 		
 		// confirm button
 		Button signIn = new Button("Sign In");
@@ -104,15 +115,47 @@ public class SignInPane extends GridPane {
 		signIn.setMaxWidth(Double.MAX_VALUE);
 		HBox signInButton = new HBox(this.getHgap());
 		signInButton.getChildren().add(signIn);
-		this.add(signInButton, 1, 3);
+		this.add(signInButton, 1, 2);
 		
 		signIn.setOnAction(new EventHandler<ActionEvent>() {
 
 			@Override
 			public void handle(ActionEvent event) {
 				// TODO: sign in staff member who's ID is in idField
+				confirmation.setText("Cooper Schwartz signed in at 12:34 PM");
 			}
 		});
+		
+		
+		/* right column (view unaccounted for, mark shmira/day off) */
+		
+		VBox listButtons = new VBox(this.getVgap() / 2);
+		Button viewUnaccounted = new Button("View Unaccounted-for Staff Members");
+		Button markShmira = new Button("Mark Staff on Shmira");
+		Button markDayOff = new Button("Mark Staff on Day Off");
+		
+		viewUnaccounted.setMinWidth(USE_PREF_SIZE);
+		markShmira.setMinWidth(USE_PREF_SIZE);
+		markDayOff.setMinWidth(USE_PREF_SIZE);
+		
+		HBox.setHgrow(viewUnaccounted, Priority.ALWAYS);
+		HBox.setHgrow(markShmira, Priority.ALWAYS);
+		HBox.setHgrow(markDayOff, Priority.ALWAYS);
+		
+		viewUnaccounted.setMaxWidth(Double.MAX_VALUE);
+		markShmira.setMaxWidth(Double.MAX_VALUE);
+		markDayOff.setMaxWidth(Double.MAX_VALUE);
+		
+		HBox vu = new HBox();
+		vu.getChildren().add(viewUnaccounted);
+		HBox ms = new HBox();
+		ms.getChildren().add(markShmira);
+		HBox md = new HBox();
+		md.getChildren().add(markDayOff);
+		
+		listButtons.getChildren().addAll(vu, ms, md);
+		this.add(listButtons, 2, 1);
+		
 	}
 	
 }
