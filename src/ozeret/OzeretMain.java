@@ -12,10 +12,6 @@ import javafx.stage.Stage;
 
 public class OzeretMain extends Application {
 	
-	private static String ozeretName;
-	private static LocalDateTime curfew;
-	private static File attendanceFile;
-	
 	@Override
 	public void start(Stage primaryStage) {
 		/* 
@@ -29,55 +25,27 @@ public class OzeretMain extends Application {
 		// TODO: remove this GridPane and Scene once all four other scenes are properly created
 		GridPane gp = new GridPane();
 		gp.add(new Button("Hey"), 0, 0);
-		Scene dummy = new Scene(gp, 500, 500);
+		Scene dummy = new Scene(gp);
 		
 		// create file chooser pane and scene
 		SignInPane siPane = new SignInPane(primaryStage, dummy); // TODO: replace dummy Scene with Farewell Scene
-		Scene siScene = new Scene(siPane);
+		Scene siScene = new Scene(siPane);//, 775, siPane.getPrefHeight());
 		siScene.getStylesheets().add(OzeretMain.class.getResource("ozeret.css").toExternalForm());
 		
-		/* TODO: uncomment this section once layout for SignInPane is complete
-		 * // create initial pane and scene
-		 * InitialPane initial = new InitialPane(primaryStage, siScene); 
-		 * Scene initialScene = new Scene(initial);
-		 * initialScene.getStylesheets().add(OzeretMain.class.getResource("ozeret.css").toExternalForm());
-		 */
+		// create initial pane and scene
+		InitialPane initial = new InitialPane(primaryStage, siScene); 
+		Scene initialScene = new Scene(initial);
+		initialScene.getStylesheets().add(OzeretMain.class.getResource("ozeret.css").toExternalForm());
 		
 		// set up stage for viewing with inital scene
 		primaryStage.setTitle("Ozeret Sign-In");
 		primaryStage.getIcons().add(new Image("file:resources/images/stage_icon.png"));
-		// primaryStage.setScene(initialScene); // TODO: uncomment this line once layout for SignInPane is complete
-		primaryStage.setScene(siScene); // TODO: delete this line once layout for SignInPane is complete
+		primaryStage.setScene(initialScene);
+		
 		primaryStage.show();
 	}
 	
 	public static void main(String[] args) {
 		launch(args);
-	}
-
-	/* getters and setters */
-	
-	public static String getOzeretName() {
-		return ozeretName;
-	}
-
-	public static void setOzeretName(String ozeretName) {
-		OzeretMain.ozeretName = ozeretName;
-	}
-
-	public static LocalDateTime getCurfew() {
-		return curfew;
-	}
-
-	public static void setCurfew(LocalDateTime curfew) {
-		OzeretMain.curfew = curfew;
-	}
-
-	public static File getAttendanceFile() {
-		return attendanceFile;
-	}
-
-	public static void setAttendanceFile(File attendanceFile) {
-		OzeretMain.attendanceFile = attendanceFile;
 	}
 }

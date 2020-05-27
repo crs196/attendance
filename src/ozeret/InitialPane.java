@@ -18,6 +18,7 @@ import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -51,7 +52,7 @@ public class InitialPane extends GridPane {
 		this.setPadding(new Insets(30));
 		
 		// header
-		Text title = new Text("Sign-in Setup");
+		Label title = new Label("Sign-in Setup");
 		title.setId("header");
 		this.add(title, 0, 0, 3, 1);
 		
@@ -119,7 +120,7 @@ public class InitialPane extends GridPane {
 			public void handle(ActionEvent event) {
 				
 				// pop up exit confirmation alert
-				Alert exitConfirmation = new Alert(AlertType.CONFIRMATION, "Are you sure you want to exit?");
+				Alert exitConfirmation = new Alert(AlertType.CONFIRMATION, "Are you sure you want to exit?\nData entered will be lost.");
 				exitConfirmation.setTitle("Exit Confirmation");
 				exitConfirmation.getDialogPane().getStylesheets().add(getClass().getResource("ozeret.css").toExternalForm());
 				exitConfirmation.showAndWait();
@@ -140,10 +141,6 @@ public class InitialPane extends GridPane {
 				//  (name field is not empty, curfew field matches an HH:MM time regex)
 				if(!ozNameEntry.getText().equals("") && curfewEntry.getText().matches("\\d{1,2}:\\d\\d")) {
 					
-					// set name and time fields to be carried from scene to scene
-					OzeretMain.setOzeretName(ozNameEntry.getText());
-					OzeretMain.setCurfew(curfewTime());
-					
 					// open FileChooser for person on ozeret to select which file has the attendance information
 					FileChooser fileChooser = new FileChooser();
 					fileChooser.setInitialDirectory(new File("."));
@@ -152,11 +149,34 @@ public class InitialPane extends GridPane {
 					File attendanceFile = fileChooser.showOpenDialog(stage);
 					
 					if (attendanceFile != null) {
-						// set attendance file
-						OzeretMain.setAttendanceFile(attendanceFile);
 						
-						// change the scene to the next one (should be a scene with SignInPane in it)
+						// update next scene's SignInPane to have correct curfew, ozeret name, and attendance file
+						((SignInPane) nextScene.getRoot()).setPrevVars(ozNameEntry.getText(), curfewTime(), attendanceFile);
+						
+						// change the scene to the next one (will be a scene with SignInPane in it)
 						stage.setScene(nextScene);
+						stage.centerOnScreen();
+						
+						// update stage close behavior for SignInPane's scene
+						stage.setOnCloseRequest(new EventHandler<WindowEvent>() {
+
+							@Override
+							public void handle(WindowEvent event) {
+								event.consume(); // consume window-close event
+								
+								Alert alert = new Alert(AlertType.CONFIRMATION, 
+										"Are you sure you want to exit?\nIf you exit now, before saving, all attendance data taken in this session will be lost",
+										new ButtonType("No, Return to Sign-In"),
+										new ButtonType("Yes, Exit", ButtonData.OK_DONE));
+								alert.setTitle("Exit Confirmation");
+								alert.getDialogPane().getStylesheets().add(getClass().getResource("ozeret.css").toExternalForm());
+								alert.showAndWait();
+								
+								if (alert.getResult().getButtonData() == ButtonData.OK_DONE)
+									stage.close();
+								
+							}
+						});
 					}
 					
 				} else {

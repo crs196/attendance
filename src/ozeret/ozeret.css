@@ -11,7 +11,7 @@
 }
 
 .root {
-	-fx-background-color: #f36a26;
+	-fx-background-color: #212153;
 }
 
 .dialog-pane:header .header-panel {
@@ -29,18 +29,19 @@
 	-fx-font-size: 14px;
 }
 
-.textarea {
+.text-area {
 	-fx-font-size: 20px;
 	-fx-font-family: "Montserrat Medium";
 	-fx-text-fill: white;
-}
-
-.textarea .content {
 	-fx-background-color: #f36a26;
 }
 
-.textarea:focused {
-	-fx-focus-color: transparent;
+.text-area .content {
+	-fx-background-color: #f36a26;
+}
+
+.text-area:focused .content {
+	-fx-background-color: #f36a26;
 }
 
 .dialog-pane .label {
@@ -58,11 +59,11 @@
 	-fx-font-family: "Montserrat Medium";
 	-fx-font-size: 12px;
 	-fx-text-fill: white;
-	-fx-background-color: linear-gradient(#8a8aac, #212153);
+	-fx-background-color: linear-gradient(#da885b, #f36a26);
 }
 
 .button:hover {
-	-fx-background-color: linear-gradient(#212153, #8a8aac);
+	-fx-background-color: linear-gradient(#f36a26, #da885b);
 }
 
 .radiobutton {

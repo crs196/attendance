@@ -1,5 +1,6 @@
 package ozeret;
 
+import java.io.File;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -18,10 +19,10 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
-import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
@@ -31,11 +32,21 @@ public class SignInPane extends GridPane {
 
 	private Stage stage;
 	private Scene nextScene;
+	private String ozeretName;
+	private LocalDateTime curfew;
+	private File attendanceFile;
 	
 	public SignInPane(Stage s, Scene ns) {
 		super();
 		stage = s;
 		nextScene = ns;
+	}
+	
+	// called when InitialPane moves to this scene
+	public void setPrevVars(String ozName, LocalDateTime c, File af) {
+		ozeretName = ozName;
+		curfew = c;
+		attendanceFile = af;
 		
 		readFile();
 		setup();
@@ -73,9 +84,18 @@ public class SignInPane extends GridPane {
 		currentTimeBox.setAlignment(Pos.CENTER);
 		currentTimeBox.getChildren().addAll(clockLabel, currentTime);
 		
+		// curfew time
+		Label curfewLabel = new Label("Curfew:");
+		Label curfewTimeLabel = new Label();
+		curfewTimeLabel.setText(curfew.format(DateTimeFormatter.ofPattern("h:mm a")));
+		HBox curfewBox = new HBox(this.getHgap());
+		curfewLabel.setMinWidth(USE_PREF_SIZE);
+		curfewTimeLabel.setMinWidth(USE_PREF_SIZE);
+		curfewBox.setAlignment(Pos.CENTER);
+		curfewBox.getChildren().addAll(curfewLabel, curfewTimeLabel);
+		
 		// time to curfew
-		CountdownTimer timeToCurfew = new CountdownTimer(LocalDateTime.now().plusMinutes(3)); // TODO: delete this line once layout of SignInPane is finalized
-		// CountdownTimer timeToCurfew = new CountdownTimer(OzeretMain.getCurfew()); // TODO: uncomment this line once layout of SignInPane is finalized
+		CountdownTimer timeToCurfew = new CountdownTimer(curfew);
 		Label countdownLabel = new Label("Time until curfew:");
 		HBox countdownBox = new HBox(this.getHgap());
 		timeToCurfew.setMinWidth(USE_PREF_SIZE);
@@ -85,8 +105,7 @@ public class SignInPane extends GridPane {
 		
 		// add clocks to pane
 		VBox clockBox = new VBox(this.getVgap());
-		clockBox.getChildren().addAll(currentTimeBox, countdownBox);
-		this.add(clockBox, 0, 1);
+		clockBox.getChildren().addAll(currentTimeBox, curfewBox, countdownBox);
 		
 		
 		/* central column (sign-in box, confirmation area) */
@@ -100,7 +119,6 @@ public class SignInPane extends GridPane {
 		
 		// confirmation area
 		TextArea confirmation = new TextArea();
-		confirmation.getStyleClass().add("textarea");
 		confirmation.setEditable(false);
 		confirmation.setWrapText(true);
 		confirmation.setPrefWidth(scanLabel.getWidth());
@@ -117,19 +135,20 @@ public class SignInPane extends GridPane {
 		signInButton.getChildren().add(signIn);
 		this.add(signInButton, 1, 2);
 		
+		// set sign-in button behavior
 		signIn.setOnAction(new EventHandler<ActionEvent>() {
 
 			@Override
 			public void handle(ActionEvent event) {
 				// TODO: sign in staff member who's ID is in idField
-				confirmation.setText("Cooper Schwartz signed in at 12:34 PM");
+				confirmation.setText("Confirmation tk");
 			}
 		});
 		
 		
 		/* right column (view unaccounted for, mark shmira/day off) */
 		
-		VBox listButtons = new VBox(this.getVgap() / 2);
+		VBox listButtons = new VBox(this.getVgap() * 0.75);
 		Button viewUnaccounted = new Button("View Unaccounted-for Staff Members");
 		Button markShmira = new Button("Mark Staff on Shmira");
 		Button markDayOff = new Button("Mark Staff on Day Off");
@@ -153,9 +172,96 @@ public class SignInPane extends GridPane {
 		HBox md = new HBox();
 		md.getChildren().add(markDayOff);
 		
-		listButtons.getChildren().addAll(vu, ms, md);
-		this.add(listButtons, 2, 1);
+		listButtons.getChildren().addAll(clockBox, vu, ms, md);
+		this.add(listButtons, 0, 1);
 		
+		// event handlers for right column buttons
+		
+		// pulls up list of staff members who have yet to sign in in this session
+		viewUnaccounted.setOnAction(new EventHandler<ActionEvent>() {
+
+			@Override
+			public void handle(ActionEvent event) {
+				// TODO Auto-generated method stub
+				
+				GridPane unaccPane = new GridPane();
+				// set up grid layout and sizing
+				unaccPane.setAlignment(Pos.CENTER);
+				unaccPane.setHgap(15);
+				unaccPane.setVgap(20);
+				unaccPane.setPadding(new Insets(30));
+				
+				Label temp = new Label("Unaccounted-for staff list tk");
+				unaccPane.add(temp, 0, 0);
+				
+				Stage unaccStage = new Stage();
+				Scene unaccScene = new Scene(unaccPane);
+				unaccScene.getStylesheets().add(OzeretMain.class.getResource("ozeret.css").toExternalForm());
+				
+				unaccStage.setScene(unaccScene);
+				unaccStage.setTitle("Unaccounted-for staff");
+				unaccStage.getIcons().add(new Image("file:resources/images/stage_icon.png"));
+				unaccStage.show();
+			}
+		});
+		
+		// pulls up list of staff members who have yet to sign in in this session
+		//  with option to mark them as on shmira
+		markShmira.setOnAction(new EventHandler<ActionEvent>() {
+
+			@Override
+			public void handle(ActionEvent event) {
+				// TODO Auto-generated method stub
+						
+				GridPane msPane = new GridPane();
+				// set up grid layout and sizing
+				msPane.setAlignment(Pos.CENTER);
+				msPane.setHgap(15);
+				msPane.setVgap(20);
+				msPane.setPadding(new Insets(30));
+					
+				Label temp = new Label("Mark-Shmira staff list tk");
+				msPane.add(temp, 0, 0);
+						
+				Stage msStage = new Stage();
+				Scene msScene = new Scene(msPane);
+				msScene.getStylesheets().add(OzeretMain.class.getResource("ozeret.css").toExternalForm());
+						
+				msStage.setScene(msScene);
+				msStage.setTitle("Mark Shmira");
+				msStage.getIcons().add(new Image("file:resources/images/stage_icon.png"));
+				msStage.show();
+			}
+		});
+		
+		// pulls up list of staff members who have yet to sign in in this session
+		//  with option to mark them as on day off
+		markDayOff.setOnAction(new EventHandler<ActionEvent>() {
+
+			@Override
+			public void handle(ActionEvent event) {
+				// TODO Auto-generated method stub
+					
+				GridPane doPane = new GridPane();
+				// set up grid layout and sizing
+				doPane.setAlignment(Pos.CENTER);
+				doPane.setHgap(15);
+				doPane.setVgap(20);
+				doPane.setPadding(new Insets(30));
+						
+				Label temp = new Label("Mark-Day-Off staff list tk");
+				doPane.add(temp, 0, 0);
+						
+				Stage doStage = new Stage();
+				Scene doScene = new Scene(doPane);
+				doScene.getStylesheets().add(OzeretMain.class.getResource("ozeret.css").toExternalForm());
+						
+				doStage.setScene(doScene);
+				doStage.setTitle("Mark Day Off");
+				doStage.getIcons().add(new Image("file:resources/images/stage_icon.png"));
+				doStage.show();
+			}
+		});
 	}
 	
 }
