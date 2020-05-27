@@ -10,12 +10,14 @@
 	src: url("../../resources/fonts/PlayfairDisplayRegular.ttf");
 }
 
+/* colors: orange - #f36a26; blue - #212153 */
+
 .root {
 	-fx-background-color: #212153;
 }
 
 .dialog-pane:header .header-panel {
-	-fx-background-color: #f36a26;
+	-fx-background-color: #212153;
 }
 
 #header {
@@ -33,15 +35,15 @@
 	-fx-font-size: 20px;
 	-fx-font-family: "Montserrat Medium";
 	-fx-text-fill: white;
-	-fx-background-color: #f36a26;
+	-fx-background-color: #212153;
 }
 
 .text-area .content {
-	-fx-background-color: #f36a26;
+	-fx-background-color: #212153;
 }
 
 .text-area:focused .content {
-	-fx-background-color: #f36a26;
+	-fx-background-color: #212153;
 }
 
 .dialog-pane .label {

@@ -23,7 +23,6 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
@@ -156,27 +155,6 @@ public class InitialPane extends GridPane {
 						// change the scene to the next one (will be a scene with SignInPane in it)
 						stage.setScene(nextScene);
 						stage.centerOnScreen();
-						
-						// update stage close behavior for SignInPane's scene
-						stage.setOnCloseRequest(new EventHandler<WindowEvent>() {
-
-							@Override
-							public void handle(WindowEvent event) {
-								event.consume(); // consume window-close event
-								
-								Alert alert = new Alert(AlertType.CONFIRMATION, 
-										"Are you sure you want to exit?\nIf you exit now, before saving, all attendance data taken in this session will be lost",
-										new ButtonType("No, Return to Sign-In"),
-										new ButtonType("Yes, Exit", ButtonData.OK_DONE));
-								alert.setTitle("Exit Confirmation");
-								alert.getDialogPane().getStylesheets().add(getClass().getResource("ozeret.css").toExternalForm());
-								alert.showAndWait();
-								
-								if (alert.getResult().getButtonData() == ButtonData.OK_DONE)
-									stage.close();
-								
-							}
-						});
 					}
 					
 				} else {

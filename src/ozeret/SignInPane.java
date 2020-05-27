@@ -15,17 +15,21 @@ import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.scene.image.Image;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 import javafx.util.Duration;
 
 public class SignInPane extends GridPane {
@@ -67,7 +71,7 @@ public class SignInPane extends GridPane {
 		this.setPadding(new Insets(30));
 		
 		// header
-		Text title = new Text("Sign-In");
+		Label title = new Label("Sign-In");
 		title.setId("header");
 		SignInPane.setHalignment(title, HPos.CENTER);
 		this.add(title, 0, 0, 3, 1);
@@ -142,6 +146,9 @@ public class SignInPane extends GridPane {
 			public void handle(ActionEvent event) {
 				// TODO: sign in staff member who's ID is in idField
 				confirmation.setText("Confirmation tk");
+				
+				// after signing staff member in, clear idField for next entry
+				idField.setText("");
 			}
 		});
 		
@@ -260,6 +267,28 @@ public class SignInPane extends GridPane {
 				doStage.setTitle("Mark Day Off");
 				doStage.getIcons().add(new Image("file:resources/images/stage_icon.png"));
 				doStage.show();
+			}
+		});
+		
+		
+		/* change stage close behavior */
+		stage.setOnCloseRequest(new EventHandler<WindowEvent>() {
+
+			@Override
+			public void handle(WindowEvent event) {
+				event.consume(); // consume window-close event
+				
+				Alert alert = new Alert(AlertType.CONFIRMATION, 
+						"Are you sure you want to exit?\nIf you exit now, before saving, all attendance data taken in this session will be lost",
+						new ButtonType("No, Return to Sign-In", ButtonData.CANCEL_CLOSE),
+						new ButtonType("Yes, Exit", ButtonData.OK_DONE));
+				alert.setTitle("Exit Confirmation");
+				alert.getDialogPane().getStylesheets().add(getClass().getResource("ozeret.css").toExternalForm());
+				alert.showAndWait();
+				
+				if (alert.getResult().getButtonData() == ButtonData.OK_DONE)
+					stage.close();
+				
 			}
 		});
 	}
