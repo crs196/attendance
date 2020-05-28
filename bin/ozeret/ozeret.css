@@ -16,6 +16,10 @@
 	-fx-background-color: #212153;
 }
 
+.scroll-pane {
+	-fx-background: #212153;
+}
+
 .dialog-pane:header .header-panel {
 	-fx-background-color: #212153;
 }

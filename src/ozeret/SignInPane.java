@@ -8,7 +8,9 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
@@ -21,21 +23,25 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
+import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.scene.image.Image;
+import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -53,6 +59,9 @@ public class SignInPane extends GridPane {
 	private LocalDateTime curfew;
 	private File attendanceFile;
 	
+	private XSSFWorkbook workbook;
+	private XSSFSheet sheet;
+	
 	// used to track which column holds each piece of information
 	private int bunkCol, nameCol, idCol, ontimeCol, lateCol, absentCol;
 	
@@ -68,26 +77,24 @@ public class SignInPane extends GridPane {
 		curfew = c;
 		attendanceFile = af;
 		
-		try {
-			readFile();
+		// create local workbook from attendanceFile
+		try (FileInputStream afis = new FileInputStream(attendanceFile)) {
+			workbook = new XSSFWorkbook(afis);
+			sheet = workbook.getSheetAt(0);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
+		readHeaderRow();
 		setup();
 	}
 	
-	// reads in information from selected attendance file and stores it locally
-	private void readFile() throws IOException {
-
-		// create local workbook from attendanceFile
-		FileInputStream afis = new FileInputStream(attendanceFile);
-		XSSFWorkbook workbook = new XSSFWorkbook(afis);
-		XSSFSheet sheet = workbook.getSheetAt(0);
+	// reads header row of workbook to initialize column trackers
+	private void readHeaderRow() {
 		
-		// read header row and assign column trackers
 		XSSFRow headerRow = sheet.getRow(0);
-		boolean idColExists = false;
+		boolean idExists = false, ontimeExists = false, lateExists = false, absentExists = false;
 		for (int i = headerRow.getFirstCellNum(); i < headerRow.getLastCellNum(); i++) {
 			
 			if (headerRow.getCell(i).getCellType() == CellType.STRING) {
@@ -101,58 +108,36 @@ public class SignInPane extends GridPane {
 					break;
 				case "id":
 					idCol = i;
-					idColExists = true;
+					idExists = true;
 					break;
 				case "on time":
 					ontimeCol = i;
+					ontimeExists = true;
 					break;
 				case "late":
 					lateCol = i;
+					lateExists = true;
 					break;
 				case "absent":
 					absentCol = i;
+					absentExists = true;
 					break;
 				default:
 					break;
 				}
 			}
 		}
-		// if there is no column labeled "ID", set the ID column to be the name column
-		if (!idColExists)
-			idCol = nameCol;
 		
-		// TODO: from here to the next TODO comment is a debug section to print out the read-in spreadsheet.
-		//  remove when done debugging
-		Iterator<Row> rowIterator = sheet.iterator();
-		while(rowIterator.hasNext()) {
-
-			Iterator<Cell> cellIterator = ((XSSFRow) rowIterator.next()).iterator();
-
-			while(cellIterator.hasNext()) {
-				XSSFCell c = (XSSFCell) cellIterator.next();
-
-				switch (c.getCellType()) {
-				case NUMERIC:
-					System.out.print(c.getNumericCellValue() + "\t\t");
-					break;
-				case STRING:
-					System.out.print(c.getStringCellValue() + "\t\t");
-					break;
-				default:
-					System.out.println("??\t\t");
-				}
-			}
-
-			System.out.println();
-		}
-		// TODO: end debug section
-
-
-		// write taken attendance back to 
-		afis.close();
-		FileOutputStream afos = new FileOutputStream(attendanceFile);
-		workbook.write(afos);
-		workbook.close();
+		// if there is no column labeled "ID", set the ID column to be the name column
+		if (!idExists)
+			idCol = nameCol;
+		// if any of the summary statistic columns don't exist, set the respective tracker to -1 to signify that
+		if(!ontimeExists)
+			ontimeCol = -1;
+		if(!lateExists)
+			lateCol = -1;
+		if(!absentExists)
+			absentCol = -1;
 	}
 
 	// sets up layout and functionality of SignInPane
@@ -290,24 +275,80 @@ public class SignInPane extends GridPane {
 			public void handle(ActionEvent event) {
 				// TODO Auto-generated method stub
 					
-				GridPane unaccPane = new GridPane();
+				FlowPane unaccPane = new FlowPane(Orientation.HORIZONTAL, 15, 20);
 				// set up grid layout and sizing
 				unaccPane.setAlignment(Pos.CENTER);
-				unaccPane.setHgap(15);
-				unaccPane.setVgap(20);
 				unaccPane.setPadding(new Insets(30));
+				unaccPane.setPrefWrapLength(500);
 
-				Label temp = new Label("Unaccounted-for staff list tk");
-				unaccPane.add(temp, 0, 0);
-
-				Scene unaccScene = new Scene(unaccPane);
+				ScrollPane scrollPane = new ScrollPane(unaccPane);
+				// TODO: uncomment these lines to center display within scrollPane, delete otherwise
+				// scrollPane.setFitToHeight(true);
+				// scrollPane.setFitToWidth(true);
+				
+				List<String> numBunks = countBunks();
+				
+				for (int i = 0; i < numBunks.size(); i++)
+					unaccPane.getChildren().add(getStaffFromBunk(numBunks.get(i)));
+				
+				
+				// create scene
+				Scene unaccScene = new Scene(scrollPane);
 				unaccScene.getStylesheets().add(OzeretMain.class.getResource("ozeret.css").toExternalForm());
 
+				// set up stage
 				extraStage.setScene(unaccScene);
 				extraStage.setTitle("Unaccounted-for staff");
 				extraStage.getIcons().add(new Image("file:resources/images/stage_icon.png"));
 				extraStage.centerOnScreen();
 				extraStage.show();
+			}
+			
+			// counts the number of unique bunks in workbook and returns the list of unique bunks
+			public List<String> countBunks() {
+				
+				List<String> uniqueBunks = new ArrayList<String>();
+				
+				// loop through all rows of the sheet, starting at the third row (so ignoring the two header rows)
+				//  and look at the "bunk" column to count how many unique bunks there are
+				for (int i = sheet.getFirstRowNum() + 2; i <= sheet.getLastRowNum(); i++) {
+					
+					// if the current bunk is new, add it to the list of unique bunks
+					if (!uniqueBunks.contains(sheet.getRow(i).getCell(bunkCol).getStringCellValue()))
+						uniqueBunks.add(sheet.getRow(i).getCell(bunkCol).getStringCellValue());
+				}
+				
+				return uniqueBunks;
+			}
+			
+			// given a bunk name, gets the names of all staff in that bunk and creates
+			//  a VBox with the name of the bunk and each staff member in it
+			public VBox getStaffFromBunk(String bunk) {
+				
+				VBox bunkBox = new VBox(20);
+				
+				Label bunkName = new Label(bunk);
+				bunkName.setMinWidth(USE_PREF_SIZE);
+				HBox bunkNameBox = new HBox(15);
+				bunkNameBox.setAlignment(Pos.CENTER);
+				bunkNameBox.getChildren().add(bunkName);
+				bunkBox.getChildren().add(bunkNameBox);
+				
+				// runs through all rows of the spreadsheet and adds staff in this bunk to the VBox
+				for (int i = sheet.getFirstRowNum() + 2; i <= sheet.getLastRowNum(); i++) {
+					
+					if (sheet.getRow(i).getCell(bunkCol).getStringCellValue().equals(bunk)) {
+						Label staffMember = new Label(sheet.getRow(i).getCell(nameCol).getStringCellValue());
+						staffMember.setMinWidth(USE_PREF_SIZE);
+						HBox staffNameBox = new HBox(15);
+						staffNameBox.setAlignment(Pos.CENTER);
+						staffNameBox.getChildren().add(staffMember);
+						bunkBox.getChildren().add(staffNameBox);
+					}
+					
+				}
+				
+				return bunkBox;
 			}
 		});
 		
@@ -386,7 +427,7 @@ public class SignInPane extends GridPane {
 				alert.showAndWait();
 				
 				if (alert.getResult().getButtonData() == ButtonData.OK_DONE)
-					stage.close();
+					Platform.exit();
 				
 			}
 		});
