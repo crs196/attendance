@@ -2,6 +2,7 @@ package ozeret;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -9,8 +10,8 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Iterator;
 
-import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFRow;
@@ -47,9 +48,13 @@ public class SignInPane extends GridPane {
 
 	private Stage stage;
 	private Scene nextScene;
+	
 	private String ozeretName;
 	private LocalDateTime curfew;
 	private File attendanceFile;
+	
+	// used to track which column holds each piece of information
+	private int bunkCol, nameCol, idCol, ontimeCol, lateCol, absentCol;
 	
 	public SignInPane(Stage s, Scene ns) {
 		super();
@@ -63,47 +68,93 @@ public class SignInPane extends GridPane {
 		curfew = c;
 		attendanceFile = af;
 		
-		readFile();
-		setup();
-	}
-	
-	// reads in information from selected attendance file and stores it locally
-	private void readFile() {
-		try (FileInputStream afis = new FileInputStream(attendanceFile)){
-			
-			// create local workbook from attendanceFile
-			XSSFWorkbook workbook = new XSSFWorkbook(afis);
-			XSSFSheet sheet = workbook.getSheetAt(0);
-			Iterator<Row> rowIterator = sheet.iterator();
-			
-			while(rowIterator.hasNext()) {
-				
-				Iterator<Cell> cellIterator = ((XSSFRow) rowIterator.next()).iterator();
-				
-				while(cellIterator.hasNext()) {
-					XSSFCell c = (XSSFCell) cellIterator.next();
-					
-					switch (c.getCellType()) {
-					case NUMERIC:
-						System.out.print(c.getNumericCellValue() + "\t\t");
-						break;
-					case STRING:
-						System.out.print(c.getStringCellValue() + "\t\t");
-						break;
-					default:
-						System.out.println("??\t\t");
-					}
-				}
-				
-				System.out.println();
-			}
-			
+		try {
+			readFile();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		setup();
 	}
 	
+	// reads in information from selected attendance file and stores it locally
+	private void readFile() throws IOException {
+
+		// create local workbook from attendanceFile
+		FileInputStream afis = new FileInputStream(attendanceFile);
+		XSSFWorkbook workbook = new XSSFWorkbook(afis);
+		XSSFSheet sheet = workbook.getSheetAt(0);
+		
+		// read header row and assign column trackers
+		XSSFRow headerRow = sheet.getRow(0);
+		boolean idColExists = false;
+		for (int i = headerRow.getFirstCellNum(); i < headerRow.getLastCellNum(); i++) {
+			
+			if (headerRow.getCell(i).getCellType() == CellType.STRING) {
+				
+				switch (headerRow.getCell(i).getStringCellValue().toLowerCase()) {
+				case "bunk":
+					bunkCol = i;
+					break;
+				case "name":
+					nameCol = i;
+					break;
+				case "id":
+					idCol = i;
+					idColExists = true;
+					break;
+				case "on time":
+					ontimeCol = i;
+					break;
+				case "late":
+					lateCol = i;
+					break;
+				case "absent":
+					absentCol = i;
+					break;
+				default:
+					break;
+				}
+			}
+		}
+		// if there is no column labeled "ID", set the ID column to be the name column
+		if (!idColExists)
+			idCol = nameCol;
+		
+		// TODO: from here to the next TODO comment is a debug section to print out the read-in spreadsheet.
+		//  remove when done debugging
+		Iterator<Row> rowIterator = sheet.iterator();
+		while(rowIterator.hasNext()) {
+
+			Iterator<Cell> cellIterator = ((XSSFRow) rowIterator.next()).iterator();
+
+			while(cellIterator.hasNext()) {
+				XSSFCell c = (XSSFCell) cellIterator.next();
+
+				switch (c.getCellType()) {
+				case NUMERIC:
+					System.out.print(c.getNumericCellValue() + "\t\t");
+					break;
+				case STRING:
+					System.out.print(c.getStringCellValue() + "\t\t");
+					break;
+				default:
+					System.out.println("??\t\t");
+				}
+			}
+
+			System.out.println();
+		}
+		// TODO: end debug section
+
+
+		// write taken attendance back to 
+		afis.close();
+		FileOutputStream afos = new FileOutputStream(attendanceFile);
+		workbook.write(afos);
+		workbook.close();
+	}
+
 	// sets up layout and functionality of SignInPane
 	private void setup() {
 
