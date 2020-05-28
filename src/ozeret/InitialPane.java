@@ -18,7 +18,6 @@ import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -148,7 +147,7 @@ public class InitialPane extends GridPane {
 					FileChooser fileChooser = new FileChooser();
 					fileChooser.setInitialDirectory(new File("."));
 					fileChooser.setTitle("Select Attendance File");
-					fileChooser.getExtensionFilters().add(new ExtensionFilter("CSV Files", "*.csv"));
+					fileChooser.getExtensionFilters().add(new ExtensionFilter("Excel Files", "*.xlsx"));
 					File attendanceFile = fileChooser.showOpenDialog(stage);
 					
 					if (attendanceFile != null) {

@@ -1,10 +1,21 @@
 package ozeret;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.Iterator;
+
+import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.xssf.usermodel.XSSFCell;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
@@ -56,9 +67,41 @@ public class SignInPane extends GridPane {
 		setup();
 	}
 	
-	// reads in information from selected attendance file and stores it in instance variables
+	// reads in information from selected attendance file and stores it locally
 	private void readFile() {
-		// TODO: do this
+		try (FileInputStream afis = new FileInputStream(attendanceFile)){
+			
+			// create local workbook from attendanceFile
+			XSSFWorkbook workbook = new XSSFWorkbook(afis);
+			XSSFSheet sheet = workbook.getSheetAt(0);
+			Iterator<Row> rowIterator = sheet.iterator();
+			
+			while(rowIterator.hasNext()) {
+				
+				Iterator<Cell> cellIterator = ((XSSFRow) rowIterator.next()).iterator();
+				
+				while(cellIterator.hasNext()) {
+					XSSFCell c = (XSSFCell) cellIterator.next();
+					
+					switch (c.getCellType()) {
+					case NUMERIC:
+						System.out.print(c.getNumericCellValue() + "\t\t");
+						break;
+					case STRING:
+						System.out.print(c.getStringCellValue() + "\t\t");
+						break;
+					default:
+						System.out.println("??\t\t");
+					}
+				}
+				
+				System.out.println();
+			}
+			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	// sets up layout and functionality of SignInPane
@@ -187,9 +230,7 @@ public class SignInPane extends GridPane {
 		// event handlers for right column buttons
 		
 		// stages for right column buttons
-		Stage unaccStage = new Stage();
-		Stage msStage = new Stage();
-		Stage doStage = new Stage();
+		Stage extraStage = new Stage();
 		
 		// pulls up list of staff members who have yet to sign in in this session
 		viewUnaccounted.setOnAction(new EventHandler<ActionEvent>() {
@@ -211,10 +252,11 @@ public class SignInPane extends GridPane {
 				Scene unaccScene = new Scene(unaccPane);
 				unaccScene.getStylesheets().add(OzeretMain.class.getResource("ozeret.css").toExternalForm());
 
-				unaccStage.setScene(unaccScene);
-				unaccStage.setTitle("Unaccounted-for staff");
-				unaccStage.getIcons().add(new Image("file:resources/images/stage_icon.png"));
-				unaccStage.show();
+				extraStage.setScene(unaccScene);
+				extraStage.setTitle("Unaccounted-for staff");
+				extraStage.getIcons().add(new Image("file:resources/images/stage_icon.png"));
+				extraStage.centerOnScreen();
+				extraStage.show();
 			}
 		});
 		
@@ -239,10 +281,11 @@ public class SignInPane extends GridPane {
 				Scene msScene = new Scene(msPane);
 				msScene.getStylesheets().add(OzeretMain.class.getResource("ozeret.css").toExternalForm());
 						
-				msStage.setScene(msScene);
-				msStage.setTitle("Mark Shmira");
-				msStage.getIcons().add(new Image("file:resources/images/stage_icon.png"));
-				msStage.show();
+				extraStage.setScene(msScene);
+				extraStage.setTitle("Mark Shmira");
+				extraStage.getIcons().add(new Image("file:resources/images/stage_icon.png"));
+				extraStage.centerOnScreen();
+				extraStage.show();
 			}
 		});
 		
@@ -267,10 +310,11 @@ public class SignInPane extends GridPane {
 				Scene doScene = new Scene(doPane);
 				doScene.getStylesheets().add(OzeretMain.class.getResource("ozeret.css").toExternalForm());
 						
-				doStage.setScene(doScene);
-				doStage.setTitle("Mark Day Off");
-				doStage.getIcons().add(new Image("file:resources/images/stage_icon.png"));
-				doStage.show();
+				extraStage.setScene(doScene);
+				extraStage.setTitle("Mark Day Off");
+				extraStage.getIcons().add(new Image("file:resources/images/stage_icon.png"));
+				extraStage.centerOnScreen();
+				extraStage.show();
 			}
 		});
 		
