@@ -60,7 +60,7 @@ public class InitialPane extends GridPane {
 		Label ozName = new Label("Ozeret Name:");
 		this.add(ozName, 0, 1);
 		
-		TextField ozNameEntry = new TextField("TEST NAME"); // TODO: remove prefilled text
+		TextField ozNameEntry = new TextField();
 		this.add(ozNameEntry, 1, 1, 2, 1);
 		
 		
@@ -68,7 +68,7 @@ public class InitialPane extends GridPane {
 		Label curfewTime = new Label("Curfew (HH:MM):");
 		this.add(curfewTime, 0, 2);
 		
-		TextField curfewEntry = new TextField("12:00"); // TODO: remove prefilled text
+		TextField curfewEntry = new TextField();
 		this.add(curfewEntry, 1, 2);
 		
 		// create and add am/pm selector buttons
@@ -122,6 +122,7 @@ public class InitialPane extends GridPane {
 				Alert exitConfirmation = new Alert(AlertType.CONFIRMATION, "Are you sure you want to exit?\nData entered will be lost.");
 				exitConfirmation.setTitle("Exit Confirmation");
 				exitConfirmation.getDialogPane().getStylesheets().add(getClass().getResource("ozeret.css").toExternalForm());
+				exitConfirmation.initOwner(exit.getScene().getWindow());
 				exitConfirmation.showAndWait();
 				
 				// exit if user confirms exit
@@ -146,7 +147,7 @@ public class InitialPane extends GridPane {
 					
 					// open FileChooser for person on ozeret to select which file has the attendance information
 					FileChooser fileChooser = new FileChooser();
-					fileChooser.setInitialDirectory(new File("./resources/files")); // TODO: change starting filepath to "."
+					fileChooser.setInitialDirectory(new File("."));
 					fileChooser.setTitle("Select Attendance File");
 					fileChooser.getExtensionFilters().add(new ExtensionFilter("Excel Files", "*.xlsx"));
 					File attendanceFile = fileChooser.showOpenDialog(stage);

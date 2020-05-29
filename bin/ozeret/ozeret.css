@@ -35,6 +35,12 @@
 	-fx-font-size: 14px;
 }
 
+#bunk-label {
+	-fx-font-family: "Toonish";
+	-fx-text-fill: white;
+	-fx-font-size: 18px;
+}
+
 .text-area {
 	-fx-font-size: 20px;
 	-fx-font-family: "Montserrat Medium";
@@ -76,4 +82,15 @@
 	-fx-font-family: "Montserrat Medium";
 	-fx-text-fill: white;
 	-fx-font-size: 12px;
+}
+
+#list-button {
+	-fx-font-family: "Montserrat Medium";
+	-fx-font-size: 14px;
+	-fx-text-fill: white;
+	-fx-background-color: transparent;
+}
+
+#list-button:hover {
+	-fx-text-fill: #c8c8c8;
 }

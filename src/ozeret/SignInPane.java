@@ -36,6 +36,7 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonBar.ButtonData;
+import javafx.scene.control.ScrollPane.ScrollBarPolicy;
 import javafx.scene.image.Image;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
@@ -49,30 +50,28 @@ import javafx.util.Duration;
 public class SignInPane extends GridPane {
 
 	private Stage stage;
-	private Scene nextScene;
-	
+
 	private String ozeretName;
 	private LocalDateTime curfew;
 	private File attendanceFile;
-	
+
 	private XSSFWorkbook workbook;
 	private XSSFSheet sheet;
-	
+
 	// used to track which column holds each piece of information
 	private int bunkCol, nameCol, idCol, ontimeCol, lateCol, absentCol, todayCol;
-	
-	public SignInPane(Stage s, Scene ns) {
+
+	public SignInPane(Stage s) {
 		super();
 		stage = s;
-		nextScene = ns;
 	}
-	
+
 	// called when InitialPane moves to this scene
 	public void setPrevVars(String ozName, LocalDateTime c, File af) {
 		ozeretName = ozName;
 		curfew = c;
 		attendanceFile = af;
-		
+
 		// create local workbook from attendanceFile
 		try (FileInputStream afis = new FileInputStream(attendanceFile)) {
 			workbook = new XSSFWorkbook(afis);
@@ -81,24 +80,24 @@ public class SignInPane extends GridPane {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+
 		readHeaderRow();
 		setup();
 	}
-	
+
 	// reads header row of workbook to initialize column trackers,
 	//  adds column for today to the end of the sheet and puts in OzeretName to row 2
 	private void readHeaderRow() {
-		
+
 		XSSFRow headerRow = sheet.getRow(0);
 		boolean idExists = false, ontimeExists = false, lateExists = false, absentExists = false, todayExists = false;
 		boolean curfewToday = curfew.toLocalDate().equals(LocalDate.now());
-		
+
 		// run through all cells in header row to assign column trackers
 		for (int i = headerRow.getFirstCellNum(); i < headerRow.getLastCellNum(); i++) {
-			
+
 			if (headerRow.getCell(i).getCellType() == CellType.STRING) {
-				
+
 				// check to see if current cell has any of these contents
 				switch (headerRow.getCell(i).getStringCellValue().toLowerCase()) {
 				case "bunk":
@@ -126,20 +125,20 @@ public class SignInPane extends GridPane {
 				default:
 					break;
 				}
-				
+
 				if (curfewToday)
 					if (headerRow.getCell(i).getStringCellValue().equals(curfew.format(DateTimeFormatter.ofPattern("MM/dd/yyyy")))){
 						todayCol = i;
 						todayExists = true;
 					}
-				else
-					if (headerRow.getCell(i).getStringCellValue().equals(curfew.minusDays(1).format(DateTimeFormatter.ofPattern("MM/dd/yyyy")))){
-						todayCol = i;
-						todayExists = true;
-					}
+					else
+						if (headerRow.getCell(i).getStringCellValue().equals(curfew.minusDays(1).format(DateTimeFormatter.ofPattern("MM/dd/yyyy")))){
+							todayCol = i;
+							todayExists = true;
+						}
 			}
 		}
-		
+
 		// if there is no column labeled "ID", set the ID column to be the name column
 		if (!idExists)
 			idCol = nameCol;
@@ -155,19 +154,19 @@ public class SignInPane extends GridPane {
 			// add new column for today's sign-in
 			todayCol = headerRow.getLastCellNum();
 			headerRow.createCell(todayCol);
-			
+
 			if (curfew.toLocalDate().equals(LocalDate.now())) // if curfew is today
 				headerRow.getCell(todayCol).setCellValue(curfew.format(DateTimeFormatter.ofPattern("MM/dd/yyyy")));
 			else // curfew is tomorrow
 				headerRow.getCell(todayCol).setCellValue(curfew.minusDays(1).format(DateTimeFormatter.ofPattern("MM/dd/yyyy")));
 		}
-		
+
 		// write name of person on ozeret to row 2 in today's column if different than what's already there
 		if ((sheet.getRow(1).getCell(todayCol) == null))
 			sheet.getRow(1).createCell(todayCol).setCellValue(ozeretName);
 		else if (!(sheet.getRow(1).getCell(todayCol).getStringCellValue().equals(ozeretName)))
 			sheet.getRow(1).getCell(todayCol).setCellValue(ozeretName);
-		
+
 	}
 
 	// sets up layout and functionality of SignInPane
@@ -178,16 +177,16 @@ public class SignInPane extends GridPane {
 		this.setHgap(15);
 		this.setVgap(20);
 		this.setPadding(new Insets(30));
-		
+
 		// header
 		Label title = new Label("Sign-In");
 		title.setId("header");
 		SignInPane.setHalignment(title, HPos.CENTER);
 		this.add(title, 0, 0, 3, 1);
-		
-		
+
+
 		/* left column (clock + time to curfew, view unaccounted for, mark shmira/day off) */
-		
+
 		// clock
 		Clock currentTime = new Clock();
 		Label clockLabel = new Label("Current Time:");
@@ -196,7 +195,7 @@ public class SignInPane extends GridPane {
 		clockLabel.setMinWidth(USE_PREF_SIZE);
 		currentTimeBox.setAlignment(Pos.CENTER);
 		currentTimeBox.getChildren().addAll(clockLabel, currentTime);
-		
+
 		// curfew time
 		Label curfewLabel = new Label("Curfew:");
 		Label curfewTimeLabel = new Label();
@@ -206,7 +205,7 @@ public class SignInPane extends GridPane {
 		curfewTimeLabel.setMinWidth(USE_PREF_SIZE);
 		curfewBox.setAlignment(Pos.CENTER);
 		curfewBox.getChildren().addAll(curfewLabel, curfewTimeLabel);
-		
+
 		// time to curfew
 		CountdownTimer timeToCurfew = new CountdownTimer(curfew);
 		Label countdownLabel = new Label("Time until curfew:");
@@ -215,51 +214,43 @@ public class SignInPane extends GridPane {
 		countdownLabel.setMinWidth(USE_PREF_SIZE);
 		countdownBox.setAlignment(Pos.CENTER);
 		countdownBox.getChildren().addAll(countdownLabel, timeToCurfew);
-		
+
 		// add clocks to VBox to hold them
 		VBox clockBox = new VBox(this.getVgap() * 0.5);
 		clockBox.getChildren().addAll(currentTimeBox, curfewBox, countdownBox);
-		
-		VBox listButtons = new VBox(this.getVgap() * 0.75);
+
+		VBox listButtons = new VBox(this.getVgap() * 0.5);
 		Button viewUnaccounted = new Button("View Unaccounted-for Staff Members");
-		Button markShmira = new Button("Mark Staff on Shmira");
-		Button markDayOff = new Button("Mark Staff on Day Off");
-		
+		Button save = new Button("Save");
+		Button saveAndQuit = new Button("Save and Quit");
+
 		viewUnaccounted.setMinWidth(USE_PREF_SIZE);
-		markShmira.setMinWidth(USE_PREF_SIZE);
-		markDayOff.setMinWidth(USE_PREF_SIZE);
-		
+		save.setMinWidth(USE_PREF_SIZE);
+		saveAndQuit.setMinWidth(USE_PREF_SIZE);
+
 		HBox.setHgrow(viewUnaccounted, Priority.ALWAYS);
-		HBox.setHgrow(markShmira, Priority.ALWAYS);
-		HBox.setHgrow(markDayOff, Priority.ALWAYS);
-		
+		HBox.setHgrow(save, Priority.ALWAYS);
+		HBox.setHgrow(saveAndQuit, Priority.ALWAYS);
+
 		viewUnaccounted.setMaxWidth(Double.MAX_VALUE);
-		markShmira.setMaxWidth(Double.MAX_VALUE);
-		markDayOff.setMaxWidth(Double.MAX_VALUE);
-		
-		HBox vu = new HBox();
-		vu.getChildren().add(viewUnaccounted);
-		HBox ms = new HBox();
-		ms.getChildren().add(markShmira);
-		HBox md = new HBox();
-		md.getChildren().add(markDayOff);
-		
-		listButtons.getChildren().addAll(vu, ms, md);
-		
+		save.setMaxWidth(Double.MAX_VALUE);
+		saveAndQuit.setMaxWidth(Double.MAX_VALUE);
+
+		listButtons.getChildren().addAll(new HBox(viewUnaccounted), new HBox(), new HBox(save), new HBox(saveAndQuit)); // empty HBox for spacing
+
 		VBox leftColumn = new VBox(this.getVgap());
 		leftColumn.getChildren().addAll(clockBox, listButtons);
-		this.add(leftColumn, 0, 1);
-		
-		
+		this.add(leftColumn, 0, 1);		
+
 		/* right column (sign-in box, confirmation area) */
-		
+
 		// sign-in instructions and entry point
 		Label scanLabel = new Label("Please enter a staff member's ID");
 		scanLabel.setMinWidth(USE_PREF_SIZE);
 		TextField idField = new TextField();
 		VBox idBox = new VBox(this.getVgap());
 		idBox.getChildren().addAll(scanLabel, idField);
-		
+
 		// confirmation area
 		TextArea confirmation = new TextArea();
 		confirmation.setEditable(false);
@@ -268,7 +259,7 @@ public class SignInPane extends GridPane {
 		confirmation.setPrefRowCount(3);
 		idBox.getChildren().add(confirmation);
 		this.add(idBox, 1, 1);
-		
+
 		// confirm button
 		Button signIn = new Button("Sign In");
 		signIn.setDefaultButton(true);
@@ -277,68 +268,124 @@ public class SignInPane extends GridPane {
 		HBox signInButton = new HBox(this.getHgap());
 		signInButton.getChildren().add(signIn);
 		this.add(signInButton, 1, 2);
-		
+
 		// set sign-in button behavior
 		signIn.setOnAction(new EventHandler<ActionEvent>() {
 
 			@Override
 			public void handle(ActionEvent event) {
-				// TODO: sign in staff member who's ID is in idField
-				confirmation.setText("Confirmation tk");
-				
-				// after signing staff member in, clear idField for next entry
+
+				// save staff ID and clear idField text
+				String staffID = idField.getText();
 				idField.setText("");
+
+				boolean idFound = false; // staff member has not yet been found
+				for (int i = sheet.getFirstRowNum() + 2; i < sheet.getLastRowNum(); i++) {
+
+					// if the current row's ID matches the one inputted, the staff member was found
+					if (sheet.getRow(i).getCell(idCol).getStringCellValue().equals(staffID)) {
+
+						idFound = true;
+						LocalTime now = LocalTime.now(); // save current time in case close to curfew
+
+						// if today's attendance column does not exist or is empty, the staff member is unaccounted for
+						if (sheet.getRow(i).getCell(todayCol) == null) {
+
+							sheet.getRow(i).createCell(todayCol).setCellValue(now.format(DateTimeFormatter.ofPattern("h:mm a")));
+							signInStatus(i, now);
+							confirmation.setText(sheet.getRow(i).getCell(nameCol).getStringCellValue() + " signed in");
+							break; // search is done
+
+						} else if (sheet.getRow(i).getCell(todayCol).getCellType() == CellType.BLANK) {
+
+							sheet.getRow(i).getCell(todayCol).setCellValue(now.format(DateTimeFormatter.ofPattern("h:mm a")));
+							signInStatus(i, now);
+							confirmation.setText(sheet.getRow(i).getCell(nameCol).getStringCellValue() + " signed in");
+							break; // search is done
+
+						} else { // if cell exists and is not blank, staff member has already signed in today
+							confirmation.setText(sheet.getRow(i).getCell(nameCol).getStringCellValue() + " has already signed in");
+							break; // search is done
+						}
+					}
+				}
+
+				if (!idFound && !staffID.isEmpty())
+					confirmation.setText("Staff member " + staffID + " not found");
+				else if (!idFound)
+					confirmation.setText("No ID entered");
+			}
+
+			// given a staff member (via row number) and sign-in time, increments the proper summary
+			//  statistic column (if it exists)
+			public void signInStatus(int rowNum, LocalTime signInTime) {
+
+				// staff member is on time
+				if (curfew.toLocalTime().isAfter(signInTime)) {
+					if (ontimeCol != -1) {// there is an "on time" column
+						if (sheet.getRow(rowNum).getCell(ontimeCol) != null) // the cell exists
+							sheet.getRow(rowNum).getCell(ontimeCol).setCellValue(sheet.getRow(rowNum).getCell(ontimeCol).getNumericCellValue() + 1);
+						else // the cell does not exist
+							sheet.getRow(rowNum).createCell(ontimeCol).setCellValue(1);
+					}
+				} else { // staff member is late
+					if (lateCol != -1) {// there is an "on time" column
+						if (sheet.getRow(rowNum).getCell(lateCol) != null) // the cell exists
+							sheet.getRow(rowNum).getCell(lateCol).setCellValue(sheet.getRow(rowNum).getCell(lateCol).getNumericCellValue() + 1);
+						else // the cell does not exist
+							sheet.getRow(rowNum).createCell(lateCol).setCellValue(1);
+					}
+				}
 			}
 		});
-		
-		
-		
+
+
+
 		// event handlers for right column buttons
-		
-		// stages for right column buttons
+
+		// stage for viewUnaccounted
 		Stage extraStage = new Stage();
-		
+
 		// pulls up list of staff members who have yet to sign in in this session
 		viewUnaccounted.setOnAction(new EventHandler<ActionEvent>() {
 
 			@Override
 			public void handle(ActionEvent event) {
-				// TODO Auto-generated method stub
-					
+
 				GridPane unaccPane = new GridPane();
 				// set up grid layout and sizing
 				unaccPane.setHgap(15);
 				unaccPane.setVgap(20);
 				unaccPane.setAlignment(Pos.CENTER);
-				unaccPane.setPadding(new Insets(30));
+				unaccPane.setPadding(new Insets(20));
 				ColumnConstraints column1 = new ColumnConstraints();
-			    column1.setPercentWidth(50);
-			    ColumnConstraints column2 = new ColumnConstraints();
-			    column2.setPercentWidth(50);
-			    ColumnConstraints column3 = new ColumnConstraints();
-			    column3.setPercentWidth(50);
-			    unaccPane.getColumnConstraints().addAll(column1, column2, column3);
+				column1.setPercentWidth(50);
+				ColumnConstraints column2 = new ColumnConstraints();
+				column2.setPercentWidth(50);
+				ColumnConstraints column3 = new ColumnConstraints();
+				column3.setPercentWidth(50);
+				unaccPane.getColumnConstraints().addAll(column1, column2, column3);
 
 				ScrollPane scrollPane = new ScrollPane(unaccPane);
-				// TODO: uncomment these lines to center display within scrollPane, delete otherwise
-				// scrollPane.setFitToHeight(true);
-				// scrollPane.setFitToWidth(true);
-				
-				List<String> numBunks = countBunks();
+				scrollPane.setHbarPolicy(ScrollBarPolicy.NEVER);
+
+				List<String> listBunks = countBunks();
 				int nextRow = 0, nextCol = 0;
-				
-				for (int i = 0; i < numBunks.size(); i++) {
-					unaccPane.add(getStaffFromBunk(numBunks.get(i)), nextRow, nextCol);
-					
-					if (++nextRow > 2) {
-						nextCol++;
-						nextRow = 0;
+
+				for (int i = 0; i < listBunks.size(); i++) {
+					if (!bunkEmpty(listBunks.get(i))) {
+						unaccPane.add(getStaffFromBunk(listBunks.get(i)), nextRow, nextCol);
+
+						if (++nextRow > 2) {
+							nextCol++;
+							nextRow = 0;
+						}
 					}
 				}
-				
-				
+
+
 				// create scene
-				Scene unaccScene = new Scene(scrollPane);
+				Scene unaccScene = new Scene(scrollPane, scrollPane.getPrefWidth(), stage.getHeight());
 				unaccScene.getStylesheets().add(OzeretMain.class.getResource("ozeret.css").toExternalForm());
 
 				// set up stage
@@ -348,170 +395,294 @@ public class SignInPane extends GridPane {
 				extraStage.centerOnScreen();
 				extraStage.show();
 			}
-			
+
 			// counts the number of unique bunks in workbook and returns the list of unique bunks
 			public List<String> countBunks() {
-				
+
 				List<String> uniqueBunks = new ArrayList<String>();
-				
+
 				// loop through all rows of the sheet, starting at the third row (so ignoring the two header rows)
 				//  and look at the "bunk" column to count how many unique bunks there are
 				for (int i = sheet.getFirstRowNum() + 2; i <= sheet.getLastRowNum(); i++) {
-					
+
 					// if the current bunk is new, add it to the list of unique bunks
 					if (!uniqueBunks.contains(sheet.getRow(i).getCell(bunkCol).getStringCellValue()))
 						uniqueBunks.add(sheet.getRow(i).getCell(bunkCol).getStringCellValue());
 				}
-				
+
 				return uniqueBunks;
 			}
-			
-			// given a bunk name, gets the names of all staff in that bunk and creates
-			//  a VBox with the name of the bunk and each staff member in it
+
+			// given a bunk name, returns whether or not there are any unaccounted staff remaining
+			//  in that bunk
+			public boolean bunkEmpty(String bunk) {
+
+				// runs through all rows of the spreadsheet and returns false if there is an
+				//  unaccounted staff member in this bunk
+				for (int i = sheet.getFirstRowNum() + 2; i <= sheet.getLastRowNum(); i++)
+					if (sheet.getRow(i).getCell(bunkCol).getStringCellValue().equals(bunk))
+						// if today's attendance column does not exist or is empty, the staff member is unaccounted for
+						if (sheet.getRow(i).getCell(todayCol) == null || 
+						sheet.getRow(i).getCell(todayCol).getCellType() == CellType.BLANK)
+							return false;
+
+				return true;
+			}
+
+			// given a bunk name, gets the names of all unaccounted staff in that bunk
+			//  and creates a VBox with the name of the bunk and each staff member in it
 			public VBox getStaffFromBunk(String bunk) {
-				
-				VBox bunkBox = new VBox(20);
-				
+
+				VBox bunkBox = new VBox(10);
+
 				Label bunkName = new Label(bunk);
+				bunkName.setId("bunk-label");
 				bunkName.setMinWidth(USE_PREF_SIZE);
 				HBox bunkNameBox = new HBox(15);
 				bunkNameBox.setAlignment(Pos.CENTER);
 				bunkNameBox.getChildren().add(bunkName);
-				bunkBox.getChildren().add(bunkNameBox);
-				
-				// runs through all rows of the spreadsheet and adds staff in this bunk to the VBox
+				bunkBox.getChildren().addAll(bunkNameBox, new HBox()); // empty HBox for spacing
+
+				// runs through all rows of the spreadsheet and adds unaccounted staff in this bunk to the VBox
 				for (int i = sheet.getFirstRowNum() + 2; i <= sheet.getLastRowNum(); i++) {
-					
+
 					if (sheet.getRow(i).getCell(bunkCol).getStringCellValue().equals(bunk)) {
-						Label staffMember = new Label(sheet.getRow(i).getCell(nameCol).getStringCellValue());
-						staffMember.setMinWidth(USE_PREF_SIZE);
-						HBox staffNameBox = new HBox(15);
-						staffNameBox.setAlignment(Pos.CENTER);
-						staffNameBox.getChildren().add(staffMember);
-						bunkBox.getChildren().add(staffNameBox);
+
+						// if today's attendance column does not exist or is empty, the staff member is unaccounted for
+						if (sheet.getRow(i).getCell(todayCol) == null || 
+								sheet.getRow(i).getCell(todayCol).getCellType() == CellType.BLANK) {
+
+							Button staffMember = new Button(sheet.getRow(i).getCell(nameCol).getStringCellValue());
+							staffMember.setId("list-button");
+							staffMember.setMinWidth(USE_PREF_SIZE);
+							HBox staffNameBox = new HBox(15);
+							staffNameBox.setAlignment(Pos.CENTER);
+							staffNameBox.getChildren().add(staffMember);
+							bunkBox.getChildren().add(staffNameBox);
+
+							// when a staff member is clicked, open a popup window to allow user to
+							//  mark them as on shmira or a day off
+							XSSFRow staffRow = sheet.getRow(i); // stores current row for use in event handler
+							staffMember.setOnAction(new EventHandler<ActionEvent>() {
+
+								@Override
+								public void handle(ActionEvent event) {
+									Alert options = new Alert(AlertType.NONE, "Sign this staff member in as on shmira or a day off:",
+											new ButtonType("Shmira", ButtonData.OTHER),
+											new ButtonType("Day Off", ButtonData.OTHER),
+											ButtonType.CANCEL);
+									options.setTitle("Special Status Sign-In");
+									options.setHeaderText(staffMember.getText());
+									options.getDialogPane().getStylesheets().add(getClass().getResource("ozeret.css").toExternalForm());
+									options.initOwner(staffMember.getScene().getWindow());
+									options.showAndWait();
+
+									if (options.getResult().getText().equals("Shmira")) {
+										// staff member should be signed in as on shmira
+
+										// set today's attendance column to show that the staff member is on shmira
+										if (staffRow.getCell(todayCol) == null)
+											staffRow.createCell(todayCol).setCellValue("Shmira");
+										else
+											staffRow.getCell(todayCol).setCellValue("Shmira");
+
+										// update "on time" column (if it exists)
+										if (ontimeCol != -1) {// there is an "on time" column
+											if (staffRow.getCell(ontimeCol) != null) // the cell exists
+												staffRow.getCell(ontimeCol).setCellValue(staffRow.getCell(ontimeCol).getNumericCellValue() + 1);
+											else // the cell does not exist
+												staffRow.createCell(ontimeCol).setCellValue(1);
+										}
+
+									} else if (options.getResult().getText().equals("Day Off")) {
+										// staff member should be signed in as on day off
+
+										// set today's attendance column to show that the staff member is on a day off
+										if (staffRow.getCell(todayCol) == null)
+											staffRow.createCell(todayCol).setCellValue("Day Off");
+										else
+											staffRow.getCell(todayCol).setCellValue("Day Off");
+
+										// update "on time" column (if it exists)
+										if (ontimeCol != -1) {// there is an "on time" column
+											if (staffRow.getCell(ontimeCol) != null) // the cell exists
+												staffRow.getCell(ontimeCol).setCellValue(staffRow.getCell(ontimeCol).getNumericCellValue() + 1);
+											else // the cell does not exist
+												staffRow.createCell(ontimeCol).setCellValue(1);
+										}
+									}
+
+									// refresh list of unaccounted staff members
+									viewUnaccounted.fire();
+								}
+							});
+						}
 					}
-					
+
 				}
-				
+
+				bunkBox.getChildren().addAll(new HBox(), new HBox()); // empty HBoxes for spacing
+
 				return bunkBox;
 			}
 		});
-		
-		// pulls up list of staff members who have yet to sign in in this session
-		//  with option to mark them as on shmira
-		markShmira.setOnAction(new EventHandler<ActionEvent>() {
+
+		// writes currently entered data back to input spreadsheet
+		save.setOnAction(new EventHandler<ActionEvent>() {
 
 			@Override
 			public void handle(ActionEvent event) {
-				// TODO Auto-generated method stub
-						
-				GridPane msPane = new GridPane();
-				// set up grid layout and sizing
-				msPane.setAlignment(Pos.CENTER);
-				msPane.setHgap(15);
-				msPane.setVgap(20);
-				msPane.setPadding(new Insets(30));
-					
-				Label temp = new Label("Mark-Shmira staff list tk");
-				msPane.add(temp, 0, 0);
-						
-				Scene msScene = new Scene(msPane);
-				msScene.getStylesheets().add(OzeretMain.class.getResource("ozeret.css").toExternalForm());
-						
-				extraStage.setScene(msScene);
-				extraStage.setTitle("Mark Shmira");
-				extraStage.getIcons().add(new Image("file:resources/images/stage_icon.png"));
-				extraStage.centerOnScreen();
-				extraStage.show();
+				
+				// write data to attendanceFile
+				try (FileOutputStream afos = new FileOutputStream(attendanceFile)) {
+					workbook.write(afos);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} 
+				
+				// print confirmation
+				confirmation.setText("Data saved to " + attendanceFile.getName());
 			}
 		});
-		
+
 		// pulls up list of staff members who have yet to sign in in this session
 		//  with option to mark them as on day off
-		markDayOff.setOnAction(new EventHandler<ActionEvent>() {
+		saveAndQuit.setOnAction(new EventHandler<ActionEvent>() {
 
 			@Override
 			public void handle(ActionEvent event) {
-				// TODO Auto-generated method stub
+				
+				// see if there are any staff that haven't signed in yet
+				boolean allBunksEmpty = noUnaccountedStaff();
+				
+				// if there are still unaccounted staff, confirm that user still wants to quit
+				if (!allBunksEmpty) {
+					Alert saveAndQuitConf = new Alert(AlertType.CONFIRMATION, "There are still staff members that haven't signed in.\nAre you sure you want to quit?");
+					saveAndQuitConf.setHeaderText("Save and Quit Confirmation");
+					saveAndQuitConf.setTitle("Save and Quit Confirmation");
+					saveAndQuitConf.getDialogPane().getStylesheets().add(getClass().getResource("ozeret.css").toExternalForm());
+					saveAndQuitConf.initOwner(saveAndQuit.getScene().getWindow());
+					saveAndQuitConf.showAndWait();
 					
-				GridPane doPane = new GridPane();
-				// set up grid layout and sizing
-				doPane.setAlignment(Pos.CENTER);
-				doPane.setHgap(15);
-				doPane.setVgap(20);
-				doPane.setPadding(new Insets(30));
-						
-				Label temp = new Label("Mark-Day-Off staff list tk");
-				doPane.add(temp, 0, 0);
-						
-				Scene doScene = new Scene(doPane);
-				doScene.getStylesheets().add(OzeretMain.class.getResource("ozeret.css").toExternalForm());
-						
-				extraStage.setScene(doScene);
-				extraStage.setTitle("Mark Day Off");
-				extraStage.getIcons().add(new Image("file:resources/images/stage_icon.png"));
-				extraStage.centerOnScreen();
-				extraStage.show();
+					if (saveAndQuitConf.getResult() != ButtonType.OK)
+						return; // user does not want to save and quit
+				}
+				
+				// all staff are accounted for or user wants to mark unaccounted-for staff as absent
+				markUnaccAbsent();
+				
+				// write data to attendanceFile
+				try (FileOutputStream afos = new FileOutputStream(attendanceFile)) {
+					workbook.write(afos);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} 
+				
+				Platform.exit();
+			}
+
+			// returns whether or not there are still unaccounted-for staff
+			public boolean noUnaccountedStaff() {
+
+				// runs through all rows of the spreadsheet and returns false if there is an
+				//  unaccounted staff member
+				for (int i = sheet.getFirstRowNum() + 2; i <= sheet.getLastRowNum(); i++)
+					// if today's attendance column does not exist or is empty, the staff member is unaccounted for
+					if (sheet.getRow(i).getCell(todayCol) == null || 
+					sheet.getRow(i).getCell(todayCol).getCellType() == CellType.BLANK)
+						return false;
+
+				return true;
+			}
+			
+			// marks all staff that did not sign in as absent, and increments their "absent" column, if it exists
+			public void markUnaccAbsent() {
+				
+				boolean absent;
+				
+				for (int i = sheet.getFirstRowNum() + 2; i < sheet.getLastRowNum() + 1; i++) {
+					
+					absent = false;
+					
+					// if today's attendance column does not exist or is empty, the staff member is unaccounted for
+					if (sheet.getRow(i).getCell(todayCol) == null) {
+						sheet.getRow(i).createCell(todayCol).setCellValue("Absent");
+						absent = true;
+					} else if (sheet.getRow(i).getCell(todayCol).getCellType() == CellType.BLANK) {
+						sheet.getRow(i).getCell(todayCol).setCellValue("Absent");
+						absent = true;
+					}
+					
+					// increment "absent" column, if it exists
+					if (absent && absentCol != -1) {
+						if (sheet.getRow(i).getCell(absentCol) != null) // the cell exists
+							sheet.getRow(i).getCell(absentCol).setCellValue(sheet.getRow(i).getCell(absentCol).getNumericCellValue() + 1);
+						else // the cell does not exist
+							sheet.getRow(i).createCell(absentCol).setCellValue(1);
+					}
+				}
 			}
 		});
-		
-		
+
 		/* change stage close behavior */
 		stage.setOnCloseRequest(new EventHandler<WindowEvent>() {
 
 			@Override
 			public void handle(WindowEvent event) {
 				event.consume(); // consume window-close event
-				
+
 				Alert alert = new Alert(AlertType.CONFIRMATION, 
-						"Are you sure you want to exit?\nIf you exit now, before saving, all attendance data taken in this session will be lost",
+						"Are you sure you want to exit?\nAll unsaved data will be lost.",
 						new ButtonType("No, Return to Sign-In", ButtonData.CANCEL_CLOSE),
 						new ButtonType("Yes, Exit", ButtonData.OK_DONE));
 				alert.setTitle("Exit Confirmation");
 				alert.getDialogPane().getStylesheets().add(getClass().getResource("ozeret.css").toExternalForm());
+				alert.initOwner(stage);
 				alert.showAndWait();
-				
+
 				if (alert.getResult().getButtonData() == ButtonData.OK_DONE)
 					Platform.exit();
-				
+
 			}
 		});
 	}
-	
+
 }
 
 class Clock extends Label {
-	
+
 	public Clock() {
 		bindToTime();
 	}
-	
+
 	private void bindToTime() {
 		Timeline timeline = new Timeline(new KeyFrame(Duration.seconds(0), new EventHandler<ActionEvent>() {
-			
+
 			@Override
 			public void handle(ActionEvent event) {
 				setText(LocalTime.now().format(DateTimeFormatter.ofPattern("h:mm a")));
 			}
 		}), new KeyFrame(Duration.seconds(1)));
-		
+
 		timeline.setCycleCount(Animation.INDEFINITE);
 		timeline.play();
 	}
 }
 
 class CountdownTimer extends Label {
-	
+
 	LocalDateTime finalTime;
-	
+
 	public CountdownTimer(LocalDateTime timeToCountTo) {
 		finalTime = timeToCountTo;
 		bindToTime();
 	}
-	
+
 	private void bindToTime() {
 		Timeline timeline = new Timeline(new KeyFrame(Duration.seconds(0), new EventHandler<ActionEvent>() {
-			
+
 			@Override
 			public void handle(ActionEvent event) {
 				if (LocalDateTime.now().until(finalTime, ChronoUnit.MINUTES) == 1) 
@@ -520,7 +691,7 @@ class CountdownTimer extends Label {
 					setText(LocalDateTime.now().until(finalTime, ChronoUnit.MINUTES) + " minutes");
 			}
 		}), new KeyFrame(Duration.seconds(1)));
-		
+
 		timeline.setCycleCount(Animation.INDEFINITE);
 		timeline.play();
 	}

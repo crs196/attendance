@@ -1,13 +1,8 @@
 package ozeret;
 	
-import java.io.File;
-import java.time.LocalDateTime;
-
 import javafx.application.Application;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
 import javafx.scene.image.Image;
-import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
 
 public class OzeretMain extends Application {
@@ -16,19 +11,12 @@ public class OzeretMain extends Application {
 	public void start(Stage primaryStage) {
 		/* 
 		 * Create things in reverse order:
-		 * 	FarewellPane	-- confirms attendance has been written, alerts of any issues
-		 * 	SignInPane		-- signs in people, tracks who hasn't signed in yet
-		 * 	FileChooserPane -- chooses file with attendance information
-		 * 	InitialPane		-- gets name of Ozeret, confirms what time curfew is
+		 * 	SignInPane	-- signs in people, tracks who hasn't signed in yet
+		 * 	InitialPane	-- gets name of Ozeret, confirms what time curfew is
 		 */
 		
-		// TODO: remove this GridPane and Scene once all four other scenes are properly created
-		GridPane gp = new GridPane();
-		gp.add(new Button("Hey"), 0, 0);
-		Scene dummy = new Scene(gp);
-		
 		// create file chooser pane and scene
-		SignInPane siPane = new SignInPane(primaryStage, dummy); // TODO: replace dummy Scene with Farewell Scene
+		SignInPane siPane = new SignInPane(primaryStage);
 		Scene siScene = new Scene(siPane);//, 775, siPane.getPrefHeight());
 		siScene.getStylesheets().add(OzeretMain.class.getResource("ozeret.css").toExternalForm());
 		
@@ -37,7 +25,7 @@ public class OzeretMain extends Application {
 		Scene initialScene = new Scene(initial);
 		initialScene.getStylesheets().add(OzeretMain.class.getResource("ozeret.css").toExternalForm());
 		
-		// set up stage for viewing with inital scene
+		// set up stage for viewing with initial scene
 		primaryStage.setTitle("Ozeret Sign-In");
 		primaryStage.getIcons().add(new Image("file:resources/images/stage_icon.png"));
 		primaryStage.setScene(initialScene);
