@@ -4,18 +4,15 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
-import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -28,7 +25,6 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
-import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
@@ -41,7 +37,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.scene.image.Image;
-import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -63,7 +59,7 @@ public class SignInPane extends GridPane {
 	private XSSFSheet sheet;
 	
 	// used to track which column holds each piece of information
-	private int bunkCol, nameCol, idCol, ontimeCol, lateCol, absentCol;
+	private int bunkCol, nameCol, idCol, ontimeCol, lateCol, absentCol, todayCol;
 	
 	public SignInPane(Stage s, Scene ns) {
 		super();
@@ -90,15 +86,20 @@ public class SignInPane extends GridPane {
 		setup();
 	}
 	
-	// reads header row of workbook to initialize column trackers
+	// reads header row of workbook to initialize column trackers,
+	//  adds column for today to the end of the sheet and puts in OzeretName to row 2
 	private void readHeaderRow() {
 		
 		XSSFRow headerRow = sheet.getRow(0);
-		boolean idExists = false, ontimeExists = false, lateExists = false, absentExists = false;
+		boolean idExists = false, ontimeExists = false, lateExists = false, absentExists = false, todayExists = false;
+		boolean curfewToday = curfew.toLocalDate().equals(LocalDate.now());
+		
+		// run through all cells in header row to assign column trackers
 		for (int i = headerRow.getFirstCellNum(); i < headerRow.getLastCellNum(); i++) {
 			
 			if (headerRow.getCell(i).getCellType() == CellType.STRING) {
 				
+				// check to see if current cell has any of these contents
 				switch (headerRow.getCell(i).getStringCellValue().toLowerCase()) {
 				case "bunk":
 					bunkCol = i;
@@ -121,10 +122,21 @@ public class SignInPane extends GridPane {
 				case "absent":
 					absentCol = i;
 					absentExists = true;
-					break;
+					break;					
 				default:
 					break;
 				}
+				
+				if (curfewToday)
+					if (headerRow.getCell(i).getStringCellValue().equals(curfew.format(DateTimeFormatter.ofPattern("MM/dd/yyyy")))){
+						todayCol = i;
+						todayExists = true;
+					}
+				else
+					if (headerRow.getCell(i).getStringCellValue().equals(curfew.minusDays(1).format(DateTimeFormatter.ofPattern("MM/dd/yyyy")))){
+						todayCol = i;
+						todayExists = true;
+					}
 			}
 		}
 		
@@ -132,12 +144,30 @@ public class SignInPane extends GridPane {
 		if (!idExists)
 			idCol = nameCol;
 		// if any of the summary statistic columns don't exist, set the respective tracker to -1 to signify that
-		if(!ontimeExists)
+		if (!ontimeExists)
 			ontimeCol = -1;
-		if(!lateExists)
+		if (!lateExists)
 			lateCol = -1;
-		if(!absentExists)
+		if (!absentExists)
 			absentCol = -1;
+		// if there was no column for today's attendance, add one
+		if (!todayExists) {
+			// add new column for today's sign-in
+			todayCol = headerRow.getLastCellNum();
+			headerRow.createCell(todayCol);
+			
+			if (curfew.toLocalDate().equals(LocalDate.now())) // if curfew is today
+				headerRow.getCell(todayCol).setCellValue(curfew.format(DateTimeFormatter.ofPattern("MM/dd/yyyy")));
+			else // curfew is tomorrow
+				headerRow.getCell(todayCol).setCellValue(curfew.minusDays(1).format(DateTimeFormatter.ofPattern("MM/dd/yyyy")));
+		}
+		
+		// write name of person on ozeret to row 2 in today's column if different than what's already there
+		if ((sheet.getRow(1).getCell(todayCol) == null))
+			sheet.getRow(1).createCell(todayCol).setCellValue(ozeretName);
+		else if (!(sheet.getRow(1).getCell(todayCol).getStringCellValue().equals(ozeretName)))
+			sheet.getRow(1).getCell(todayCol).setCellValue(ozeretName);
+		
 	}
 
 	// sets up layout and functionality of SignInPane
@@ -275,11 +305,19 @@ public class SignInPane extends GridPane {
 			public void handle(ActionEvent event) {
 				// TODO Auto-generated method stub
 					
-				FlowPane unaccPane = new FlowPane(Orientation.HORIZONTAL, 15, 20);
+				GridPane unaccPane = new GridPane();
 				// set up grid layout and sizing
+				unaccPane.setHgap(15);
+				unaccPane.setVgap(20);
 				unaccPane.setAlignment(Pos.CENTER);
 				unaccPane.setPadding(new Insets(30));
-				unaccPane.setPrefWrapLength(500);
+				ColumnConstraints column1 = new ColumnConstraints();
+			    column1.setPercentWidth(50);
+			    ColumnConstraints column2 = new ColumnConstraints();
+			    column2.setPercentWidth(50);
+			    ColumnConstraints column3 = new ColumnConstraints();
+			    column3.setPercentWidth(50);
+			    unaccPane.getColumnConstraints().addAll(column1, column2, column3);
 
 				ScrollPane scrollPane = new ScrollPane(unaccPane);
 				// TODO: uncomment these lines to center display within scrollPane, delete otherwise
@@ -287,9 +325,16 @@ public class SignInPane extends GridPane {
 				// scrollPane.setFitToWidth(true);
 				
 				List<String> numBunks = countBunks();
+				int nextRow = 0, nextCol = 0;
 				
-				for (int i = 0; i < numBunks.size(); i++)
-					unaccPane.getChildren().add(getStaffFromBunk(numBunks.get(i)));
+				for (int i = 0; i < numBunks.size(); i++) {
+					unaccPane.add(getStaffFromBunk(numBunks.get(i)), nextRow, nextCol);
+					
+					if (++nextRow > 2) {
+						nextCol++;
+						nextRow = 0;
+					}
+				}
 				
 				
 				// create scene
