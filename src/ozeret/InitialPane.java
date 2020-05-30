@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
@@ -22,7 +23,6 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
@@ -41,6 +41,7 @@ public class InitialPane extends GridPane {
 		setup();
 	}
 	
+	// sets up layout and functionality of InitalPane
 	private void setup() {
 		
 		// set up grid layout and sizing
@@ -50,7 +51,7 @@ public class InitialPane extends GridPane {
 		this.setPadding(new Insets(30));
 		
 		// header
-		Text title = new Text("Sign-in Setup");
+		Label title = new Label("Sign-in Setup");
 		title.setId("header");
 		this.add(title, 0, 0, 3, 1);
 		
@@ -80,7 +81,7 @@ public class InitialPane extends GridPane {
 		pm.setToggleGroup(timeGroup);
 		am.setSelected(true);
 		
-		VBox timeBox = new VBox(10);
+		VBox timeBox = new VBox(this.getVgap());
 		timeBox.getChildren().addAll(am, pm);
 		this.add(timeBox, 2, 2);
 		
@@ -93,7 +94,7 @@ public class InitialPane extends GridPane {
 		advance.setDefaultButton(true); // advance button is triggered on ENTER keypress
 		
 		// make buttons grow to fit entire width of row
-		HBox statusBox = new HBox(10);
+		HBox statusBox = new HBox(this.getHgap());
 		HBox.setHgrow(exit, Priority.ALWAYS);
 		HBox.setHgrow(advance, Priority.ALWAYS);
 		exit.setMaxWidth(Double.MAX_VALUE);
@@ -118,14 +119,15 @@ public class InitialPane extends GridPane {
 			public void handle(ActionEvent event) {
 				
 				// pop up exit confirmation alert
-				Alert exitConfirmation = new Alert(AlertType.CONFIRMATION, "Are you sure you want to exit?");
+				Alert exitConfirmation = new Alert(AlertType.CONFIRMATION, "Are you sure you want to exit?\nData entered will be lost.");
 				exitConfirmation.setTitle("Exit Confirmation");
 				exitConfirmation.getDialogPane().getStylesheets().add(getClass().getResource("ozeret.css").toExternalForm());
+				exitConfirmation.initOwner(exit.getScene().getWindow());
 				exitConfirmation.showAndWait();
 				
 				// exit if user confirms exit
 				if (exitConfirmation.getResult() == ButtonType.OK)
-					stage.close();
+					Platform.exit();
 			}
 		});
 		
@@ -136,26 +138,28 @@ public class InitialPane extends GridPane {
 			public void handle(ActionEvent event) {
 				
 				// check to make sure that both fields are properly filled out
-				//  (name field is not empty, curfew field matches an HH:MM time regex)
-				if(!ozNameEntry.getText().equals("") && curfewEntry.getText().matches("\\d{1,2}:\\d\\d")) {
-					
-					// set name and time fields to be carried from scene to scene
-					OzeretMain.setOzeretName(ozNameEntry.getText());
-					OzeretMain.setCurfew(curfewTime());
+				//  (name field is not empty, curfew field matches an hh:mm time regex, time is valid)
+				if(!ozNameEntry.getText().equals("") && curfewEntry.getText().matches("\\d{1,2}:\\d\\d") &&
+						Integer.parseInt(curfewEntry.getText().split(":")[0]) >= 1 &&	// check hour of time for validity
+						Integer.parseInt(curfewEntry.getText().split(":")[0]) <= 12 &&
+						Integer.parseInt(curfewEntry.getText().split(":")[1]) >= 0 &&	// check minute of time for validity
+						Integer.parseInt(curfewEntry.getText().split(":")[1]) <= 59) {
 					
 					// open FileChooser for person on ozeret to select which file has the attendance information
 					FileChooser fileChooser = new FileChooser();
 					fileChooser.setInitialDirectory(new File("."));
 					fileChooser.setTitle("Select Attendance File");
-					fileChooser.getExtensionFilters().add(new ExtensionFilter("CSV Files", "*.csv"));
+					fileChooser.getExtensionFilters().add(new ExtensionFilter("Excel Files", "*.xlsx"));
 					File attendanceFile = fileChooser.showOpenDialog(stage);
 					
 					if (attendanceFile != null) {
-						// set attendance file
-						OzeretMain.setAttendanceFile(attendanceFile);
 						
-						// change the scene to the next one (should be a scene with SignInPane in it)
+						// update next scene's SignInPane to have correct curfew, ozeret name, and attendance file
+						((SignInPane) nextScene.getRoot()).setPrevVars(ozNameEntry.getText(), curfewTime(), attendanceFile);
+						
+						// change the scene to the next one (will be a scene with SignInPane in it)
 						stage.setScene(nextScene);
+						stage.centerOnScreen();
 					}
 					
 				} else {
