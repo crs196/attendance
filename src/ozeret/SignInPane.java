@@ -36,7 +36,6 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonBar.ButtonData;
-import javafx.scene.control.ScrollPane.ScrollBarPolicy;
 import javafx.scene.image.Image;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
@@ -75,12 +74,18 @@ public class SignInPane extends GridPane {
 		// create local workbook from attendanceFile
 		try (FileInputStream afis = new FileInputStream(attendanceFile)) {
 			workbook = new XSSFWorkbook(afis);
-			sheet = workbook.getSheetAt(0);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Alert fileNotFound = new Alert(AlertType.ERROR, "Unable to find " + attendanceFile.getName() + "\nPlease choose a different file");
+			fileNotFound.setTitle("Attendance File Not Found");
+			fileNotFound.getDialogPane().getStylesheets().add(OzeretMain.class.getResource("ozeret.css").toExternalForm());
+			fileNotFound.initOwner(stage);
+			fileNotFound.showAndWait();
+			
+			Platform.exit();
 		}
 
+		sheet = workbook.getSheetAt(0);
+		
 		readHeaderRow();
 		setup();
 	}
@@ -276,6 +281,10 @@ public class SignInPane extends GridPane {
 		HBox signInButton = new HBox(this.getHgap());
 		signInButton.getChildren().add(signIn);
 		this.add(signInButton, 1, 2);
+		
+		// stage and scene for viewUnaccounted
+		Stage extraStage = new Stage();
+		Scene unaccScene = new Scene(new Label("Something's gone wrong"));
 
 		// set sign-in button behavior
 		signIn.setOnAction(new EventHandler<ActionEvent>() {
@@ -287,48 +296,54 @@ public class SignInPane extends GridPane {
 				String staffID = idField.getText();
 				idField.setText("");
 
-				boolean idFound = false; // staff member has not yet been found
-				for (int i = sheet.getFirstRowNum() + 3; i < sheet.getLastRowNum(); i++) {
-
-					String currentID = "";
+				// only search if an ID was actually entered
+				if (!staffID.isEmpty()) {
 					
-					if((sheet.getRow(i) != null) && sheet.getRow(i).getCell(idCol).getCellType() == CellType.NUMERIC)
-						currentID = (int) sheet.getRow(i).getCell(idCol).getNumericCellValue() + "";
-					else if ((sheet.getRow(i) != null) && sheet.getRow(i).getCell(idCol).getCellType() == CellType.STRING)
-						currentID = sheet.getRow(i).getCell(idCol).getStringCellValue();
-					
-					// if the current row's ID matches the one inputted, the staff member was found
-					if (currentID.equals(staffID)) {
+					boolean idFound = false; // staff member has not yet been found
+					for (int i = sheet.getFirstRowNum() + 3; i < sheet.getLastRowNum(); i++) {
 
-						idFound = true;
-						LocalTime now = LocalTime.now(); // save current time in case close to curfew
+						String currentID = "";
+						
+						if((sheet.getRow(i) != null) && sheet.getRow(i).getCell(idCol).getCellType() == CellType.NUMERIC)
+							currentID = (int) sheet.getRow(i).getCell(idCol).getNumericCellValue() + "";
+						else if ((sheet.getRow(i) != null) && sheet.getRow(i).getCell(idCol).getCellType() == CellType.STRING)
+							currentID = sheet.getRow(i).getCell(idCol).getStringCellValue();
+						
+						// if the current row's ID matches the one inputted, the staff member was found
+						if (currentID.equals(staffID)) {
 
-						// if today's attendance column does not exist or is empty, the staff member is unaccounted for
-						if ((sheet.getRow(i) != null) && sheet.getRow(i).getCell(todayCol) == null) {
+							idFound = true;
+							LocalTime now = LocalTime.now(); // save current time in case close to curfew
 
-							sheet.getRow(i).createCell(todayCol).setCellValue(now.format(DateTimeFormatter.ofPattern("h:mm a")));
-							signInStatus(i, now);
-							confirmation.setText(sheet.getRow(i).getCell(nameCol).getStringCellValue() + " signed in");
-							break; // search is done
+							// if today's attendance column does not exist or is empty, the staff member is unaccounted for
+							if ((sheet.getRow(i) != null) && sheet.getRow(i).getCell(todayCol) == null) {
 
-						} else if ((sheet.getRow(i) != null) && sheet.getRow(i).getCell(todayCol).getCellType() == CellType.BLANK) {
+								sheet.getRow(i).createCell(todayCol).setCellValue(now.format(DateTimeFormatter.ofPattern("h:mm a")));
+								signInStatus(i, now);
+								confirmation.setText(sheet.getRow(i).getCell(nameCol).getStringCellValue() + " signed in");
+								break; // search is done
 
-							sheet.getRow(i).getCell(todayCol).setCellValue(now.format(DateTimeFormatter.ofPattern("h:mm a")));
-							signInStatus(i, now);
-							confirmation.setText(sheet.getRow(i).getCell(nameCol).getStringCellValue() + " signed in");
-							break; // search is done
+							} else if ((sheet.getRow(i) != null) && sheet.getRow(i).getCell(todayCol).getCellType() == CellType.BLANK) {
 
-						} else { // if cell exists and is not blank, staff member has already signed in today
-							confirmation.setText(sheet.getRow(i).getCell(nameCol).getStringCellValue() + " has already signed in");
-							break; // search is done
+								sheet.getRow(i).getCell(todayCol).setCellValue(now.format(DateTimeFormatter.ofPattern("h:mm a")));
+								signInStatus(i, now);
+								confirmation.setText(sheet.getRow(i).getCell(nameCol).getStringCellValue() + " signed in");
+								break; // search is done
+
+							} else { // if cell exists and is not blank, staff member has already signed in today
+								confirmation.setText(sheet.getRow(i).getCell(nameCol).getStringCellValue() + " has already signed in");
+								break; // search is done
+							}
 						}
 					}
-				}
-
-				if (!idFound && !staffID.isEmpty())
-					confirmation.setText("Staff member " + staffID + " not found");
-				else if (!idFound)
+					
+					if (!idFound && !staffID.isEmpty())
+						confirmation.setText("Staff member " + staffID + " not found");
+				} else
 					confirmation.setText("No ID entered");
+				
+				if (extraStage.isShowing())
+					viewUnaccounted.fire();
 			}
 
 			// given a staff member (via row number) and sign-in time, increments the proper summary
@@ -356,10 +371,7 @@ public class SignInPane extends GridPane {
 
 
 
-		// event handlers for right column buttons
-
-		// stage for viewUnaccounted
-		Stage extraStage = new Stage();
+		// event handlers for left column buttons
 
 		// pulls up list of staff members who have yet to sign in in this session
 		viewUnaccounted.setOnAction(new EventHandler<ActionEvent>() {
@@ -391,7 +403,7 @@ public class SignInPane extends GridPane {
 				unaccPane.getColumnConstraints().addAll(column1, column2, column3);
 
 				ScrollPane scrollPane = new ScrollPane(unaccPane);
-				scrollPane.setHbarPolicy(ScrollBarPolicy.NEVER);
+				scrollPane.setMinWidth(stage.getWidth() * 0.75);
 				scrollPane.setMaxHeight(stage.getHeight());
 
 				List<String> listBunks = countBunks();
@@ -409,16 +421,21 @@ public class SignInPane extends GridPane {
 				}
 
 
-				// create scene
-				Scene unaccScene = new Scene(scrollPane, scrollPane.getPrefWidth(), scrollPane.getPrefHeight());
+				// set up scene
+				unaccScene.setRoot(scrollPane);
 				unaccScene.getStylesheets().add(OzeretMain.class.getResource("ozeret.css").toExternalForm());
 
-				// set up stage
-				extraStage.setScene(unaccScene);
-				extraStage.setTitle("Unaccounted-for Staff");
-				extraStage.getIcons().add(new Image("file:resources/images/stage_icon.png"));
-				extraStage.centerOnScreen();
-				extraStage.show();
+				// only need to do these things if the stage isn't currently on screen
+				if (!extraStage.isShowing()) {
+					// set up stage
+					extraStage.setScene(unaccScene);
+					extraStage.setMinWidth(scrollPane.getMinWidth());
+					extraStage.setMaxHeight(scrollPane.getMaxHeight());
+					extraStage.setTitle("Unaccounted-for Staff");
+					extraStage.getIcons().add(new Image("file:resources/images/stage_icon.png"));
+					extraStage.centerOnScreen();
+					extraStage.show();
+				}
 			}
 			
 			// returns whether or not there are still unaccounted-for staff
@@ -429,7 +446,7 @@ public class SignInPane extends GridPane {
 				for (int i = sheet.getFirstRowNum() + 3; i <= sheet.getLastRowNum(); i++)
 					// if today's attendance column does not exist or is empty, the staff member is unaccounted for
 					if ((sheet.getRow(i) != null) && (sheet.getRow(i).getCell(todayCol) == null || 
-					sheet.getRow(i).getCell(todayCol).getCellType() == CellType.BLANK))
+						 								sheet.getRow(i).getCell(todayCol).getCellType() == CellType.BLANK))
 						return false;
 
 				return true;
@@ -576,8 +593,7 @@ public class SignInPane extends GridPane {
 				try (FileOutputStream afos = new FileOutputStream(attendanceFile)) {
 					workbook.write(afos);
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					confirmation.setText("Unable to write to " + attendanceFile.getName());
 				} 
 				
 				// print confirmation
@@ -615,8 +631,7 @@ public class SignInPane extends GridPane {
 				try (FileOutputStream afos = new FileOutputStream(attendanceFile)) {
 					workbook.write(afos);
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					confirmation.setText("Unable to write to " + attendanceFile.getName());
 				} 
 				
 				Platform.exit();
