@@ -367,6 +367,15 @@ public class SignInPane extends GridPane {
 			@Override
 			public void handle(ActionEvent event) {
 
+				// if there are no staff left unaccounted, print a message saying so and leave this handle method
+				if (noUnaccountedStaff()) {
+					confirmation.setText("All staff members have signed in");
+					extraStage.close();
+					return;
+				}
+				
+				// if we get here, there are still unaccounted-for staff, so find and list them
+				
 				GridPane unaccPane = new GridPane();
 				// set up grid layout and sizing
 				unaccPane.setHgap(15);
@@ -383,6 +392,7 @@ public class SignInPane extends GridPane {
 
 				ScrollPane scrollPane = new ScrollPane(unaccPane);
 				scrollPane.setHbarPolicy(ScrollBarPolicy.NEVER);
+				scrollPane.setMaxHeight(stage.getHeight());
 
 				List<String> listBunks = countBunks();
 				int nextRow = 0, nextCol = 0;
@@ -400,7 +410,7 @@ public class SignInPane extends GridPane {
 
 
 				// create scene
-				Scene unaccScene = new Scene(scrollPane, scrollPane.getPrefWidth(), stage.getHeight());
+				Scene unaccScene = new Scene(scrollPane, scrollPane.getPrefWidth(), scrollPane.getPrefHeight());
 				unaccScene.getStylesheets().add(OzeretMain.class.getResource("ozeret.css").toExternalForm());
 
 				// set up stage
@@ -409,6 +419,20 @@ public class SignInPane extends GridPane {
 				extraStage.getIcons().add(new Image("file:resources/images/stage_icon.png"));
 				extraStage.centerOnScreen();
 				extraStage.show();
+			}
+			
+			// returns whether or not there are still unaccounted-for staff
+			public boolean noUnaccountedStaff() {
+
+				// runs through all rows of the spreadsheet and returns false if there is an
+				//  unaccounted staff member
+				for (int i = sheet.getFirstRowNum() + 3; i <= sheet.getLastRowNum(); i++)
+					// if today's attendance column does not exist or is empty, the staff member is unaccounted for
+					if ((sheet.getRow(i) != null) && (sheet.getRow(i).getCell(todayCol) == null || 
+					sheet.getRow(i).getCell(todayCol).getCellType() == CellType.BLANK))
+						return false;
+
+				return true;
 			}
 
 			// counts the number of unique bunks in workbook and returns the list of unique bunks
