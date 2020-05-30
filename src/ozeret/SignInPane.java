@@ -162,10 +162,16 @@ public class SignInPane extends GridPane {
 		}
 
 		// write name of person on ozeret to row 2 in today's column if different than what's already there
-		if ((sheet.getRow(1).getCell(todayCol) == null))
+		if (sheet.getRow(1).getCell(todayCol) == null)
 			sheet.getRow(1).createCell(todayCol).setCellValue(ozeretName);
 		else if (!(sheet.getRow(1).getCell(todayCol).getStringCellValue().equals(ozeretName)))
 			sheet.getRow(1).getCell(todayCol).setCellValue(ozeretName);
+		
+		// write curfew time to row 3 in today's column if different than what's already there
+		if (sheet.getRow(2).getCell(todayCol) == null)
+			sheet.getRow(2).createCell(todayCol).setCellValue(curfew.format(DateTimeFormatter.ofPattern("h:mm a")));
+		else if (!(sheet.getRow(2).getCell(todayCol).getStringCellValue().equals(ozeretName)))
+			sheet.getRow(2).getCell(todayCol).setCellValue(curfew.format(DateTimeFormatter.ofPattern("h:mm a")));
 
 	}
 
@@ -280,7 +286,7 @@ public class SignInPane extends GridPane {
 				idField.setText("");
 
 				boolean idFound = false; // staff member has not yet been found
-				for (int i = sheet.getFirstRowNum() + 2; i < sheet.getLastRowNum(); i++) {
+				for (int i = sheet.getFirstRowNum() + 3; i < sheet.getLastRowNum(); i++) {
 
 					// if the current row's ID matches the one inputted, the staff member was found
 					if (sheet.getRow(i).getCell(idCol).getStringCellValue().equals(staffID)) {
@@ -403,7 +409,7 @@ public class SignInPane extends GridPane {
 
 				// loop through all rows of the sheet, starting at the third row (so ignoring the two header rows)
 				//  and look at the "bunk" column to count how many unique bunks there are
-				for (int i = sheet.getFirstRowNum() + 2; i <= sheet.getLastRowNum(); i++) {
+				for (int i = sheet.getFirstRowNum() + 3; i <= sheet.getLastRowNum(); i++) {
 
 					// if the current bunk is new, add it to the list of unique bunks
 					if (!uniqueBunks.contains(sheet.getRow(i).getCell(bunkCol).getStringCellValue()))
@@ -419,7 +425,7 @@ public class SignInPane extends GridPane {
 
 				// runs through all rows of the spreadsheet and returns false if there is an
 				//  unaccounted staff member in this bunk
-				for (int i = sheet.getFirstRowNum() + 2; i <= sheet.getLastRowNum(); i++)
+				for (int i = sheet.getFirstRowNum() + 3; i <= sheet.getLastRowNum(); i++)
 					if (sheet.getRow(i).getCell(bunkCol).getStringCellValue().equals(bunk))
 						// if today's attendance column does not exist or is empty, the staff member is unaccounted for
 						if (sheet.getRow(i).getCell(todayCol) == null || 
@@ -444,7 +450,7 @@ public class SignInPane extends GridPane {
 				bunkBox.getChildren().addAll(bunkNameBox, new HBox()); // empty HBox for spacing
 
 				// runs through all rows of the spreadsheet and adds unaccounted staff in this bunk to the VBox
-				for (int i = sheet.getFirstRowNum() + 2; i <= sheet.getLastRowNum(); i++) {
+				for (int i = sheet.getFirstRowNum() + 3; i <= sheet.getLastRowNum(); i++) {
 
 					if (sheet.getRow(i).getCell(bunkCol).getStringCellValue().equals(bunk)) {
 
@@ -588,7 +594,7 @@ public class SignInPane extends GridPane {
 
 				// runs through all rows of the spreadsheet and returns false if there is an
 				//  unaccounted staff member
-				for (int i = sheet.getFirstRowNum() + 2; i <= sheet.getLastRowNum(); i++)
+				for (int i = sheet.getFirstRowNum() + 3; i <= sheet.getLastRowNum(); i++)
 					// if today's attendance column does not exist or is empty, the staff member is unaccounted for
 					if (sheet.getRow(i).getCell(todayCol) == null || 
 					sheet.getRow(i).getCell(todayCol).getCellType() == CellType.BLANK)
@@ -602,7 +608,7 @@ public class SignInPane extends GridPane {
 				
 				boolean absent;
 				
-				for (int i = sheet.getFirstRowNum() + 2; i < sheet.getLastRowNum() + 1; i++) {
+				for (int i = sheet.getFirstRowNum() + 3; i < sheet.getLastRowNum() + 1; i++) {
 					
 					absent = false;
 					
@@ -686,9 +692,9 @@ class CountdownTimer extends Label {
 			@Override
 			public void handle(ActionEvent event) {
 				if (LocalDateTime.now().until(finalTime, ChronoUnit.MINUTES) == 1) 
-					setText(LocalDateTime.now().until(finalTime, ChronoUnit.MINUTES) + " minute");
+					setText((LocalDateTime.now().until(finalTime, ChronoUnit.MINUTES) + 1) + " minute");
 				else
-					setText(LocalDateTime.now().until(finalTime, ChronoUnit.MINUTES) + " minutes");
+					setText((LocalDateTime.now().until(finalTime, ChronoUnit.MINUTES) + 1) + " minutes");
 			}
 		}), new KeyFrame(Duration.seconds(1)));
 
