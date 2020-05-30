@@ -96,7 +96,7 @@ public class SignInPane extends GridPane {
 		// run through all cells in header row to assign column trackers
 		for (int i = headerRow.getFirstCellNum(); i < headerRow.getLastCellNum(); i++) {
 
-			if (headerRow.getCell(i).getCellType() == CellType.STRING) {
+			if ((headerRow.getCell(i) != null) && (headerRow.getCell(i).getCellType() == CellType.STRING)) {
 
 				// check to see if current cell has any of these contents
 				switch (headerRow.getCell(i).getStringCellValue().toLowerCase()) {
@@ -172,6 +172,8 @@ public class SignInPane extends GridPane {
 			sheet.getRow(2).createCell(todayCol).setCellValue(curfew.format(DateTimeFormatter.ofPattern("h:mm a")));
 		else if (!(sheet.getRow(2).getCell(todayCol).getStringCellValue().equals(ozeretName)))
 			sheet.getRow(2).getCell(todayCol).setCellValue(curfew.format(DateTimeFormatter.ofPattern("h:mm a")));
+		
+		sheet.autoSizeColumn(todayCol); // resize column to fit
 
 	}
 
@@ -288,21 +290,28 @@ public class SignInPane extends GridPane {
 				boolean idFound = false; // staff member has not yet been found
 				for (int i = sheet.getFirstRowNum() + 3; i < sheet.getLastRowNum(); i++) {
 
+					String currentID = "";
+					
+					if((sheet.getRow(i) != null) && sheet.getRow(i).getCell(idCol).getCellType() == CellType.NUMERIC)
+						currentID = (int) sheet.getRow(i).getCell(idCol).getNumericCellValue() + "";
+					else if ((sheet.getRow(i) != null) && sheet.getRow(i).getCell(idCol).getCellType() == CellType.STRING)
+						currentID = sheet.getRow(i).getCell(idCol).getStringCellValue();
+					
 					// if the current row's ID matches the one inputted, the staff member was found
-					if (sheet.getRow(i).getCell(idCol).getStringCellValue().equals(staffID)) {
+					if (currentID.equals(staffID)) {
 
 						idFound = true;
 						LocalTime now = LocalTime.now(); // save current time in case close to curfew
 
 						// if today's attendance column does not exist or is empty, the staff member is unaccounted for
-						if (sheet.getRow(i).getCell(todayCol) == null) {
+						if ((sheet.getRow(i) != null) && sheet.getRow(i).getCell(todayCol) == null) {
 
 							sheet.getRow(i).createCell(todayCol).setCellValue(now.format(DateTimeFormatter.ofPattern("h:mm a")));
 							signInStatus(i, now);
 							confirmation.setText(sheet.getRow(i).getCell(nameCol).getStringCellValue() + " signed in");
 							break; // search is done
 
-						} else if (sheet.getRow(i).getCell(todayCol).getCellType() == CellType.BLANK) {
+						} else if ((sheet.getRow(i) != null) && sheet.getRow(i).getCell(todayCol).getCellType() == CellType.BLANK) {
 
 							sheet.getRow(i).getCell(todayCol).setCellValue(now.format(DateTimeFormatter.ofPattern("h:mm a")));
 							signInStatus(i, now);
@@ -329,14 +338,14 @@ public class SignInPane extends GridPane {
 				// staff member is on time
 				if (curfew.toLocalTime().isAfter(signInTime)) {
 					if (ontimeCol != -1) {// there is an "on time" column
-						if (sheet.getRow(rowNum).getCell(ontimeCol) != null) // the cell exists
+						if ((sheet.getRow(rowNum) != null) && sheet.getRow(rowNum).getCell(ontimeCol) != null) // the cell exists
 							sheet.getRow(rowNum).getCell(ontimeCol).setCellValue(sheet.getRow(rowNum).getCell(ontimeCol).getNumericCellValue() + 1);
 						else // the cell does not exist
 							sheet.getRow(rowNum).createCell(ontimeCol).setCellValue(1);
 					}
 				} else { // staff member is late
 					if (lateCol != -1) {// there is an "on time" column
-						if (sheet.getRow(rowNum).getCell(lateCol) != null) // the cell exists
+						if ((sheet.getRow(rowNum) != null) && sheet.getRow(rowNum).getCell(lateCol) != null) // the cell exists
 							sheet.getRow(rowNum).getCell(lateCol).setCellValue(sheet.getRow(rowNum).getCell(lateCol).getNumericCellValue() + 1);
 						else // the cell does not exist
 							sheet.getRow(rowNum).createCell(lateCol).setCellValue(1);
@@ -396,7 +405,7 @@ public class SignInPane extends GridPane {
 
 				// set up stage
 				extraStage.setScene(unaccScene);
-				extraStage.setTitle("Unaccounted-for staff");
+				extraStage.setTitle("Unaccounted-for Staff");
 				extraStage.getIcons().add(new Image("file:resources/images/stage_icon.png"));
 				extraStage.centerOnScreen();
 				extraStage.show();
@@ -412,7 +421,7 @@ public class SignInPane extends GridPane {
 				for (int i = sheet.getFirstRowNum() + 3; i <= sheet.getLastRowNum(); i++) {
 
 					// if the current bunk is new, add it to the list of unique bunks
-					if (!uniqueBunks.contains(sheet.getRow(i).getCell(bunkCol).getStringCellValue()))
+					if ((sheet.getRow(i) != null) && !uniqueBunks.contains(sheet.getRow(i).getCell(bunkCol).getStringCellValue()))
 						uniqueBunks.add(sheet.getRow(i).getCell(bunkCol).getStringCellValue());
 				}
 
@@ -426,10 +435,10 @@ public class SignInPane extends GridPane {
 				// runs through all rows of the spreadsheet and returns false if there is an
 				//  unaccounted staff member in this bunk
 				for (int i = sheet.getFirstRowNum() + 3; i <= sheet.getLastRowNum(); i++)
-					if (sheet.getRow(i).getCell(bunkCol).getStringCellValue().equals(bunk))
+					if ((sheet.getRow(i) != null) && sheet.getRow(i).getCell(bunkCol).getStringCellValue().equals(bunk))
 						// if today's attendance column does not exist or is empty, the staff member is unaccounted for
-						if (sheet.getRow(i).getCell(todayCol) == null || 
-						sheet.getRow(i).getCell(todayCol).getCellType() == CellType.BLANK)
+						if ((sheet.getRow(i) != null) && (sheet.getRow(i).getCell(todayCol) == null || 
+						sheet.getRow(i).getCell(todayCol).getCellType() == CellType.BLANK))
 							return false;
 
 				return true;
@@ -452,11 +461,11 @@ public class SignInPane extends GridPane {
 				// runs through all rows of the spreadsheet and adds unaccounted staff in this bunk to the VBox
 				for (int i = sheet.getFirstRowNum() + 3; i <= sheet.getLastRowNum(); i++) {
 
-					if (sheet.getRow(i).getCell(bunkCol).getStringCellValue().equals(bunk)) {
+					if ((sheet.getRow(i) != null) && sheet.getRow(i).getCell(bunkCol).getStringCellValue().equals(bunk)) {
 
 						// if today's attendance column does not exist or is empty, the staff member is unaccounted for
-						if (sheet.getRow(i).getCell(todayCol) == null || 
-								sheet.getRow(i).getCell(todayCol).getCellType() == CellType.BLANK) {
+						if ((sheet.getRow(i) != null) && (sheet.getRow(i).getCell(todayCol) == null || 
+								sheet.getRow(i).getCell(todayCol).getCellType() == CellType.BLANK)) {
 
 							Button staffMember = new Button(sheet.getRow(i).getCell(nameCol).getStringCellValue());
 							staffMember.setId("list-button");
@@ -596,8 +605,8 @@ public class SignInPane extends GridPane {
 				//  unaccounted staff member
 				for (int i = sheet.getFirstRowNum() + 3; i <= sheet.getLastRowNum(); i++)
 					// if today's attendance column does not exist or is empty, the staff member is unaccounted for
-					if (sheet.getRow(i).getCell(todayCol) == null || 
-					sheet.getRow(i).getCell(todayCol).getCellType() == CellType.BLANK)
+					if ((sheet.getRow(i) != null) && (sheet.getRow(i).getCell(todayCol) == null || 
+					       sheet.getRow(i).getCell(todayCol).getCellType() == CellType.BLANK))
 						return false;
 
 				return true;
@@ -613,17 +622,17 @@ public class SignInPane extends GridPane {
 					absent = false;
 					
 					// if today's attendance column does not exist or is empty, the staff member is unaccounted for
-					if (sheet.getRow(i).getCell(todayCol) == null) {
+					if ((sheet.getRow(i) != null) && sheet.getRow(i).getCell(todayCol) == null) {
 						sheet.getRow(i).createCell(todayCol).setCellValue("Absent");
 						absent = true;
-					} else if (sheet.getRow(i).getCell(todayCol).getCellType() == CellType.BLANK) {
+					} else if ((sheet.getRow(i) != null) && sheet.getRow(i).getCell(todayCol).getCellType() == CellType.BLANK) {
 						sheet.getRow(i).getCell(todayCol).setCellValue("Absent");
 						absent = true;
 					}
 					
 					// increment "absent" column, if it exists
 					if (absent && absentCol != -1) {
-						if (sheet.getRow(i).getCell(absentCol) != null) // the cell exists
+						if ((sheet.getRow(i) != null) && sheet.getRow(i).getCell(absentCol) != null) // the cell exists
 							sheet.getRow(i).getCell(absentCol).setCellValue(sheet.getRow(i).getCell(absentCol).getNumericCellValue() + 1);
 						else // the cell does not exist
 							sheet.getRow(i).createCell(absentCol).setCellValue(1);
