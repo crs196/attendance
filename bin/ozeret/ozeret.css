@@ -6,9 +6,8 @@
 @font-face {
     src: url("/resources/fonts/MontserratMedium.ttf");
 } 
-8?
-
-/* for use in eclipse */
+*/
+/* for use in eclipse*/
 @font-face {
 	src: url("../../resources/fonts/Toonish.ttf");
 }
@@ -16,6 +15,7 @@
 @font-face {
     src: url("../../resources/fonts/MontserratMedium.ttf");
 }
+
 
 /* colors: orange - #f36a26; blue - #212153 */
 
@@ -82,7 +82,7 @@
 }
 
 .text-area {
-	-fx-font-size: 20px;
+	-fx-font-size: 18px;
 	-fx-font-family: "Montserrat Medium";
 	-fx-text-fill: white;
 	-fx-background-color: #212153;

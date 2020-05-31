@@ -300,9 +300,11 @@ public class SignInPane extends GridPane {
 				if (!staffID.isEmpty()) {
 					
 					boolean idFound = false; // staff member has not yet been found
-					for (int i = sheet.getFirstRowNum() + 3; i < sheet.getLastRowNum(); i++) {
+					for (int i = sheet.getFirstRowNum() + 3; i < sheet.getLastRowNum() + 1; i++) {
 
 						String currentID = "";
+						
+						// first check idCol for matches
 						
 						if((sheet.getRow(i) != null) && sheet.getRow(i).getCell(idCol).getCellType() == CellType.NUMERIC)
 							currentID = (int) sheet.getRow(i).getCell(idCol).getNumericCellValue() + "";
@@ -333,6 +335,42 @@ public class SignInPane extends GridPane {
 							} else { // if cell exists and is not blank, staff member has already signed in today
 								confirmation.setText(sheet.getRow(i).getCell(nameCol).getStringCellValue() + " has already signed in");
 								break; // search is done
+							}
+						}
+						
+						// then, if nameCol is different than idCol, check nameCol for matches
+						if (nameCol != idCol) {
+							
+							if((sheet.getRow(i) != null) && sheet.getRow(i).getCell(nameCol).getCellType() == CellType.NUMERIC)
+								currentID = (int) sheet.getRow(i).getCell(nameCol).getNumericCellValue() + "";
+							else if ((sheet.getRow(i) != null) && sheet.getRow(i).getCell(nameCol).getCellType() == CellType.STRING)
+								currentID = sheet.getRow(i).getCell(nameCol).getStringCellValue();
+							
+							// if the current row's ID matches the one inputted, the staff member was found
+							if (currentID.equals(staffID)) {
+
+								idFound = true;
+								LocalTime now = LocalTime.now(); // save current time in case close to curfew
+
+								// if today's attendance column does not exist or is empty, the staff member is unaccounted for
+								if ((sheet.getRow(i) != null) && sheet.getRow(i).getCell(todayCol) == null) {
+
+									sheet.getRow(i).createCell(todayCol).setCellValue(now.format(DateTimeFormatter.ofPattern("h:mm a")));
+									signInStatus(i, now);
+									confirmation.setText(sheet.getRow(i).getCell(nameCol).getStringCellValue() + " signed in");
+									break; // search is done
+
+								} else if ((sheet.getRow(i) != null) && sheet.getRow(i).getCell(todayCol).getCellType() == CellType.BLANK) {
+
+									sheet.getRow(i).getCell(todayCol).setCellValue(now.format(DateTimeFormatter.ofPattern("h:mm a")));
+									signInStatus(i, now);
+									confirmation.setText(sheet.getRow(i).getCell(nameCol).getStringCellValue() + " signed in");
+									break; // search is done
+
+								} else { // if cell exists and is not blank, staff member has already signed in today
+									confirmation.setText(sheet.getRow(i).getCell(nameCol).getStringCellValue() + " has already signed in");
+									break; // search is done
+								}
 							}
 						}
 					}
@@ -523,11 +561,12 @@ public class SignInPane extends GridPane {
 
 								@Override
 								public void handle(ActionEvent event) {
-									Alert options = new Alert(AlertType.NONE, "Sign this staff member in as on shmira or a day off:",
+									Alert options = new Alert(AlertType.NONE, "Sign this staff member in:",
+											new ButtonType("Sign In", ButtonData.OTHER),
 											new ButtonType("Shmira", ButtonData.OTHER),
 											new ButtonType("Day Off", ButtonData.OTHER),
 											ButtonType.CANCEL);
-									options.setTitle("Special Status Sign-In");
+									options.setTitle("Manual Sign-In");
 									options.setHeaderText(staffMember.getText());
 									options.getDialogPane().getStylesheets().add(getClass().getResource("ozeret.css").toExternalForm());
 									options.initOwner(staffMember.getScene().getWindow());
@@ -549,6 +588,9 @@ public class SignInPane extends GridPane {
 											else // the cell does not exist
 												staffRow.createCell(ontimeCol).setCellValue(1);
 										}
+										
+										// print a confirmation
+										confirmation.setText(staffMember.getText() + " signed in as on shmira");
 
 									} else if (options.getResult().getText().equals("Day Off")) {
 										// staff member should be signed in as on day off
@@ -566,6 +608,15 @@ public class SignInPane extends GridPane {
 											else // the cell does not exist
 												staffRow.createCell(ontimeCol).setCellValue(1);
 										}
+										
+										// print a confirmation
+										confirmation.setText(staffMember.getText() + " signed in as on a day off");
+									} else if (options.getResult().getText().equals("Sign In")) {
+										// staff member should be signed in normally
+										// do this by writing the staff member's name into the entry box and firing the sign-in button
+										
+										idField.setText(staffMember.getText());
+										signIn.fire();
 									}
 
 									// refresh list of unaccounted staff members
