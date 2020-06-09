@@ -3,6 +3,7 @@ package ozeret;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
+import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
 
 public class OzeretMain extends Application {
@@ -21,8 +22,8 @@ public class OzeretMain extends Application {
 		siScene.getStylesheets().add(OzeretMain.class.getResource("ozeret.css").toExternalForm());
 		
 		// create initial pane and scene
-		InitialPane initial = new InitialPane(primaryStage, siScene); 
-		Scene initialScene = new Scene(initial);
+		Scene initialScene = new Scene(new GridPane());
+		InitialPane initial = new InitialPane(primaryStage, siScene, initialScene);
 		initialScene.getStylesheets().add(OzeretMain.class.getResource("ozeret.css").toExternalForm());
 		
 		// set up stage for viewing with initial scene

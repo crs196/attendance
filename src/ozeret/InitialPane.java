@@ -31,12 +31,15 @@ import javafx.stage.WindowEvent;
 public class InitialPane extends GridPane {
 
 	private Stage stage;
-	private Scene nextScene;
+	private Scene nextScene, myScene;
 	
-	public InitialPane(Stage s, Scene ns) {
+	public InitialPane(Stage s, Scene ns, Scene ms) {
 		super();
 		stage = s;
 		nextScene = ns;
+		myScene = ms;
+		
+		myScene.setRoot(this);
 		
 		setup();
 	}
@@ -155,7 +158,11 @@ public class InitialPane extends GridPane {
 					if (attendanceFile != null) {
 						
 						// update next scene's SignInPane to have correct curfew, ozeret name, and attendance file
-						((SignInPane) nextScene.getRoot()).setPrevVars(ozNameEntry.getText(), curfewTime(), attendanceFile);
+						((SignInPane) nextScene.getRoot()).setPrevVars(ozNameEntry.getText(), curfewTime(), attendanceFile, myScene);
+						
+						// clear text in fields, in case user returns to this scene
+						ozNameEntry.clear();
+						curfewEntry.clear();
 						
 						// change the scene to the next one (will be a scene with SignInPane in it)
 						stage.setScene(nextScene);

@@ -53,6 +53,7 @@ public class SignInPane extends GridPane {
 	private String ozeretName;
 	private LocalDateTime curfew;
 	private File attendanceFile;
+	private Scene prevScene;
 
 	private XSSFWorkbook workbook;
 	private XSSFSheet sheet;
@@ -66,10 +67,11 @@ public class SignInPane extends GridPane {
 	}
 
 	// called when InitialPane moves to this scene
-	public void setPrevVars(String ozName, LocalDateTime c, File af) {
+	public void setPrevVars(String ozName, LocalDateTime c, File af, Scene ps) {
 		ozeretName = ozName;
 		curfew = c;
 		attendanceFile = af;
+		prevScene = ps;
 
 		// create local workbook from attendanceFile
 		try (FileInputStream afis = new FileInputStream(attendanceFile)) {
@@ -235,21 +237,21 @@ public class SignInPane extends GridPane {
 		VBox listButtons = new VBox(this.getVgap() * 0.5);
 		Button viewUnaccounted = new Button("View Unaccounted-for Staff Members");
 		Button save = new Button("Save");
-		Button saveAndQuit = new Button("Save and Quit");
+		Button saveAndReturn = new Button("Save and Return to Setup");
 
 		viewUnaccounted.setMinWidth(USE_PREF_SIZE);
 		save.setMinWidth(USE_PREF_SIZE);
-		saveAndQuit.setMinWidth(USE_PREF_SIZE);
+		saveAndReturn.setMinWidth(USE_PREF_SIZE);
 
 		HBox.setHgrow(viewUnaccounted, Priority.ALWAYS);
 		HBox.setHgrow(save, Priority.ALWAYS);
-		HBox.setHgrow(saveAndQuit, Priority.ALWAYS);
+		HBox.setHgrow(saveAndReturn, Priority.ALWAYS);
 
 		viewUnaccounted.setMaxWidth(Double.MAX_VALUE);
 		save.setMaxWidth(Double.MAX_VALUE);
-		saveAndQuit.setMaxWidth(Double.MAX_VALUE);
+		saveAndReturn.setMaxWidth(Double.MAX_VALUE);
 
-		listButtons.getChildren().addAll(new HBox(viewUnaccounted), new HBox(), new HBox(save), new HBox(saveAndQuit)); // empty HBox for spacing
+		listButtons.getChildren().addAll(new HBox(viewUnaccounted), new HBox(), new HBox(save), new HBox(saveAndReturn)); // empty HBox for spacing
 
 		VBox leftColumn = new VBox(this.getVgap());
 		leftColumn.getChildren().addAll(clockBox, listButtons);
@@ -257,12 +259,21 @@ public class SignInPane extends GridPane {
 
 		/* right column (sign-in box, confirmation area) */
 
-		// sign-in instructions and entry point
+		// sign-in instructions, entry point, and confirm button
 		Label scanLabel = new Label("Please enter a staff member's ID");
 		scanLabel.setMinWidth(USE_PREF_SIZE);
+		
 		TextField idField = new TextField();
+		
+		Button signIn = new Button("Sign In");
+		signIn.setDefaultButton(true);
+		HBox.setHgrow(signIn, Priority.ALWAYS);
+		signIn.setMaxWidth(Double.MAX_VALUE);
+		HBox signInBox = new HBox(this.getHgap());
+		signInBox.getChildren().addAll(idField, signIn);
+		
 		VBox idBox = new VBox(this.getVgap());
-		idBox.getChildren().addAll(scanLabel, idField);
+		idBox.getChildren().addAll(scanLabel, signInBox);
 
 		// confirmation area
 		TextArea confirmation = new TextArea();
@@ -272,15 +283,6 @@ public class SignInPane extends GridPane {
 		confirmation.setPrefRowCount(3);
 		idBox.getChildren().add(confirmation);
 		this.add(idBox, 1, 1);
-
-		// confirm button
-		Button signIn = new Button("Sign In");
-		signIn.setDefaultButton(true);
-		HBox.setHgrow(signIn, Priority.ALWAYS);
-		signIn.setMaxWidth(Double.MAX_VALUE);
-		HBox signInButton = new HBox(this.getHgap());
-		signInButton.getChildren().add(signIn);
-		this.add(signInButton, 1, 2);
 		
 		// stage and scene for viewUnaccounted
 		Stage extraStage = new Stage();
@@ -294,7 +296,7 @@ public class SignInPane extends GridPane {
 
 				// save staff ID and clear idField text
 				String staffID = idField.getText();
-				idField.setText("");
+				idField.clear();
 
 				// only search if an ID was actually entered
 				if (!staffID.isEmpty()) {
@@ -654,7 +656,7 @@ public class SignInPane extends GridPane {
 
 		// pulls up list of staff members who have yet to sign in in this session
 		//  with option to mark them as on day off
-		saveAndQuit.setOnAction(new EventHandler<ActionEvent>() {
+		saveAndReturn.setOnAction(new EventHandler<ActionEvent>() {
 
 			@Override
 			public void handle(ActionEvent event) {
@@ -662,17 +664,17 @@ public class SignInPane extends GridPane {
 				// see if there are any staff that haven't signed in yet
 				boolean allBunksEmpty = noUnaccountedStaff();
 				
-				// if there are still unaccounted staff, confirm that user still wants to quit
+				// if there are still unaccounted staff, confirm that user still wants to return to set-up
 				if (!allBunksEmpty) {
-					Alert saveAndQuitConf = new Alert(AlertType.CONFIRMATION, "There are still staff members that haven't signed in.\nAre you sure you want to quit?");
-					saveAndQuitConf.setHeaderText("Save and Quit Confirmation");
-					saveAndQuitConf.setTitle("Save and Quit Confirmation");
-					saveAndQuitConf.getDialogPane().getStylesheets().add(getClass().getResource("ozeret.css").toExternalForm());
-					saveAndQuitConf.initOwner(saveAndQuit.getScene().getWindow());
-					saveAndQuitConf.showAndWait();
+					Alert saveAndReturnConf = new Alert(AlertType.CONFIRMATION, "There are still staff members that haven't signed in.\nAre you sure you want to return to setup?");
+					saveAndReturnConf.setHeaderText("Save and Return to Setup Confirmation");
+					saveAndReturnConf.setTitle("Save and Return to Setup Confirmation");
+					saveAndReturnConf.getDialogPane().getStylesheets().add(getClass().getResource("ozeret.css").toExternalForm());
+					saveAndReturnConf.initOwner(saveAndReturn.getScene().getWindow());
+					saveAndReturnConf.showAndWait();
 					
-					if (saveAndQuitConf.getResult() != ButtonType.OK)
-						return; // user does not want to save and quit
+					if (saveAndReturnConf.getResult() != ButtonType.OK)
+						return; // user does not want to save and return to setup
 				}
 				
 				// all staff are accounted for or user wants to mark unaccounted-for staff as absent
@@ -685,7 +687,8 @@ public class SignInPane extends GridPane {
 					confirmation.setText("Unable to write to " + attendanceFile.getName());
 				} 
 				
-				Platform.exit();
+				stage.setScene(prevScene);
+				stage.centerOnScreen();
 			}
 
 			// returns whether or not there are still unaccounted-for staff
