@@ -687,6 +687,8 @@ public class SignInPane extends GridPane {
 					confirmation.setText("Unable to write to " + attendanceFile.getName());
 				} 
 				
+				// close unaccounted-for staff window and change scene back to sign-in scene
+				extraStage.close();
 				stage.setScene(prevScene);
 				stage.centerOnScreen();
 			}
