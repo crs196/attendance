@@ -39,9 +39,9 @@ public class InitialPane extends GridPane {
 		nextScene = ns;
 		myScene = ms;
 		
-		myScene.setRoot(this);
-		
 		setup();
+		
+		myScene.setRoot(this); // set this pane on its scene
 	}
 	
 	// sets up layout and functionality of InitalPane

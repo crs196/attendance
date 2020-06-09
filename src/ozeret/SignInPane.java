@@ -12,6 +12,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.poi.EmptyFileException;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -73,23 +74,24 @@ public class SignInPane extends GridPane {
 		attendanceFile = af;
 		prevScene = ps;
 
-		// create local workbook from attendanceFile
+		// create local workbook from attendanceFile, only continue if workbook creation is acceptable
 		try (FileInputStream afis = new FileInputStream(attendanceFile)) {
 			workbook = new XSSFWorkbook(afis);
-		} catch (IOException e) {
-			Alert fileNotFound = new Alert(AlertType.ERROR, "Unable to find " + attendanceFile.getName() + "\nPlease choose a different file");
-			fileNotFound.setTitle("Attendance File Not Found");
-			fileNotFound.getDialogPane().getStylesheets().add(OzeretMain.class.getResource("ozeret.css").toExternalForm());
-			fileNotFound.initOwner(stage);
-			fileNotFound.showAndWait();
+			
+			sheet = workbook.getSheetAt(0);
+			
+			readHeaderRow();
+			setup();
+		} catch (EmptyFileException | IOException e) {			
+			Alert fileNotAccessible = new Alert(AlertType.ERROR, "Unable to access \"" + attendanceFile.getName()
+					+ "\"\nPlease choose a different file.");
+			fileNotAccessible.setTitle("Attendance File Not Accessible");
+			fileNotAccessible.getDialogPane().getStylesheets().add(OzeretMain.class.getResource("ozeret.css").toExternalForm());
+			fileNotAccessible.initOwner(stage);
+			fileNotAccessible.showAndWait();
 			
 			Platform.exit();
 		}
-
-		sheet = workbook.getSheetAt(0);
-		
-		readHeaderRow();
-		setup();
 	}
 
 	// reads header row of workbook to initialize column trackers,
@@ -97,7 +99,9 @@ public class SignInPane extends GridPane {
 	private void readHeaderRow() {
 
 		XSSFRow headerRow = sheet.getRow(0);
-		boolean idExists = false, ontimeExists = false, lateExists = false, absentExists = false, todayExists = false;
+		boolean bunkExists = false, nameExists = false, idExists = false,
+				ontimeExists = false, lateExists = false, absentExists = false,
+				todayExists = false;
 		boolean curfewToday = curfew.toLocalDate().equals(LocalDate.now());
 
 		// run through all cells in header row to assign column trackers
@@ -109,9 +113,11 @@ public class SignInPane extends GridPane {
 				switch (headerRow.getCell(i).getStringCellValue().toLowerCase()) {
 				case "bunk":
 					bunkCol = i;
+					bunkExists = true;
 					break;
 				case "name":
 					nameCol = i;
+					nameExists = true;
 					break;
 				case "id":
 					idCol = i;
@@ -133,17 +139,30 @@ public class SignInPane extends GridPane {
 					break;
 				}
 
-				if (curfewToday)
+				if (curfewToday) {
 					if (headerRow.getCell(i).getStringCellValue().equals(curfew.format(DateTimeFormatter.ofPattern("MM/dd/yyyy")))){
 						todayCol = i;
 						todayExists = true;
 					}
-					else
-						if (headerRow.getCell(i).getStringCellValue().equals(curfew.minusDays(1).format(DateTimeFormatter.ofPattern("MM/dd/yyyy")))){
-							todayCol = i;
-							todayExists = true;
-						}
+				} else {
+					if (headerRow.getCell(i).getStringCellValue().equals(curfew.minusDays(1).format(DateTimeFormatter.ofPattern("MM/dd/yyyy")))){
+						todayCol = i;
+						todayExists = true;
+					}
+				}
 			}
+		}
+		
+		// if the bunk and/or name columns don't exist, this spreadsheet is invalid, so don't continue
+		if (!bunkExists || !nameExists) {
+			Alert fileNotAccessible = new Alert(AlertType.ERROR, "The chosen file \"" + attendanceFile.getName() + "\" is formatted incorrecly.\n"
+					+ "Please choose a different file.");
+			fileNotAccessible.setTitle("Attendance File Not Formatted Correctly");
+			fileNotAccessible.getDialogPane().getStylesheets().add(OzeretMain.class.getResource("ozeret.css").toExternalForm());
+			fileNotAccessible.initOwner(stage);
+			fileNotAccessible.showAndWait();
+			
+			Platform.exit();
 		}
 
 		// if there is no column labeled "ID", set the ID column to be the name column
@@ -646,11 +665,11 @@ public class SignInPane extends GridPane {
 				try (FileOutputStream afos = new FileOutputStream(attendanceFile)) {
 					workbook.write(afos);
 				} catch (IOException e) {
-					confirmation.setText("Unable to write to " + attendanceFile.getName());
+					confirmation.setText("Unable to write to \"" + attendanceFile.getName() + "\"");
 				} 
 				
 				// print confirmation
-				confirmation.setText("Data saved to " + attendanceFile.getName());
+				confirmation.setText("Data saved to \"" + attendanceFile.getName() + "\"");
 			}
 		});
 
@@ -684,10 +703,10 @@ public class SignInPane extends GridPane {
 				try (FileOutputStream afos = new FileOutputStream(attendanceFile)) {
 					workbook.write(afos);
 				} catch (IOException e) {
-					confirmation.setText("Unable to write to " + attendanceFile.getName());
+					confirmation.setText("Unable to write to \"" + attendanceFile.getName() + "\"");
 				} 
 				
-				// close unaccounted-for staff window and change scene back to sign-in scene
+				// close unaccounted-for staff window and change scene back to setup scene
 				extraStage.close();
 				stage.setScene(prevScene);
 				stage.centerOnScreen();

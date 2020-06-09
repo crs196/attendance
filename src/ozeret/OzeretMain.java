@@ -14,7 +14,7 @@ public class OzeretMain extends Application {
 		 * Create things in reverse order:
 		 * 	SignInPane	-- signs in people, tracks who hasn't signed in yet
 		 * 	InitialPane	-- gets name of Ozeret, confirms what time curfew is
-		 */
+		 */		
 		
 		// create file chooser pane and scene
 		SignInPane siPane = new SignInPane(primaryStage);
@@ -23,6 +23,7 @@ public class OzeretMain extends Application {
 		
 		// create initial pane and scene
 		Scene initialScene = new Scene(new GridPane());
+		@SuppressWarnings("unused")
 		InitialPane initial = new InitialPane(primaryStage, siScene, initialScene);
 		initialScene.getStylesheets().add(OzeretMain.class.getResource("ozeret.css").toExternalForm());
 		
