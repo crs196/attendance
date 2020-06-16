@@ -31,7 +31,7 @@
 
 ## Executable Version
 
-The folder in this repository called `OzeretSignIn` is a standalone version of this project (I believe it does still require a JRE. but not a full JDK). The functionality of `OzeretSignIn.exe` is identical to the code in the `src/ozeret` folder. If you don't have an operating system that can run an `*.exe` file, you should be able to use the file `harlam-ozeret.jar` the the folder `ozeret jar and xml` in place of `OzeretSignIn.exe`.
+The zip file in this repository called `OzeretSignIn.zip` is a standalone version of this project (I believe it does still require a JRE. but not a full JDK). The functionality of `OzeretSignIn.exe` (in the zip file) is identical to the code in the `src/ozeret` folder. If you don't have an operating system that can run an `*.exe` file, you should be able to use the file `harlam-ozeret.jar` the the folder `ozeret jar and xml` in place of `OzeretSignIn.exe`.
 
 ---
 
