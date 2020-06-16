@@ -4,7 +4,8 @@
 
 ## **Table of Contents** <!-- omit in TOC -->
 - [License](#license)
-- [Executable Version](#executable-version)
+- [How to Run this Program](#how-to-run-this-program)
+  - [Executable Version](#executable-version)
 - [Instructions](#instructions)
   - [*Spreadsheet Format*](#spreadsheet-format)
   - [*Application Use*](#application-use)
@@ -29,7 +30,11 @@
 
 ---
 
-## Executable Version
+## How to Run this Program
+
+The file `src/ozeret/OzeretMain.java` contains the main method for this program.
+
+### *Executable Version*
 
 The zip file in this repository called `OzeretSignIn.zip` is a standalone version of this project (I believe it does still require a JRE. but not a full JDK). The functionality of `OzeretSignIn.exe` (in the zip file) is identical to the code in the `src/ozeret` folder. If you don't have an operating system that can run an `*.exe` file, you should be able to use the file `harlam-ozeret.jar` the the folder `ozeret jar and xml` in place of `OzeretSignIn.exe`.
 
