@@ -5,10 +5,12 @@
 ## **Table of Contents** <!-- omit in TOC -->
 - [License](#license)
 - [How to Run this Program](#how-to-run-this-program)
-  - [Executable Version](#executable-version)
+  - [*Executable Version*](#executable-version)
 - [Instructions](#instructions)
   - [*Spreadsheet Format*](#spreadsheet-format)
   - [*Application Use*](#application-use)
+- [Changelog](#changelog)
+  - [*Version 1.1 (released 8/7/2020)*](#version-11-released-872020)
 - [Known Bugs](#known-bugs)
   - [*Blank Staff Member*](#blank-staff-member)
 
@@ -85,6 +87,16 @@ Clicking on `View Unaccounted-for Staff Members` will bring up a list of all sta
 ![additional staff sign-in options](resources/images/instructions/manual_sign_in.png)
 
 Clicking on the `Sign In`, `Shmira`, or `Day Off` buttons in this window will sign in the listed staff member either normally, as on shmira, or as on a day off, respectively.
+
+---
+
+## Changelog
+
+### *Version 1.1 (released 8/7/2020)*
+
+- A bug that caused the text reading `Current Time`, `Curfew`, and `Time until curfew` to overlap previous versions of themselves was fixed.
+- In addition to the time a staff member signs in being written to the attendance `*.xlsx` file, the cell is now colored according to when the staff member signed in. This is to make seeing overall trends more easily visible at a glance.
+  - A green background means that the staff member signed in on time (or was on shmira or a day off), a yellow background means that the staff members signed in after curfew, and a red background means that the staff member did not sign in at all.
 
 ---
 
