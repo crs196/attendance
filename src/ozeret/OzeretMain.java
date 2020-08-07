@@ -18,7 +18,7 @@ public class OzeretMain extends Application {
 		
 		// create file chooser pane and scene
 		SignInPane siPane = new SignInPane(primaryStage);
-		Scene siScene = new Scene(siPane);//, 775, siPane.getPrefHeight());
+		Scene siScene = new Scene(siPane);
 		siScene.getStylesheets().add(OzeretMain.class.getResource("ozeret.css").toExternalForm());
 		
 		// create initial pane and scene

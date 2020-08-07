@@ -14,6 +14,10 @@ import java.util.List;
 
 import org.apache.poi.EmptyFileException;
 import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.FillPatternType;
+import org.apache.poi.xssf.usermodel.DefaultIndexedColorMap;
+import org.apache.poi.xssf.usermodel.XSSFCellStyle;
+import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -405,12 +409,25 @@ public class SignInPane extends GridPane {
 					viewUnaccounted.fire();
 			}
 
-			// given a staff member (via row number) and sign-in time, increments the proper summary
-			//  statistic column (if it exists)
+			// given a staff member (via row number) and sign-in time, 
+			//  increments the proper summary statistic column (if it exists)
+			//  and colors the staff member's "today cell" as either green or yellow, depending on sign-in time
 			public void signInStatus(int rowNum, LocalTime signInTime) {
 
+				// create cell styles for on time and late
+				XSSFCellStyle onTime = workbook.createCellStyle();
+				onTime.setFillForegroundColor(new XSSFColor(new java.awt.Color(183, 225, 205), new DefaultIndexedColorMap()));
+				onTime.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+				
+				XSSFCellStyle late = workbook.createCellStyle();
+				late.setFillForegroundColor(new XSSFColor(new java.awt.Color(255, 229, 153), new DefaultIndexedColorMap()));
+				late.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+				
 				// staff member is on time
 				if (curfew.toLocalTime().isAfter(signInTime)) {
+					// set todayCol to onTime style
+					sheet.getRow(rowNum).getCell(todayCol).setCellStyle(onTime);
+					
 					if (ontimeCol != -1) {// there is an "on time" column
 						if ((sheet.getRow(rowNum) != null) && sheet.getRow(rowNum).getCell(ontimeCol) != null) // the cell exists
 							sheet.getRow(rowNum).getCell(ontimeCol).setCellValue(sheet.getRow(rowNum).getCell(ontimeCol).getNumericCellValue() + 1);
@@ -418,6 +435,9 @@ public class SignInPane extends GridPane {
 							sheet.getRow(rowNum).createCell(ontimeCol).setCellValue(1);
 					}
 				} else { // staff member is late
+					// set todayCol to late style
+					sheet.getRow(rowNum).getCell(todayCol).setCellStyle(late);
+					
 					if (lateCol != -1) {// there is an "on time" column
 						if ((sheet.getRow(rowNum) != null) && sheet.getRow(rowNum).getCell(lateCol) != null) // the cell exists
 							sheet.getRow(rowNum).getCell(lateCol).setCellValue(sheet.getRow(rowNum).getCell(lateCol).getNumericCellValue() + 1);
@@ -592,6 +612,11 @@ public class SignInPane extends GridPane {
 									options.getDialogPane().getStylesheets().add(getClass().getResource("ozeret.css").toExternalForm());
 									options.initOwner(staffMember.getScene().getWindow());
 									options.showAndWait();
+									
+									// create cell style to be used when signing staff member in for day off or shmira
+									XSSFCellStyle onTime = workbook.createCellStyle();
+									onTime.setFillForegroundColor(new XSSFColor(new java.awt.Color(183, 225, 205), new DefaultIndexedColorMap()));
+									onTime.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 
 									if (options.getResult().getText().equals("Shmira")) {
 										// staff member should be signed in as on shmira
@@ -603,12 +628,15 @@ public class SignInPane extends GridPane {
 											staffRow.getCell(todayCol).setCellValue("Shmira");
 
 										// update "on time" column (if it exists)
-										if (ontimeCol != -1) {// there is an "on time" column
+										if (ontimeCol != -1) { // there is an "on time" column
 											if (staffRow.getCell(ontimeCol) != null) // the cell exists
 												staffRow.getCell(ontimeCol).setCellValue(staffRow.getCell(ontimeCol).getNumericCellValue() + 1);
 											else // the cell does not exist
 												staffRow.createCell(ontimeCol).setCellValue(1);
 										}
+										
+										// recolor cell background
+										staffRow.getCell(todayCol).setCellStyle(onTime);
 										
 										// print a confirmation
 										confirmation.setText(staffMember.getText() + " signed in as on shmira");
@@ -629,6 +657,9 @@ public class SignInPane extends GridPane {
 											else // the cell does not exist
 												staffRow.createCell(ontimeCol).setCellValue(1);
 										}
+										
+										// recolor cell background
+										staffRow.getCell(todayCol).setCellStyle(onTime);
 										
 										// print a confirmation
 										confirmation.setText(staffMember.getText() + " signed in as on a day off");
@@ -706,6 +737,14 @@ public class SignInPane extends GridPane {
 					confirmation.setText("Unable to write to \"" + attendanceFile.getName() + "\"");
 				} 
 				
+				// clear clock text so that if run again they're still readable
+				currentTime.stopClock();
+				clockLabel.setText("");
+				curfewLabel.setText("");
+				curfewTimeLabel.setText("");
+				timeToCurfew.stopClock();
+				countdownLabel.setText("");
+				
 				// close unaccounted-for staff window and change scene back to setup scene
 				extraStage.close();
 				stage.setScene(prevScene);
@@ -731,6 +770,11 @@ public class SignInPane extends GridPane {
 				
 				boolean absent;
 				
+				// create cell style for absent cells
+				XSSFCellStyle absentStyle = workbook.createCellStyle();
+				absentStyle.setFillForegroundColor(new XSSFColor(new java.awt.Color(234, 153, 153), new DefaultIndexedColorMap()));
+				absentStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+				
 				for (int i = sheet.getFirstRowNum() + 3; i < sheet.getLastRowNum() + 1; i++) {
 					
 					absent = false;
@@ -744,12 +788,17 @@ public class SignInPane extends GridPane {
 						absent = true;
 					}
 					
-					// increment "absent" column, if it exists
-					if (absent && absentCol != -1) {
-						if ((sheet.getRow(i) != null) && sheet.getRow(i).getCell(absentCol) != null) // the cell exists
-							sheet.getRow(i).getCell(absentCol).setCellValue(sheet.getRow(i).getCell(absentCol).getNumericCellValue() + 1);
-						else // the cell does not exist
-							sheet.getRow(i).createCell(absentCol).setCellValue(1);
+					// set cell background to red if necessary,
+					//  increment "absent" column if it exists
+					if (absent) {
+						sheet.getRow(i).getCell(todayCol).setCellStyle(absentStyle);
+						
+						if (absentCol != -1) {
+							if ((sheet.getRow(i) != null) && sheet.getRow(i).getCell(absentCol) != null) // the cell exists
+								sheet.getRow(i).getCell(absentCol).setCellValue(sheet.getRow(i).getCell(absentCol).getNumericCellValue() + 1);
+							else // the cell does not exist
+								sheet.getRow(i).createCell(absentCol).setCellValue(1);
+						}
 					}
 				}
 			}
@@ -782,12 +831,19 @@ public class SignInPane extends GridPane {
 
 class Clock extends Label {
 
+	Timeline timeline;
+	
 	public Clock() {
 		bindToTime();
 	}
 
+	public void stopClock() {
+		timeline.stop();
+		setText("");
+	}
+	
 	private void bindToTime() {
-		Timeline timeline = new Timeline(new KeyFrame(Duration.seconds(0), new EventHandler<ActionEvent>() {
+		timeline = new Timeline(new KeyFrame(Duration.seconds(0), new EventHandler<ActionEvent>() {
 
 			@Override
 			public void handle(ActionEvent event) {
@@ -803,18 +859,24 @@ class Clock extends Label {
 class CountdownTimer extends Label {
 
 	LocalDateTime finalTime;
+	Timeline timeline;
 
 	public CountdownTimer(LocalDateTime timeToCountTo) {
 		finalTime = timeToCountTo;
 		bindToTime();
 	}
+	
+	public void stopClock() {
+		timeline.stop();
+		setText("");
+	}
 
 	private void bindToTime() {
-		Timeline timeline = new Timeline(new KeyFrame(Duration.seconds(0), new EventHandler<ActionEvent>() {
+		timeline = new Timeline(new KeyFrame(Duration.seconds(0), new EventHandler<ActionEvent>() {
 
 			@Override
 			public void handle(ActionEvent event) {
-				if (LocalDateTime.now().until(finalTime, ChronoUnit.MINUTES) == 1) 
+				if (LocalDateTime.now().until(finalTime, ChronoUnit.MINUTES) == 0) 
 					setText((LocalDateTime.now().until(finalTime, ChronoUnit.MINUTES) + 1) + " minute");
 				else
 					setText((LocalDateTime.now().until(finalTime, ChronoUnit.MINUTES) + 1) + " minutes");
