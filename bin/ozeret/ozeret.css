@@ -1,4 +1,4 @@
-/* for use outside of eclipse */
+/* for use outside of eclipse
 @font-face {
 	src: url("/resources/fonts/Toonish.ttf");
 }
@@ -6,8 +6,8 @@
 @font-face {
     src: url("/resources/fonts/MontserratMedium.ttf");
 } 
-
-/* for use in eclipse
+*/
+/* for use in eclipse */
 @font-face {
 	src: url("../../resources/fonts/Toonish.ttf");
 }
@@ -15,7 +15,7 @@
 @font-face {
     src: url("../../resources/fonts/MontserratMedium.ttf");
 }
-*/
+
 
 /* colors: orange - #f36a26; blue - #212153 */
 

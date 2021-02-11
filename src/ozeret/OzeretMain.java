@@ -16,15 +16,14 @@ public class OzeretMain extends Application {
 		 * 	InitialPane	-- gets name of Ozeret, confirms what time curfew is
 		 */		
 		
-		// create file chooser pane and scene
+		// create sign in pane and scene
 		SignInPane siPane = new SignInPane(primaryStage);
 		Scene siScene = new Scene(siPane);
 		siScene.getStylesheets().add(OzeretMain.class.getResource("ozeret.css").toExternalForm());
 		
 		// create initial pane and scene
 		Scene initialScene = new Scene(new GridPane());
-		@SuppressWarnings("unused")
-		InitialPane initial = new InitialPane(primaryStage, siScene, initialScene);
+		@SuppressWarnings("unused") InitialPane initial = new InitialPane(primaryStage, siScene, initialScene);
 		initialScene.getStylesheets().add(OzeretMain.class.getResource("ozeret.css").toExternalForm());
 		
 		// set up stage for viewing with initial scene
