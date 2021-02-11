@@ -23,7 +23,8 @@ public class OzeretMain extends Application {
 		
 		// create initial pane and scene
 		Scene initialScene = new Scene(new GridPane());
-		@SuppressWarnings("unused") InitialPane initial = new InitialPane(primaryStage, siScene, initialScene);
+		@SuppressWarnings("unused") 
+		InitialPane initial = new InitialPane(primaryStage, siScene, initialScene);
 		initialScene.getStylesheets().add(OzeretMain.class.getResource("ozeret.css").toExternalForm());
 		
 		// set up stage for viewing with initial scene
