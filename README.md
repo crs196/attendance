@@ -11,8 +11,8 @@
   - [*Application Use*](#application-use)
 - [Changelog](#changelog)
   - [*Version 1.1 (released 8/7/2020)*](#version-11-released-872020)
+  - [*Version 1.2 (released 2/11/2021)*](#version-12-released-2112021)
 - [Known Bugs](#known-bugs)
-  - [*Curfew on Wrong Day **fixed***](#curfew-on-wrong-day-fixed)
   - [*Blank Staff Member (potentially removed)*](#blank-staff-member-potentially-removed)
 
 ## License
@@ -99,17 +99,14 @@ Clicking on the `Sign In`, `Shmira`, or `Day Off` buttons in this window will si
 - In addition to the time a staff member signs in being written to the attendance `*.xlsx` file, the cell is now colored according to when the staff member signed in. This is to make seeing overall trends more easily visible at a glance.
   - A green background means that the staff member signed in on time (or was on shmira or a day off), a yellow background means that the staff members signed in after curfew, and a red background means that the staff member did not sign in at all.
 
+### *Version 1.2 (released 2/11/2021)*
+
+- A bug that caused a staff member to be incorrectly marked as late when curfew time hadn't yet passed was fixed.
+  - This bug occured due to curfew being assumed to be on the same day as when the staff member signed in, when in reality this is not always true (e.g. if curfew is at 1:00 AM and a staff member signs in at 11:30 PM, curfew is technically the next day, and the staff member is on time).
+
 ---
 
 ## Known Bugs
-
-### *Curfew on Wrong Day **fixed***
-
-~~If the curfew time entered is to be on the next day (e.g. 1:00 AM entered at 8:00 PM), the wrong date will be attached to the curfew time (the current day instead of the next one). This will cause staff members who sign in on time to be incorrectly marked as late.~~
-
-~~This bug appears to take place entirely within the `SignInPane.java` file. `InitialPane.java` passes the correct date, and it is subsequently lost.~~
-
-This bug was due to the date of curfew not being considered when checking to see if a staff member was on time or not. Only the time was considered.
 
 ### *Blank Staff Member (potentially removed)*
 
