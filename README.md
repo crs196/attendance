@@ -12,7 +12,7 @@
 - [Changelog](#changelog)
   - [*Version 1.1 (released 8/7/2020)*](#version-11-released-872020)
 - [Known Bugs](#known-bugs)
-  - [*Curfew on Wrong Day (tentative)*](#curfew-on-wrong-day-tentative)
+  - [*Curfew on Wrong Day*](#curfew-on-wrong-day)
   - [*Blank Staff Member (potentially removed)*](#blank-staff-member-potentially-removed)
 
 ## License
@@ -103,11 +103,11 @@ Clicking on the `Sign In`, `Shmira`, or `Day Off` buttons in this window will si
 
 ## Known Bugs
 
-### *Curfew on Wrong Day (tentative)*
+### *Curfew on Wrong Day*
 
-If the curfew time entered is to be on the next day (e.g. 1:00 AM entered at 8:00 PM), the wrong date may be attached to the curfew time (the current day instead of the next one). This will cause staff members who sign in on time to be incorrectly marked as late.
+If the curfew time entered is to be on the next day (e.g. 1:00 AM entered at 8:00 PM), the wrong date will be attached to the curfew time (the current day instead of the next one). This will cause staff members who sign in on time to be incorrectly marked as late.
 
-I first noticed this bug in a demonstration I did, but I've yet to reporoduce it or find the source of the error in my code. When I discover the source of the bug or am able to reproduce it, I'll update this section (2/11/2021).
+This bug appears to take place entirely within the `SignInPane.java` file. `InitialPane.java` passes the correct date, and it is subsequently lost.
 
 ### *Blank Staff Member (potentially removed)*
 
