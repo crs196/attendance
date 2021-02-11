@@ -106,7 +106,7 @@ public class SignInPane extends GridPane {
 		boolean bunkExists = false, nameExists = false, idExists = false,
 				ontimeExists = false, lateExists = false, absentExists = false,
 				todayExists = false;
-		boolean curfewToday = curfew.toLocalDate().equals(LocalDate.now());
+		boolean curfewToday = (LocalDate.now().compareTo(curfew.toLocalDate()) == 0);
 
 		// run through all cells in header row to assign column trackers
 		for (int i = headerRow.getFirstCellNum(); i < headerRow.getLastCellNum(); i++) {
@@ -185,7 +185,7 @@ public class SignInPane extends GridPane {
 			todayCol = headerRow.getLastCellNum();
 			headerRow.createCell(todayCol);
 
-			if (curfew.toLocalDate().equals(LocalDate.now())) // if curfew is today
+			if (curfew.toLocalDate().compareTo(LocalDate.now()) == 0) // if curfew is today
 				headerRow.getCell(todayCol).setCellValue(curfew.format(DateTimeFormatter.ofPattern("MM/dd/yyyy")));
 			else // curfew is tomorrow
 				headerRow.getCell(todayCol).setCellValue(curfew.minusDays(1).format(DateTimeFormatter.ofPattern("MM/dd/yyyy")));
@@ -223,7 +223,7 @@ public class SignInPane extends GridPane {
 		this.add(title, 0, 0, 3, 1);
 
 
-		/* left column (clock + time to curfew, view unaccounted for, mark shmira/day off) */
+		/* left column (clock + time to curfew, view unaccounted for, save, return to setup) */
 
 		// clock
 		Clock currentTime = new Clock();
@@ -340,7 +340,7 @@ public class SignInPane extends GridPane {
 						if (currentID.equals(staffID)) {
 
 							idFound = true;
-							LocalTime now = LocalTime.now(); // save current time in case close to curfew
+							LocalDateTime now = LocalDateTime.now(); // save current time in case close to curfew
 
 							// if today's attendance column does not exist or is empty, the staff member is unaccounted for
 							if ((sheet.getRow(i) != null) && sheet.getRow(i).getCell(todayCol) == null) {
@@ -375,7 +375,7 @@ public class SignInPane extends GridPane {
 							if (currentID.equals(staffID)) {
 
 								idFound = true;
-								LocalTime now = LocalTime.now(); // save current time in case close to curfew
+								LocalDateTime now = LocalDateTime.now(); // save current time in case close to curfew
 
 								// if today's attendance column does not exist or is empty, the staff member is unaccounted for
 								if ((sheet.getRow(i) != null) && sheet.getRow(i).getCell(todayCol) == null) {
@@ -412,7 +412,7 @@ public class SignInPane extends GridPane {
 			// given a staff member (via row number) and sign-in time, 
 			//  increments the proper summary statistic column (if it exists)
 			//  and colors the staff member's "today cell" as either green or yellow, depending on sign-in time
-			public void signInStatus(int rowNum, LocalTime signInTime) {
+			public void signInStatus(int rowNum, LocalDateTime signInTime) {
 
 				// create cell styles for on time and late
 				XSSFCellStyle onTime = workbook.createCellStyle();
@@ -424,7 +424,7 @@ public class SignInPane extends GridPane {
 				late.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 				
 				// staff member is on time
-				if (curfew.toLocalTime().isAfter(signInTime)) {
+				if (curfew.compareTo(signInTime) > 0) {
 					// set todayCol to onTime style
 					sheet.getRow(rowNum).getCell(todayCol).setCellStyle(onTime);
 					

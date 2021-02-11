@@ -191,10 +191,9 @@ public class InitialPane extends GridPane {
 					hour += 12;
 				
 				LocalTime curfew = LocalTime.of(hour, minute);
-				LocalTime now = LocalTime.now();
 				
 				// if curfew is after the current time, curfew is today
-				if (curfew.isAfter(now))
+				if (curfew.isAfter(LocalTime.now()))
 					return LocalDateTime.of(LocalDate.now(), curfew); // return LocalDateTime object with today's date and entered time
 				else // otherwise, curfew is tomorrow (read: after midnight)
 					return LocalDateTime.of(LocalDate.now().plusDays(1), curfew); // return LocalDateTime object with tomorrow's date and entered time
