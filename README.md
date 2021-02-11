@@ -12,7 +12,8 @@
 - [Changelog](#changelog)
   - [*Version 1.1 (released 8/7/2020)*](#version-11-released-872020)
 - [Known Bugs](#known-bugs)
-  - [*Blank Staff Member*](#blank-staff-member)
+  - [*Curfew on Wrong Day (tentative)*](#curfew-on-wrong-day-tentative)
+  - [*Blank Staff Member (potentially removed)*](#blank-staff-member-potentially-removed)
 
 ## License
 
@@ -102,8 +103,16 @@ Clicking on the `Sign In`, `Shmira`, or `Day Off` buttons in this window will si
 
 ## Known Bugs
 
-### *Blank Staff Member*
+### *Curfew on Wrong Day (tentative)*
+
+If the curfew time entered is to be on the next day (e.g. 1:00 AM entered at 8:00 PM), the wrong date may be attached to the curfew time (the current day instead of the next one). This will cause staff members who sign in on time to be incorrectly marked as late.
+
+I first noticed this bug in a demonstration I did, but I've yet to reporoduce it or find the source of the error in my code. When I discover the source of the bug or am able to reproduce it, I'll update this section (2/11/2021).
+
+### *Blank Staff Member (potentially removed)*
 
 If the first "staff" row in an input spreadsheet (e.g. row 4 in the sample) is a blank row, sometimes a blank space will appear first when clicking on the `View Unaccounted-for Staff Members` button. This is treated as if the spreadsheet listed a staff member with no name and no bunk, and allows the user to sign this staff member in as normal.  
 
 I have no idea how to reliably reproduce this bug, but I suspect it's due to my misunderstanding of the Apache POI library causing a formatting issue in the Excel spreadsheet. If you can find a way to reliably reproduce this bug, I would love to know how.
+
+I haven't noticed this bug occurring since before version 1.1 released, so it's possible I may have fixed it without even noticing.
