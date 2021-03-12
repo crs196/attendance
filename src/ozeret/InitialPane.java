@@ -46,7 +46,6 @@ public class InitialPane extends GridPane {
 		myScene = ms;
 		
 		infoText = "";
-		
 		getFileContents();
 		
 		setup();
@@ -92,15 +91,11 @@ public class InitialPane extends GridPane {
 		this.setVgap(20);
 		this.setPadding(new Insets(30));
 		
-		// add information button (will pop up credits and instructions)
-		Button info = new Button("i");
-		info.getStyleClass().add("info");
-		
 		// header
 		Label title = new Label("Sign-in Setup");
 		title.setId("header");
 		
-		this.add(new HBox(this.getHgap(), info, title), 0, 0, 3, 1);
+		this.add(title, 0, 0, 3, 1);
 		
 		// location for person on ozeret to input their name
 		Label ozName = new Label("Ozeret Name:");
@@ -131,7 +126,6 @@ public class InitialPane extends GridPane {
 		timeBox.getChildren().addAll(am, pm);
 		this.add(timeBox, 2, 2);
 		
-		
 		// add continue/exit buttons
 		Button exit = new Button("Exit");
 		exit.setCancelButton(true); // exit button is triggered on ESC keypress
@@ -139,13 +133,17 @@ public class InitialPane extends GridPane {
 		Button advance = new Button("Choose File");
 		advance.setDefaultButton(true); // advance button is triggered on ENTER keypress
 		
+		// add information button (will pop up credits and instructions)
+		Button info = new Button("i");
+		info.getStyleClass().add("info");
+		
 		// make buttons grow to fit entire width of row
 		HBox statusBox = new HBox(this.getHgap());
 		HBox.setHgrow(exit, Priority.ALWAYS);
 		HBox.setHgrow(advance, Priority.ALWAYS);
 		exit.setMaxWidth(Double.MAX_VALUE);
 		advance.setMaxWidth(Double.MAX_VALUE);
-		statusBox.getChildren().addAll(exit, advance);
+		statusBox.getChildren().addAll(exit, advance, info);
 		this.add(statusBox, 0, 3, 3, 1);
 		
 		// set info button behavior (show credits, brief explanation of what to do)
@@ -153,11 +151,11 @@ public class InitialPane extends GridPane {
 
 			@Override
 			public void handle(ActionEvent arg0) {
-				Alert info = new Alert(AlertType.NONE, infoText, ButtonType.CLOSE);
-				info.setTitle("Credits and Instructions");
-				info.getDialogPane().getStylesheets().add(getClass().getResource("ozeret.css").toExternalForm());
-				info.initOwner(exit.getScene().getWindow());
-				info.showAndWait();
+				Alert infoDialog = new Alert(AlertType.NONE, infoText, ButtonType.CLOSE);
+				infoDialog.setTitle("Credits and Instructions");
+				infoDialog.getDialogPane().getStylesheets().add(getClass().getResource("ozeret.css").toExternalForm());
+				infoDialog.initOwner(info.getScene().getWindow());
+				infoDialog.showAndWait();
 			}
 			
 		});
