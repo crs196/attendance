@@ -124,6 +124,20 @@
 	-fx-font-size: 12px;
 }
 
+.info {
+	-fx-font-family: "Monospaced";
+	-fx-font-weight: bolder;
+	-fx-background-color: #212153;
+	-fx-border-color: #ffffff;
+	-fx-border-radius: 100px;
+}
+
+.info:hover {
+	-fx-text-fill: #c8c8c8;
+	-fx-border-color: #c8c8c8;
+	-fx-background-color: #212153;
+}
+
 #list-button {
 	-fx-font-family: "Montserrat Medium";
 	-fx-font-size: 14px;

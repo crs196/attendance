@@ -96,15 +96,31 @@ public class InitialPane extends GridPane {
 		Button advance = new Button("Choose File");
 		advance.setDefaultButton(true); // advance button is triggered on ENTER keypress
 		
+		// add information button (will pop up credits and instructions)
+		Button info = new Button("i");
+		info.getStyleClass().add("info");
+		
 		// make buttons grow to fit entire width of row
 		HBox statusBox = new HBox(this.getHgap());
 		HBox.setHgrow(exit, Priority.ALWAYS);
 		HBox.setHgrow(advance, Priority.ALWAYS);
 		exit.setMaxWidth(Double.MAX_VALUE);
 		advance.setMaxWidth(Double.MAX_VALUE);
-		statusBox.getChildren().addAll(exit, advance);
+		info.setMaxWidth(info.getPrefWidth());
+		statusBox.getChildren().addAll(info, exit, advance);
 		this.add(statusBox, 0, 3, 3, 1);
 		
+		// set info button behavior (show credits, brief explanation of what to do)
+		info.setOnAction(new EventHandler<ActionEvent>() {
+
+			@Override
+			public void handle(ActionEvent arg0) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+		});
+			
 		// if the exit ('X') button of the window is pressed, act as if the in-window "Exit" button was pressed
 		stage.setOnCloseRequest(new EventHandler<WindowEvent>() {
 
