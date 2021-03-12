@@ -2,8 +2,8 @@
 <launch4jConfig>
   <dontWrapJar>false</dontWrapJar>
   <headerType>gui</headerType>
-  <jar>C:\Users\17csc\Desktop\harlam-ozeret.jar</jar>
-  <outfile>C:\Users\17csc\Desktop\OzeretSignIn\OzeretSignIn.exe</outfile>
+  <jar>C:\Users\17csc\OneDrive\Desktop\harlam-ozeret.jar</jar>
+  <outfile>C:\Users\17csc\OneDrive\Desktop\OzeretSignIn.exe</outfile>
   <errTitle></errTitle>
   <cmdLine></cmdLine>
   <chdir>.</chdir>
@@ -13,7 +13,7 @@
   <stayAlive>false</stayAlive>
   <restartOnCrash>false</restartOnCrash>
   <manifest></manifest>
-  <icon>C:\Users\17csc\Desktop\OzeretSignIn\resources\images\app_icon.ico</icon>
+  <icon>C:\Users\17csc\OneDrive\Desktop\OzeretSignIn\resources\images\app_icon.ico</icon>
   <jre>
     <path></path>
     <bundledJre64Bit>false</bundledJre64Bit>
