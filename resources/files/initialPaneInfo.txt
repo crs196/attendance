@@ -8,4 +8,4 @@ To get started signing people in:
 
 Copyright 2020 Cooper Schwartz
 
-Please see the README and LICENSE files in this folder for more information about the copyright on this software.
+Please see the README and LICENSE files in this folder for more information about the copyright on this software and more detailed instructions.
