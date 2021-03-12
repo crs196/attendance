@@ -1,6 +1,10 @@
 package ozeret;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -32,6 +36,8 @@ public class InitialPane extends GridPane {
 
 	private Stage stage;
 	private Scene nextScene, myScene;
+	private BufferedReader infoReader;
+	private String infoText;
 	
 	public InitialPane(Stage s, Scene ns, Scene ms) {
 		super();
@@ -39,9 +45,42 @@ public class InitialPane extends GridPane {
 		nextScene = ns;
 		myScene = ms;
 		
+		infoText = "";
+		
+		getFileContents();
+		
 		setup();
 		
 		myScene.setRoot(this); // set this pane on its scene
+	}
+	
+	// reads information from file to display if the info button is clicked
+	private void getFileContents() {
+		
+		// set up reader to read from file
+		try {
+			infoReader = new BufferedReader(new FileReader("resources/files/initialPaneInfo.txt"));
+		} catch (FileNotFoundException e) {		
+			Alert fileNotAccessible = new Alert(AlertType.ERROR, "Unable to access \"initialPaneInfo.txt\" file.\nPlease create this file in the resources/files directory.");
+			fileNotAccessible.setTitle("Info File Not Accessible");
+			fileNotAccessible.getDialogPane().getStylesheets().add(OzeretMain.class.getResource("ozeret.css").toExternalForm());
+			fileNotAccessible.showAndWait();
+			
+			Platform.exit();
+		}
+		
+		
+		// read from file into infoText
+		try {
+			String temp = "";
+			
+			while((temp = infoReader.readLine()) != null) {
+				infoText += temp + "\n";
+			}
+			
+		} catch (IOException e) {
+			infoText = "Something went wrong while reading this text.\nCheck the \"initialPaneInfo.txt\" file to see if there are errors in it.";
+		}
 	}
 	
 	// sets up layout and functionality of InitalPane
@@ -115,8 +154,11 @@ public class InitialPane extends GridPane {
 
 			@Override
 			public void handle(ActionEvent arg0) {
-				// TODO Auto-generated method stub
-				
+				Alert info = new Alert(AlertType.NONE, infoText, ButtonType.CLOSE);
+				info.setTitle("Credits and Instructions");
+				info.getDialogPane().getStylesheets().add(getClass().getResource("ozeret.css").toExternalForm());
+				info.initOwner(exit.getScene().getWindow());
+				info.showAndWait();
 			}
 			
 		});
