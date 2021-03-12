@@ -10,9 +10,9 @@
   - [*Spreadsheet Format*](#spreadsheet-format)
   - [*Application Use*](#application-use)
 - [Changelog](#changelog)
-  - [*Version 1.1 (released 8/7/2020)*](#version-11-released-872020)
-  - [*Version 1.2 (released 2/11/2021)*](#version-12-released-2112021)
   - [*Version 1.3 (released 3/12/2021)*](#version-13-released-3122021)
+  - [*Version 1.2 (released 2/11/2021)*](#version-12-released-2112021)
+  - [*Version 1.1 (released 8/7/2020)*](#version-11-released-872020)
 - [Known Bugs](#known-bugs)
   - [*Blank Staff Member (potentially removed)*](#blank-staff-member-potentially-removed)
 
@@ -94,20 +94,20 @@ Clicking on the `Sign In`, `Shmira`, or `Day Off` buttons in this window will si
 
 ## Changelog
 
-### *Version 1.1 (released 8/7/2020)*
+### *Version 1.3 (released 3/12/2021)*
 
-- A bug that caused the text reading `Current Time`, `Curfew`, and `Time until curfew` to overlap previous versions of themselves was fixed.
-- In addition to the time a staff member signs in being written to the attendance `*.xlsx` file, the cell is now colored according to when the staff member signed in. This is to make seeing overall trends more easily visible at a glance.
-  - A green background means that the staff member signed in on time (or was on shmira or a day off), a yellow background means that the staff members signed in after curfew, and a red background means that the staff member did not sign in at all.
+- An info button was added to the bottom right of both the initial screen and main window. Clicking on this button will provide a basic set of instructions for what to do on the current screen, as well as show the credits for this software.
 
 ### *Version 1.2 (released 2/11/2021)*
 
 - A bug that caused a staff member to be incorrectly marked as late when curfew time hadn't yet passed was fixed.
   - This bug occured due to curfew being assumed to be on the same day as when the staff member signed in, when in reality this is not always true (e.g. if curfew is at 1:00 AM and a staff member signs in at 11:30 PM, curfew is technically the next day, and the staff member is on time).
 
-### *Version 1.3 (released 3/12/2021)*
+### *Version 1.1 (released 8/7/2020)*
 
-- An info button was added to the bottom right of both the initial screen and main window. Clicking on this button will provide a basic set of instructions for what to do on the current screen, as well as show the credits for this software.
+- A bug that caused the text reading `Current Time`, `Curfew`, and `Time until curfew` to overlap previous versions of themselves was fixed.
+- In addition to the time a staff member signs in being written to the attendance `*.xlsx` file, the cell is now colored according to when the staff member signed in. This is to make seeing overall trends more easily visible at a glance.
+  - A green background means that the staff member signed in on time (or was on shmira or a day off), a yellow background means that the staff members signed in after curfew, and a red background means that the staff member did not sign in at all.
 
 ---
 
