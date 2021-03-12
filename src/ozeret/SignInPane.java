@@ -1,8 +1,11 @@
 package ozeret;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -62,13 +65,49 @@ public class SignInPane extends GridPane {
 
 	private XSSFWorkbook workbook;
 	private XSSFSheet sheet;
+	
+	private BufferedReader infoReader;
+	private String infoText;
 
 	// used to track which column holds each piece of information
 	private int bunkCol, nameCol, idCol, ontimeCol, lateCol, absentCol, todayCol;
 
 	public SignInPane(Stage s) {
 		super();
+		
+		infoText = "";
+		getFileContents();
+		
 		stage = s;
+	}
+	
+	// reads information from file to display if the info button is clicked
+	private void getFileContents() {
+		
+		// set up reader to read from file
+		try {
+			infoReader = new BufferedReader(new FileReader("resources/files/signInPaneInfo.txt"));
+		} catch (FileNotFoundException e) {		
+			Alert fileNotAccessible = new Alert(AlertType.ERROR, "Unable to access \"signInPaneInfo.txt\" file.\nPlease create this file in the resources/files directory.");
+			fileNotAccessible.setTitle("Info File Not Accessible");
+			fileNotAccessible.getDialogPane().getStylesheets().add(OzeretMain.class.getResource("ozeret.css").toExternalForm());
+			fileNotAccessible.showAndWait();
+			
+			Platform.exit();
+		}
+		
+		
+		// read from file into infoText
+		try {
+			String temp = "";
+			
+			while((temp = infoReader.readLine()) != null) {
+				infoText += temp + "\n";
+			}
+			
+		} catch (IOException e) {
+			infoText = "Something went wrong while reading this text.\nCheck the \"signInPaneInfo.txt\" file to see if there are errors in it.";
+		}
 	}
 
 	// called when InitialPane moves to this scene
@@ -273,12 +312,12 @@ public class SignInPane extends GridPane {
 		viewUnaccounted.setMaxWidth(Double.MAX_VALUE);
 		save.setMaxWidth(Double.MAX_VALUE);
 		saveAndReturn.setMaxWidth(Double.MAX_VALUE);
-
+		
 		listButtons.getChildren().addAll(new HBox(viewUnaccounted), new HBox(), new HBox(save), new HBox(saveAndReturn)); // empty HBox for spacing
 
 		VBox leftColumn = new VBox(this.getVgap());
 		leftColumn.getChildren().addAll(clockBox, listButtons);
-		this.add(leftColumn, 0, 1);		
+		this.add(leftColumn, 0, 1, 1, 2);		
 
 		/* right column (sign-in box, confirmation area) */
 
@@ -307,9 +346,36 @@ public class SignInPane extends GridPane {
 		idBox.getChildren().add(confirmation);
 		this.add(idBox, 1, 1);
 		
+		// add information button (will pop up credits and instructions)
+		// infoBox and infoAlign are to right-align the info button
+		Button info = new Button("i");
+		info.getStyleClass().add("info");
+		info.setMinSize(USE_PREF_SIZE, USE_PREF_SIZE);
+
+		GridPane infoAlign = new GridPane();
+		HBox.setHgrow(infoAlign, Priority.ALWAYS);
+		
+		HBox infoBox = new HBox();
+		infoBox.getChildren().addAll(infoAlign, info);
+		this.add(infoBox, 1, 2);
+		
 		// stage and scene for viewUnaccounted
 		Stage extraStage = new Stage();
 		Scene unaccScene = new Scene(new Label("Something's gone wrong"));
+		
+		// set info button behavior (show credits, brief explanation of what to do)
+		info.setOnAction(new EventHandler<ActionEvent>() {
+
+			@Override
+			public void handle(ActionEvent arg0) {
+				Alert infoDialog = new Alert(AlertType.NONE, infoText, ButtonType.CLOSE);
+				infoDialog.setTitle("Credits and Instructions");
+				infoDialog.getDialogPane().getStylesheets().add(getClass().getResource("ozeret.css").toExternalForm());
+				infoDialog.initOwner(info.getScene().getWindow());
+				infoDialog.showAndWait();
+			}
+					
+		});
 
 		// set sign-in button behavior
 		signIn.setOnAction(new EventHandler<ActionEvent>() {
