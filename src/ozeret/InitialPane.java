@@ -29,6 +29,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 
@@ -152,10 +153,13 @@ public class InitialPane extends GridPane {
 			@Override
 			public void handle(ActionEvent arg0) {
 				Alert infoDialog = new Alert(AlertType.NONE, infoText, ButtonType.CLOSE);
-				infoDialog.setTitle("Credits and Instructions");
+				infoDialog.setTitle("Credits and Instructions — Set-up");
 				infoDialog.getDialogPane().getStylesheets().add(getClass().getResource("ozeret.css").toExternalForm());
 				infoDialog.initOwner(info.getScene().getWindow());
-				infoDialog.showAndWait();
+				infoDialog.initModality(Modality.NONE);
+				infoDialog.setResizable(true);
+				infoDialog.getDialogPane().setPrefWidth(stage.getWidth());
+				infoDialog.show();
 			}
 			
 		});
