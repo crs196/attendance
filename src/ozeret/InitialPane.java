@@ -92,11 +92,15 @@ public class InitialPane extends GridPane {
 		this.setVgap(20);
 		this.setPadding(new Insets(30));
 		
+		// add information button (will pop up credits and instructions)
+		Button info = new Button("i");
+		info.getStyleClass().add("info");
+		
 		// header
 		Label title = new Label("Sign-in Setup");
 		title.setId("header");
-		this.add(title, 0, 0, 3, 1);
 		
+		this.add(new HBox(this.getHgap(), info, title), 0, 0, 3, 1);
 		
 		// location for person on ozeret to input their name
 		Label ozName = new Label("Ozeret Name:");
@@ -135,18 +139,13 @@ public class InitialPane extends GridPane {
 		Button advance = new Button("Choose File");
 		advance.setDefaultButton(true); // advance button is triggered on ENTER keypress
 		
-		// add information button (will pop up credits and instructions)
-		Button info = new Button("i");
-		info.getStyleClass().add("info");
-		
 		// make buttons grow to fit entire width of row
 		HBox statusBox = new HBox(this.getHgap());
 		HBox.setHgrow(exit, Priority.ALWAYS);
 		HBox.setHgrow(advance, Priority.ALWAYS);
 		exit.setMaxWidth(Double.MAX_VALUE);
 		advance.setMaxWidth(Double.MAX_VALUE);
-		info.setMaxWidth(info.getPrefWidth());
-		statusBox.getChildren().addAll(info, exit, advance);
+		statusBox.getChildren().addAll(exit, advance);
 		this.add(statusBox, 0, 3, 3, 1);
 		
 		// set info button behavior (show credits, brief explanation of what to do)
