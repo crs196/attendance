@@ -25,6 +25,7 @@ hs_err_pid*
 # configuration files
 .idea/
 .settings/
+*.iml
 
 # app building files
 build/
