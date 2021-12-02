@@ -240,7 +240,7 @@ public class SignInPane extends GridPane {
 		// write curfew time to row 3 in today's column if different than what's already there
 		if (sheet.getRow(2).getCell(todayCol) == null)
 			sheet.getRow(2).createCell(todayCol).setCellValue(curfew.format(DateTimeFormatter.ofPattern("h:mm a")));
-		else if (!(sheet.getRow(2).getCell(todayCol).getStringCellValue().equals(ozeretName)))
+		else if (!(sheet.getRow(2).getCell(todayCol).getStringCellValue().equals(curfew.format(DateTimeFormatter.ofPattern("h:mm a")))))
 			sheet.getRow(2).getCell(todayCol).setCellValue(curfew.format(DateTimeFormatter.ofPattern("h:mm a")));
 		
 		sheet.autoSizeColumn(todayCol); // resize column to fit
