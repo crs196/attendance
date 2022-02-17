@@ -117,7 +117,7 @@ public class SignInPane extends GridPane {
 			}
 			
 		} catch (IOException e) {
-			infoText = "Something went wrong while reading this text.\nCheck the \"" + infoFileName + ""\" file to see if there are errors in it.";
+			infoText = "Something went wrong while reading this text.\nCheck the \"" + infoFileName + "\" file to see if there are errors in it.";
 		}
 	}
 
