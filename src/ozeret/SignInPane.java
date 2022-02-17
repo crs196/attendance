@@ -150,6 +150,7 @@ public class SignInPane extends GridPane {
 
 	// reads header row of workbook to initialize column trackers,
 	//  adds column for today to the end of the sheet and puts in OzeretName to row 2
+	// TODO: consider refactoring this method in conjunction with a set of settings in `config.ini` that specify whether columns exist and where they are
 	private void readHeaderRow() {
 
 		XSSFRow headerRow = sheet.getRow(0);
