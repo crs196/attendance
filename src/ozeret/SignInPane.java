@@ -90,11 +90,16 @@ public class SignInPane extends GridPane {
 	// reads information from file to display if the info button is clicked
 	private void getFileContents() {
 		
+		// get location of the info file for this pane
+		String infoPath = settings.get("signInPaneSettings", "infoPath", String.class);
+		String infoFileParent = infoPath.substring(0, infoPath.lastIndexOf("/")); // get the parent name
+		String infoFileName = infoPath.split("/")[infoPath.split("/").length - 1]; // get the file name
+		
 		// set up reader to read from file
 		try {
-			infoReader = new BufferedReader(new FileReader("resources/files/signInPaneInfo.txt"));
+			infoReader = new BufferedReader(new FileReader(infoPath));
 		} catch (FileNotFoundException e) {		
-			Alert fileNotAccessible = new Alert(AlertType.ERROR, "Unable to access \"signInPaneInfo.txt\" file.\nPlease create this file in the resources/files directory.");
+			Alert fileNotAccessible = new Alert(AlertType.ERROR, "Unable to access \"" + infoFileName + "\" file.\nPlease create this file in the " + infoFileParent + " directory.");
 			fileNotAccessible.setTitle("Info File Not Accessible");
 			fileNotAccessible.getDialogPane().getStylesheets().add(OzeretMain.class.getResource(settings.get("stageSettings", "cssFile", String.class)).toExternalForm());
 			fileNotAccessible.showAndWait();
@@ -112,7 +117,7 @@ public class SignInPane extends GridPane {
 			}
 			
 		} catch (IOException e) {
-			infoText = "Something went wrong while reading this text.\nCheck the \"signInPaneInfo.txt\" file to see if there are errors in it.";
+			infoText = "Something went wrong while reading this text.\nCheck the \"" + infoFileName + ""\" file to see if there are errors in it.";
 		}
 	}
 
