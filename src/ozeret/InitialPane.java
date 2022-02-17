@@ -9,6 +9,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
+import org.ini4j.Ini;
+
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -39,12 +41,14 @@ public class InitialPane extends GridPane {
 	private Scene nextScene, myScene;
 	private BufferedReader infoReader;
 	private String infoText;
+	private Ini settings;
 	
-	public InitialPane(Stage s, Scene ns, Scene ms) {
+	public InitialPane(Stage s, Scene ns, Scene ms, Ini set) {
 		super();
 		stage = s;
 		nextScene = ns;
 		myScene = ms;
+		settings = set;
 		
 		infoText = "";
 		getFileContents();
@@ -57,13 +61,19 @@ public class InitialPane extends GridPane {
 	// reads information from file to display if the info button is clicked
 	private void getFileContents() {
 		
+		// get location of the info file for this pane
+		String infoPath = settings.get("initialPaneSettings", "infoPath", String.class);
+		String infoFileParent = infoPath.substring(0, infoPath.lastIndexOf("/")); // get the parent name
+		String infoFileName = infoPath.split("/")[infoPath.split("/").length - 1]; // get the file name
+		
 		// set up reader to read from file
 		try {
-			infoReader = new BufferedReader(new FileReader("resources/files/initialPaneInfo.txt"));
+			infoReader = new BufferedReader(new FileReader(infoPath));
 		} catch (FileNotFoundException e) {		
-			Alert fileNotAccessible = new Alert(AlertType.ERROR, "Unable to access \"initialPaneInfo.txt\" file.\nPlease create this file in the resources/files directory.");
+			Alert fileNotAccessible = new Alert(AlertType.ERROR, "Unable to access \""+ infoFileName+ "\" file.\n"
+					+ "Please create this file in the " + infoFileParent + " directory.");
 			fileNotAccessible.setTitle("Info File Not Accessible");
-			fileNotAccessible.getDialogPane().getStylesheets().add(OzeretMain.class.getResource("ozeret.css").toExternalForm());
+			fileNotAccessible.getDialogPane().getStylesheets().add(OzeretMain.class.getResource(settings.get("stageSettings", "cssFile", String.class)).toExternalForm());
 			fileNotAccessible.showAndWait();
 			
 			Platform.exit();
@@ -154,7 +164,7 @@ public class InitialPane extends GridPane {
 			public void handle(ActionEvent arg0) {
 				Alert infoDialog = new Alert(AlertType.NONE, infoText, ButtonType.CLOSE);
 				infoDialog.setTitle("Credits and Instructions — Set-up");
-				infoDialog.getDialogPane().getStylesheets().add(getClass().getResource("ozeret.css").toExternalForm());
+				infoDialog.getDialogPane().getStylesheets().add(getClass().getResource(settings.get("stageSettings", "cssFile", String.class)).toExternalForm());
 				infoDialog.initOwner(info.getScene().getWindow());
 				infoDialog.initModality(Modality.NONE);
 				infoDialog.setResizable(true);
@@ -183,7 +193,7 @@ public class InitialPane extends GridPane {
 				// pop up exit confirmation alert
 				Alert exitConfirmation = new Alert(AlertType.CONFIRMATION, "Are you sure you want to exit?\nData entered will be lost.");
 				exitConfirmation.setTitle("Exit Confirmation");
-				exitConfirmation.getDialogPane().getStylesheets().add(getClass().getResource("ozeret.css").toExternalForm());
+				exitConfirmation.getDialogPane().getStylesheets().add(getClass().getResource(settings.get("stageSettings", "cssFile", String.class)).toExternalForm());
 				exitConfirmation.initOwner(exit.getScene().getWindow());
 				exitConfirmation.showAndWait();
 				
@@ -229,7 +239,7 @@ public class InitialPane extends GridPane {
 					// if fields aren't properly filled out, pop up an alert saying so, and don't advance
 					Alert notDone = new Alert(AlertType.WARNING, "You must fill out both fields properly to proceed");
 					notDone.setHeaderText("Improper Ozeret Name and/or Curfew Time");
-					notDone.getDialogPane().getStylesheets().add(getClass().getResource("ozeret.css").toExternalForm());
+					notDone.getDialogPane().getStylesheets().add(getClass().getResource(settings.get("stageSettings", "cssFile", String.class)).toExternalForm());
 					notDone.showAndWait();
 				}
 			}

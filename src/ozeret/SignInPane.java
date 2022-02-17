@@ -1,5 +1,6 @@
 package ozeret;
 
+import java.awt.Color;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -24,6 +25,7 @@ import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.ini4j.Ini;
 
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
@@ -63,6 +65,7 @@ public class SignInPane extends GridPane {
 	private LocalDateTime curfew;
 	private File attendanceFile;
 	private Scene prevScene;
+	private Ini settings;
 
 	private XSSFWorkbook workbook;
 	private XSSFSheet sheet;
@@ -73,8 +76,10 @@ public class SignInPane extends GridPane {
 	// used to track which column holds each piece of information
 	private int bunkCol, nameCol, idCol, ontimeCol, lateCol, absentCol, todayCol;
 
-	public SignInPane(Stage s) {
+	public SignInPane(Stage s, Ini set) {
 		super();
+		
+		settings = set;
 		
 		infoText = "";
 		getFileContents();
@@ -91,7 +96,7 @@ public class SignInPane extends GridPane {
 		} catch (FileNotFoundException e) {		
 			Alert fileNotAccessible = new Alert(AlertType.ERROR, "Unable to access \"signInPaneInfo.txt\" file.\nPlease create this file in the resources/files directory.");
 			fileNotAccessible.setTitle("Info File Not Accessible");
-			fileNotAccessible.getDialogPane().getStylesheets().add(OzeretMain.class.getResource("ozeret.css").toExternalForm());
+			fileNotAccessible.getDialogPane().getStylesheets().add(OzeretMain.class.getResource(settings.get("stageSettings", "cssFile", String.class)).toExternalForm());
 			fileNotAccessible.showAndWait();
 			
 			Platform.exit();
@@ -130,7 +135,7 @@ public class SignInPane extends GridPane {
 			Alert fileNotAccessible = new Alert(AlertType.ERROR, "Unable to access \"" + attendanceFile.getName()
 					+ "\"\nPlease choose a different file.");
 			fileNotAccessible.setTitle("Attendance File Not Accessible");
-			fileNotAccessible.getDialogPane().getStylesheets().add(OzeretMain.class.getResource("ozeret.css").toExternalForm());
+			fileNotAccessible.getDialogPane().getStylesheets().add(OzeretMain.class.getResource(settings.get("stageSettings", "cssFile", String.class)).toExternalForm());
 			fileNotAccessible.initOwner(stage);
 			fileNotAccessible.showAndWait();
 			
@@ -202,7 +207,7 @@ public class SignInPane extends GridPane {
 			Alert fileNotAccessible = new Alert(AlertType.ERROR, "The chosen file \"" + attendanceFile.getName() + "\" is formatted incorrecly.\n"
 					+ "Please choose a different file.");
 			fileNotAccessible.setTitle("Attendance File Not Formatted Correctly");
-			fileNotAccessible.getDialogPane().getStylesheets().add(OzeretMain.class.getResource("ozeret.css").toExternalForm());
+			fileNotAccessible.getDialogPane().getStylesheets().add(OzeretMain.class.getResource(settings.get("stageSettings", "cssFile", String.class)).toExternalForm());
 			fileNotAccessible.initOwner(stage);
 			fileNotAccessible.showAndWait();
 			
@@ -371,7 +376,7 @@ public class SignInPane extends GridPane {
 			public void handle(ActionEvent arg0) {
 				Alert infoDialog = new Alert(AlertType.NONE, infoText, ButtonType.CLOSE);
 				infoDialog.setTitle("Credits and Instructions — Sign-in");
-				infoDialog.getDialogPane().getStylesheets().add(getClass().getResource("ozeret.css").toExternalForm());
+				infoDialog.getDialogPane().getStylesheets().add(getClass().getResource(settings.get("stageSettings", "cssFile", String.class)).toExternalForm());
 				infoDialog.initOwner(info.getScene().getWindow());
 				infoDialog.initModality(Modality.NONE);
 				infoDialog.setResizable(true);
@@ -486,11 +491,13 @@ public class SignInPane extends GridPane {
 
 				// create cell styles for on time and late
 				XSSFCellStyle onTime = workbook.createCellStyle();
-				onTime.setFillForegroundColor(new XSSFColor(new java.awt.Color(183, 225, 205), new DefaultIndexedColorMap()));
+				java.awt.Color onTimeColor = Color.decode(settings.get("sheetFormat", "onTimeColor", String.class));
+				onTime.setFillForegroundColor(new XSSFColor(onTimeColor, new DefaultIndexedColorMap()));
 				onTime.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 				
 				XSSFCellStyle late = workbook.createCellStyle();
-				late.setFillForegroundColor(new XSSFColor(new java.awt.Color(255, 229, 153), new DefaultIndexedColorMap()));
+				java.awt.Color lateColor = Color.decode(settings.get("sheetFormat", "lateColor", String.class));
+				late.setFillForegroundColor(new XSSFColor(lateColor, new DefaultIndexedColorMap()));
 				late.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 				
 				// staff member is on time
@@ -572,7 +579,7 @@ public class SignInPane extends GridPane {
 
 				// set up scene
 				unaccScene.setRoot(scrollPane);
-				unaccScene.getStylesheets().add(OzeretMain.class.getResource("ozeret.css").toExternalForm());
+				unaccScene.getStylesheets().add(OzeretMain.class.getResource(settings.get("stageSettings", "cssFile", String.class)).toExternalForm());
 
 				// only need to do these things if the stage isn't currently on screen
 				if (!extraStage.isShowing()) {
@@ -581,7 +588,7 @@ public class SignInPane extends GridPane {
 					extraStage.setMinWidth(scrollPane.getMinWidth());
 					extraStage.setMaxHeight(scrollPane.getMaxHeight());
 					extraStage.setTitle("Unaccounted-for Staff");
-					extraStage.getIcons().add(new Image("file:resources/images/stage_icon.png"));
+					extraStage.getIcons().add(new Image(settings.get("stageSettings", "iconPath", String.class)));
 					extraStage.centerOnScreen();
 					extraStage.show();
 				}
@@ -679,13 +686,14 @@ public class SignInPane extends GridPane {
 											ButtonType.CANCEL);
 									options.setTitle("Manual Sign-In");
 									options.setHeaderText(staffMember.getText());
-									options.getDialogPane().getStylesheets().add(getClass().getResource("ozeret.css").toExternalForm());
+									options.getDialogPane().getStylesheets().add(getClass().getResource(settings.get("stageSettings", "cssFile", String.class)).toExternalForm());
 									options.initOwner(staffMember.getScene().getWindow());
 									options.showAndWait();
 									
 									// create cell style to be used when signing staff member in for day off or shmira
 									XSSFCellStyle onTime = workbook.createCellStyle();
-									onTime.setFillForegroundColor(new XSSFColor(new java.awt.Color(183, 225, 205), new DefaultIndexedColorMap()));
+									java.awt.Color onTimeColor = Color.decode(settings.get("sheetFormat", "onTimeColor", String.class));
+									onTime.setFillForegroundColor(new XSSFColor(onTimeColor, new DefaultIndexedColorMap()));
 									onTime.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 
 									if (options.getResult().getText().equals("Shmira")) {
@@ -789,7 +797,7 @@ public class SignInPane extends GridPane {
 					Alert saveAndReturnConf = new Alert(AlertType.CONFIRMATION, "There are still staff members that haven't signed in.\nAre you sure you want to return to setup?");
 					saveAndReturnConf.setHeaderText("Save and Return to Setup Confirmation");
 					saveAndReturnConf.setTitle("Save and Return to Setup Confirmation");
-					saveAndReturnConf.getDialogPane().getStylesheets().add(getClass().getResource("ozeret.css").toExternalForm());
+					saveAndReturnConf.getDialogPane().getStylesheets().add(getClass().getResource(settings.get("stageSettings", "cssFile", String.class)).toExternalForm());
 					saveAndReturnConf.initOwner(saveAndReturn.getScene().getWindow());
 					saveAndReturnConf.showAndWait();
 					
@@ -842,7 +850,8 @@ public class SignInPane extends GridPane {
 				
 				// create cell style for absent cells
 				XSSFCellStyle absentStyle = workbook.createCellStyle();
-				absentStyle.setFillForegroundColor(new XSSFColor(new java.awt.Color(234, 153, 153), new DefaultIndexedColorMap()));
+				java.awt.Color absentColor = Color.decode(settings.get("sheetFormat", "absentColor", String.class));
+				absentStyle.setFillForegroundColor(new XSSFColor(absentColor, new DefaultIndexedColorMap()));
 				absentStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 				
 				for (int i = sheet.getFirstRowNum() + 3; i < sheet.getLastRowNum() + 1; i++) {
@@ -886,7 +895,7 @@ public class SignInPane extends GridPane {
 						new ButtonType("No, Return to Sign-In", ButtonData.CANCEL_CLOSE),
 						new ButtonType("Yes, Exit", ButtonData.OK_DONE));
 				alert.setTitle("Exit Confirmation");
-				alert.getDialogPane().getStylesheets().add(getClass().getResource("ozeret.css").toExternalForm());
+				alert.getDialogPane().getStylesheets().add(getClass().getResource(settings.get("stageSettings", "cssFile", String.class)).toExternalForm());
 				alert.initOwner(stage);
 				alert.showAndWait();
 
