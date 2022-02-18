@@ -103,7 +103,7 @@ public class InitialPane extends GridPane {
 		this.setPadding(new Insets(30));
 		
 		// header
-		Label title = new Label("Sign-in Setup");
+		Label title = new Label("Setup");
 		title.setId("header");
 		
 		this.add(title, 0, 0, 3, 1);

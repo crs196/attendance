@@ -268,7 +268,7 @@ public class SignInPane extends GridPane {
 		this.setPadding(new Insets(30));
 
 		// header
-		Label title = new Label("Sign-In");
+		Label title = new Label("Sign In");
 		title.setId("header");
 		SignInPane.setHalignment(title, HPos.CENTER);
 		this.add(title, 0, 0, 3, 1);
