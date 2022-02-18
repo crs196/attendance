@@ -1,4 +1,4 @@
-package ozeret;
+package attendance;
 
 import java.awt.Color;
 import java.io.BufferedReader;
@@ -61,7 +61,7 @@ public class SignInPane extends GridPane {
 
 	private Stage stage;
 
-	private String ozeretName;
+	private String name;
 	private LocalDateTime curfew;
 	private File attendanceFile;
 	private Scene prevScene;
@@ -101,7 +101,7 @@ public class SignInPane extends GridPane {
 		} catch (FileNotFoundException e) {		
 			Alert fileNotAccessible = new Alert(AlertType.ERROR, "Unable to access \"" + infoFileName + "\" file.\nPlease create this file in the " + infoFileParent + " directory.");
 			fileNotAccessible.setTitle("Info File Not Accessible");
-			fileNotAccessible.getDialogPane().getStylesheets().add(OzeretMain.class.getResource(settings.get("stageSettings", "cssFile", String.class)).toExternalForm());
+			fileNotAccessible.getDialogPane().getStylesheets().add(Attendance.class.getResource(settings.get("stageSettings", "cssFile", String.class)).toExternalForm());
 			fileNotAccessible.showAndWait();
 			
 			Platform.exit();
@@ -122,8 +122,8 @@ public class SignInPane extends GridPane {
 	}
 
 	// called when InitialPane moves to this scene
-	public void setPrevVars(String ozName, LocalDateTime c, File af, Scene ps) {
-		ozeretName = ozName;
+	public void setPrevVars(String opName, LocalDateTime c, File af, Scene ps) {
+		name = opName;
 		curfew = c;
 		attendanceFile = af;
 		prevScene = ps;
@@ -140,7 +140,7 @@ public class SignInPane extends GridPane {
 			Alert fileNotAccessible = new Alert(AlertType.ERROR, "Unable to access \"" + attendanceFile.getName()
 					+ "\"\nPlease choose a different file.");
 			fileNotAccessible.setTitle("Attendance File Not Accessible");
-			fileNotAccessible.getDialogPane().getStylesheets().add(OzeretMain.class.getResource(settings.get("stageSettings", "cssFile", String.class)).toExternalForm());
+			fileNotAccessible.getDialogPane().getStylesheets().add(Attendance.class.getResource(settings.get("stageSettings", "cssFile", String.class)).toExternalForm());
 			fileNotAccessible.initOwner(stage);
 			fileNotAccessible.showAndWait();
 			
@@ -149,7 +149,7 @@ public class SignInPane extends GridPane {
 	}
 
 	// reads header row of workbook to initialize column trackers,
-	//  adds column for today to the end of the sheet and puts in OzeretName to row 2
+	//  adds column for today to the end of the sheet and puts in name to row 2
 	// TODO: consider refactoring this method in conjunction with a set of settings in `config.ini` that specify whether columns exist and where they are
 	private void readHeaderRow() {
 
@@ -213,7 +213,7 @@ public class SignInPane extends GridPane {
 			Alert fileNotAccessible = new Alert(AlertType.ERROR, "The chosen file \"" + attendanceFile.getName() + "\" is formatted incorrecly.\n"
 					+ "Please choose a different file.");
 			fileNotAccessible.setTitle("Attendance File Not Formatted Correctly");
-			fileNotAccessible.getDialogPane().getStylesheets().add(OzeretMain.class.getResource(settings.get("stageSettings", "cssFile", String.class)).toExternalForm());
+			fileNotAccessible.getDialogPane().getStylesheets().add(Attendance.class.getResource(settings.get("stageSettings", "cssFile", String.class)).toExternalForm());
 			fileNotAccessible.initOwner(stage);
 			fileNotAccessible.showAndWait();
 			
@@ -242,11 +242,11 @@ public class SignInPane extends GridPane {
 				headerRow.getCell(todayCol).setCellValue(curfew.minusDays(1).format(DateTimeFormatter.ofPattern("MM/dd/yyyy")));
 		}
 
-		// write name of person on ozeret to row 2 in today's column if different than what's already there
+		// write name of operator to row 2 in today's column if different than what's already there
 		if (sheet.getRow(1).getCell(todayCol) == null)
-			sheet.getRow(1).createCell(todayCol).setCellValue(ozeretName);
-		else if (!(sheet.getRow(1).getCell(todayCol).getStringCellValue().equals(ozeretName)))
-			sheet.getRow(1).getCell(todayCol).setCellValue(ozeretName);
+			sheet.getRow(1).createCell(todayCol).setCellValue(name);
+		else if (!(sheet.getRow(1).getCell(todayCol).getStringCellValue().equals(name)))
+			sheet.getRow(1).getCell(todayCol).setCellValue(name);
 		
 		// write curfew time to row 3 in today's column if different than what's already there
 		if (sheet.getRow(2).getCell(todayCol) == null)
@@ -585,7 +585,7 @@ public class SignInPane extends GridPane {
 
 				// set up scene
 				unaccScene.setRoot(scrollPane);
-				unaccScene.getStylesheets().add(OzeretMain.class.getResource(settings.get("stageSettings", "cssFile", String.class)).toExternalForm());
+				unaccScene.getStylesheets().add(Attendance.class.getResource(settings.get("stageSettings", "cssFile", String.class)).toExternalForm());
 
 				// only need to do these things if the stage isn't currently on screen
 				if (!extraStage.isShowing()) {

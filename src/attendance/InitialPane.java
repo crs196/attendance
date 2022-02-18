@@ -1,4 +1,4 @@
-package ozeret;
+package attendance;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -73,7 +73,7 @@ public class InitialPane extends GridPane {
 			Alert fileNotAccessible = new Alert(AlertType.ERROR, "Unable to access \""+ infoFileName+ "\" file.\n"
 					+ "Please create this file in the " + infoFileParent + " directory.");
 			fileNotAccessible.setTitle("Info File Not Accessible");
-			fileNotAccessible.getDialogPane().getStylesheets().add(OzeretMain.class.getResource(settings.get("stageSettings", "cssFile", String.class)).toExternalForm());
+			fileNotAccessible.getDialogPane().getStylesheets().add(Attendance.class.getResource(settings.get("stageSettings", "cssFile", String.class)).toExternalForm());
 			fileNotAccessible.showAndWait();
 			
 			Platform.exit();
@@ -108,15 +108,15 @@ public class InitialPane extends GridPane {
 		
 		this.add(title, 0, 0, 3, 1);
 		
-		// location for person on ozeret to input their name
-		Label ozName = new Label("Ozeret Name:");
-		this.add(ozName, 0, 1);
+		// location for operator to input their name
+		Label nameLabel = new Label("Name:");
+		this.add(nameLabel, 0, 1);
 		
-		TextField ozNameEntry = new TextField();
-		this.add(ozNameEntry, 1, 1, 2, 1);
+		TextField nameEntry = new TextField();
+		this.add(nameEntry, 1, 1, 2, 1);
 		
 		
-		// location for person on ozeret to input time of curfew
+		// location for operator to input time of curfew
 		Label curfewTime = new Label("Curfew (HH:MM):");
 		this.add(curfewTime, 0, 2);
 		
@@ -211,9 +211,9 @@ public class InitialPane extends GridPane {
 				
 				// check to make sure that both fields are properly filled out
 				//  (name field is not empty, curfew field matches an hh:mm time regex)
-				if(!ozNameEntry.getText().equals("") && curfewEntry.getText().matches("^(0?[1-9]|1[0-2]):[0-5][0-9]")) {
+				if(!nameEntry.getText().equals("") && curfewEntry.getText().matches("^(0?[1-9]|1[0-2]):[0-5][0-9]")) {
 					
-					// open FileChooser for person on ozeret to select which file has the attendance information
+					// open FileChooser for operator to select which file has the attendance information
 					FileChooser fileChooser = new FileChooser();
 					fileChooser.setInitialDirectory(new File("."));
 					fileChooser.setTitle("Select Attendance File");
@@ -222,11 +222,11 @@ public class InitialPane extends GridPane {
 					
 					if (attendanceFile != null) {
 						
-						// update next scene's SignInPane to have correct curfew, ozeret name, and attendance file
-						((SignInPane) nextScene.getRoot()).setPrevVars(ozNameEntry.getText(), curfewTime(), attendanceFile, myScene);
+						// update next scene's SignInPane to have correct curfew, operator name, and attendance file
+						((SignInPane) nextScene.getRoot()).setPrevVars(nameEntry.getText(), curfewTime(), attendanceFile, myScene);
 						
 						// clear text in fields, in case user returns to this scene
-						ozNameEntry.clear();
+						nameEntry.clear();
 						curfewEntry.clear();
 						
 						// change the scene to the next one (will be a scene with SignInPane in it)
@@ -238,7 +238,7 @@ public class InitialPane extends GridPane {
 				
 					// if fields aren't properly filled out, pop up an alert saying so, and don't advance
 					Alert notDone = new Alert(AlertType.WARNING, "You must fill out both fields properly to proceed");
-					notDone.setHeaderText("Improper Ozeret Name and/or Curfew Time");
+					notDone.setHeaderText("Improper Name and/or Curfew Time");
 					notDone.getDialogPane().getStylesheets().add(getClass().getResource(settings.get("stageSettings", "cssFile", String.class)).toExternalForm());
 					notDone.showAndWait();
 				}
