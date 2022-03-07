@@ -327,7 +327,7 @@ public class SignInPane extends GridPane {
 		this.add(title, 0, 0, 3, 1);
 
 
-		/* left column (clock + time to curfew, view unaccounted for, save, return to setup) */
+		/* left column (clock + time to curfew, view unaccounted for, save, exit) */
 
 		// clock
 		Clock currentTime = new Clock();
@@ -364,21 +364,21 @@ public class SignInPane extends GridPane {
 		VBox listButtons = new VBox(this.getVgap() * 0.5);
 		Button viewUnaccounted = new Button("View Unaccounted-for Staff Members");
 		Button save = new Button("Save");
-		Button saveAndReturn = new Button("Save and Return to Setup");
+		Button saveAndExit = new Button("Save and Exit");
 
 		viewUnaccounted.setMinWidth(USE_PREF_SIZE);
 		save.setMinWidth(USE_PREF_SIZE);
-		saveAndReturn.setMinWidth(USE_PREF_SIZE);
+		saveAndExit.setMinWidth(USE_PREF_SIZE);
 
 		HBox.setHgrow(viewUnaccounted, Priority.ALWAYS);
 		HBox.setHgrow(save, Priority.ALWAYS);
-		HBox.setHgrow(saveAndReturn, Priority.ALWAYS);
+		HBox.setHgrow(saveAndExit, Priority.ALWAYS);
 
 		viewUnaccounted.setMaxWidth(Double.MAX_VALUE);
 		save.setMaxWidth(Double.MAX_VALUE);
-		saveAndReturn.setMaxWidth(Double.MAX_VALUE);
+		saveAndExit.setMaxWidth(Double.MAX_VALUE);
 		
-		listButtons.getChildren().addAll(new HBox(viewUnaccounted), new HBox(), new HBox(save), new HBox(saveAndReturn)); // empty HBox for spacing
+		listButtons.getChildren().addAll(new HBox(viewUnaccounted), new HBox(), new HBox(save), new HBox(saveAndExit)); // empty HBox for spacing
 
 		VBox leftColumn = new VBox(this.getVgap());
 		leftColumn.getChildren().addAll(clockBox, listButtons);
@@ -843,7 +843,7 @@ public class SignInPane extends GridPane {
 
 		// pulls up list of staff members who have yet to sign in in this session
 		//  with option to mark them as on day off
-		saveAndReturn.setOnAction(new EventHandler<ActionEvent>() {
+		saveAndExit.setOnAction(new EventHandler<ActionEvent>() {
 
 			@Override
 			public void handle(ActionEvent event) {
@@ -851,17 +851,17 @@ public class SignInPane extends GridPane {
 				// see if there are any staff that haven't signed in yet
 				boolean allBunksEmpty = noUnaccountedStaff();
 				
-				// if there are still unaccounted staff, confirm that user still wants to return to set-up
+				// if there are still unaccounted staff, confirm that user still wants to exit
 				if (!allBunksEmpty) {
-					Alert saveAndReturnConf = new Alert(AlertType.CONFIRMATION, "There are still staff members that haven't signed in.\nAre you sure you want to return to setup?");
-					saveAndReturnConf.setHeaderText("Save and Return to Setup Confirmation");
-					saveAndReturnConf.setTitle("Save and Return to Setup Confirmation");
-					saveAndReturnConf.getDialogPane().getStylesheets().add(getClass().getResource(settings.get("stageSettings", "cssFile", String.class)).toExternalForm());
-					saveAndReturnConf.initOwner(saveAndReturn.getScene().getWindow());
-					saveAndReturnConf.showAndWait();
+					Alert saveAndExitConf = new Alert(AlertType.CONFIRMATION, "There are still staff members that haven't signed in.\nAre you sure you want to exit?");
+					saveAndExitConf.setHeaderText("Save and Exit Confirmation");
+					saveAndExitConf.setTitle("Save and Exit Confirmation");
+					saveAndExitConf.getDialogPane().getStylesheets().add(getClass().getResource(settings.get("stageSettings", "cssFile", String.class)).toExternalForm());
+					saveAndExitConf.initOwner(saveAndExit.getScene().getWindow());
+					saveAndExitConf.showAndWait();
 					
-					if (saveAndReturnConf.getResult() != ButtonType.OK)
-						return; // user does not want to save and return to setup
+					if (saveAndExitConf.getResult() != ButtonType.OK)
+						return; // user does not want to save and exit
 				}
 				
 				// all staff are accounted for or user wants to mark unaccounted-for staff as absent
