@@ -85,9 +85,9 @@ public class SignInPane extends GridPane {
 		stage = s;
 		
 		// set instance variables
-		name = settings.get("signInPaneSettings", "opName");
+		name = settings.get("paneSettings", "opName");
 		curfew = curfewTime(settings.get("curfewTimes", "normalCurfew")); // TODO: add other two curfew times
-		attendanceFile = new File(settings.get("signInPaneSettings", "attendanceFilePath"));
+		attendanceFile = new File(settings.get("paneSettings", "attendanceFilePath"));
 		
 		
 		// create local workbook from attendanceFile, only continue if workbook creation is acceptable
@@ -142,7 +142,7 @@ public class SignInPane extends GridPane {
 	private void getFileContents() {
 		
 		// get location of the info file for this pane
-		String infoPath = settings.get("signInPaneSettings", "infoPath", String.class);
+		String infoPath = settings.get("paneSettings", "infoPath", String.class);
 		String infoFileParent = infoPath.substring(0, infoPath.lastIndexOf("/")); // get the parent name
 		String infoFileName = infoPath.split("/")[infoPath.split("/").length - 1]; // get the file name
 		
