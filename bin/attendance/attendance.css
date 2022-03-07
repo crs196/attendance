@@ -43,16 +43,16 @@
 }
 
 .scroll-bar .thumb {
-    -fx-background-color: #d8ffdd;
+    -fx-background-color: #e5a9a9;
     -fx-background-radius: 5;
 }
 
 .scroll-bar .thumb:hover {
-	-fx-background-color: #9ecb94;
+	-fx-background-color: #d2646b;
 }
 
 .scroll-bar .thumb:pressed {
-	-fx-background-color: #64964b;
+	-fx-background-color: #be1e2d;
 }
 
 .scroll-bar .track {
@@ -111,11 +111,11 @@
 	-fx-font-family: "AGaramond";
 	-fx-font-size: 12px;
 	-fx-text-fill: white;
-	-fx-background-color: linear-gradient(#9ecb94, #64964b);
+	-fx-background-color: linear-gradient(#d2646b, #be1e2d);
 }
 
 .button:hover {
-	-fx-background-color: linear-gradient(#64964b, #9ecb94);
+	-fx-background-color: linear-gradient(#be1e2d, #d2646b);
 }
 
 .radiobutton {
