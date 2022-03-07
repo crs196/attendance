@@ -223,7 +223,7 @@ public class InitialPane extends GridPane {
 					if (attendanceFile != null) {
 						
 						// update next scene's SignInPane to have correct curfew, operator name, and attendance file
-						((SignInPane) nextScene.getRoot()).setPrevVars(nameEntry.getText(), curfewTime(), attendanceFile, myScene);
+						((SignInPane) nextScene.getRoot()).setPrevVars(nameEntry.getText(), curfewTime(), attendanceFile);
 						
 						// clear text in fields, in case user returns to this scene
 						nameEntry.clear();

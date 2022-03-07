@@ -28,8 +28,8 @@ public class Attendance extends Application {
 		}
 		
 		// obtain stage settings from config file
-		String cssFile = settings.get("stageSettings", "cssFile", String.class);
-		String iconPath = settings.get("stageSettings", "iconPath", String.class);
+		String cssFile = settings.get("stageSettings", "cssFile");
+		String iconPath = settings.get("stageSettings", "iconPath");
 		
 		
 		/* 
@@ -44,15 +44,15 @@ public class Attendance extends Application {
 		siScene.getStylesheets().add(Attendance.class.getResource(cssFile).toExternalForm());
 		
 		// create initial pane and scene
-		Scene initialScene = new Scene(new GridPane());
-		@SuppressWarnings("unused") 
-		InitialPane initial = new InitialPane(primaryStage, siScene, initialScene, settings);
-		initialScene.getStylesheets().add(Attendance.class.getResource(cssFile).toExternalForm());
+//		Scene initialScene = new Scene(new GridPane());
+//		@SuppressWarnings("unused") 
+//		InitialPane initial = new InitialPane(primaryStage, siScene, initialScene, settings);
+//		initialScene.getStylesheets().add(Attendance.class.getResource(cssFile).toExternalForm());
 		
 		// set up stage for viewing with initial scene
 		primaryStage.setTitle("Attendance");
 		primaryStage.getIcons().add(new Image(iconPath));
-		primaryStage.setScene(initialScene);
+		primaryStage.setScene(siScene);
 		
 		primaryStage.show();
 	}
