@@ -15,6 +15,8 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.poi.EmptyFileException;
 import org.apache.poi.ss.usermodel.CellType;
@@ -117,21 +119,45 @@ public class SignInPane extends GridPane {
 	// takes the string entered as curfew time and converts it to the date and time of curfew
 	private LocalDateTime curfewTime(String curfewString) {
 		
-		int hour, minute;
-		hour = Integer.parseInt(curfewString.split(":")[0]);
-		minute = Integer.parseInt(curfewString.split(":")[1]);
+		int hour = 0, minute = 0; // variables to hold the input hour and minute
 		
-		// to convert to 24-hr time properly, change 12 to 0
-		if (hour == 12)
-			hour = 0;
+		// a regex and matcher that matches 12-hr time with optional leading zero, optional separator
+		//  mandatory meridem indicators (but optionally separated, case-insenstive, and with optional m/M)
+		Pattern twelveHrTime = Pattern.compile("^(1[0-2]|0?[1-9]):?([0-5]\\d)\\s*([AaPp])[Mm]?$");
+		Matcher twelveHrMatcher = twelveHrTime.matcher(curfewString);
 		
-		// to convert to 24-hr time, add 12 to the hour if time is PM.
-		//if (pm.isSelected())
-			hour += 12;
+		// a regex and matcher that matches 24-hr time with optional leading zero and optional separator
+		Pattern twentyFourHrTime = Pattern.compile("^(2[0-3]|1\\d|0?\\d):?([0-5]\\d)$");
+		Matcher twentyFourHrMatcher = twentyFourHrTime.matcher(curfewString);
+		
+		if (twelveHrMatcher.find()) { // if the curfew string matches 12-hr time
+			
+			hour = Integer.parseInt(twelveHrMatcher.group(1)); // set hour variable to input hour
+			if (twelveHrMatcher.group(3).toLowerCase().equals("p"))
+				hour += 12; // if the time is PM, add 12 to convert to 24-hour time
+			
+			minute = Integer.parseInt(twelveHrMatcher.group(2)); // set minute variable to input minute
+			
+		} else if (twentyFourHrMatcher.find()){ // else if the curfew string matches 24-hr time
+			
+			hour = Integer.parseInt(twentyFourHrMatcher.group(1)); // set hour variable to input hour
+			minute = Integer.parseInt(twentyFourHrMatcher.group(2)); // set minute variable to input minute
+		} else { // if time is invalid, alert user
+			Alert invalidCurfewTime = new Alert(AlertType.ERROR, "Curfew time was not input in a known format. Please fix this in \"config.ini\"\n"
+					+ "Valid formats are:\n- 24 hour time with or without leading zero, with or without a time separator;\n"
+					+ "- 12 hour time with or without a leading zero, with or without a time separator, with or without a space between the minutes and the meridiem, "
+					+ "with or without the \"M\" in the meridiem");
+			invalidCurfewTime.setTitle("Invalid Time Format");
+			invalidCurfewTime.getDialogPane().getStylesheets().add(Attendance.class.getResource(settings.get("stageSettings", "cssFile", String.class)).toExternalForm());
+			invalidCurfewTime.showAndWait();
+			
+			Platform.exit();
+		}
 		
 		LocalTime curfew = LocalTime.of(hour, minute);
 		
 		// if curfew is after the current time, curfew is today
+		// TODO: this may need to change to accommodate for days off? I don't think so, but I'm flagging this just in case
 		if (curfew.isAfter(LocalTime.now()))
 			return LocalDateTime.of(LocalDate.now(), curfew); // return LocalDateTime object with today's date and entered time
 		else // otherwise, curfew is tomorrow (read: after midnight)
