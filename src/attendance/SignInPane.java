@@ -39,9 +39,11 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
+import javafx.scene.control.RadioButton;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.scene.image.Image;
@@ -70,12 +72,16 @@ public class SignInPane extends GridPane {
 
 	// used to track which column holds each piece of information
 	private int bunkCol, nameCol, idCol, ontimeCol, lateCol, absentCol, todayCol;
+	
+	private boolean autosave;
 
 	public SignInPane(Stage s, Ini set) {
 		super();
 		
 		// get config settings
 		settings = set;
+		
+		autosave = settings.get("settings", "autosave", Boolean.class);
 		
 		// set stage
 		stage = s;
@@ -85,7 +91,7 @@ public class SignInPane extends GridPane {
 		nightOffCurfew = curfewTime(settings.get("curfewTimes", "nightOffCurfew"));
 		dayOffCurfew = curfewTime(settings.get("curfewTimes", "dayOffCurfew"));
 		
-		attendanceFile = new File(settings.get("paneSettings", "attendanceFilePath"));
+		attendanceFile = new File(settings.get("filePaths", "attendanceFilePath"));
 		
 		// get info text
 		infoText = "";
@@ -105,7 +111,8 @@ public class SignInPane extends GridPane {
 			Alert fileNotAccessible = new Alert(AlertType.ERROR, "Unable to access \"" + attendanceFile.getName()
 					+ "\"\nPlease choose a different file.");
 			fileNotAccessible.setTitle("Attendance File Not Accessible");
-			fileNotAccessible.getDialogPane().getStylesheets().add(Attendance.class.getResource(settings.get("stageSettings", "cssFile", String.class)).toExternalForm());
+			fileNotAccessible.getDialogPane().getStylesheets().add(Attendance.class.getResource(settings.get("filePaths", "cssFile", String.class)).toExternalForm());
+			fileNotAccessible.getDialogPane().lookupButton(ButtonType.OK).setId("red");
 			fileNotAccessible.initOwner(stage);
 			fileNotAccessible.showAndWait();
 			
@@ -117,7 +124,7 @@ public class SignInPane extends GridPane {
 	private void getFileContents() {
 			
 		// get location of the info file for this pane
-		String infoPath = settings.get("paneSettings", "infoPath", String.class);
+		String infoPath = settings.get("filePaths", "infoPath", String.class);
 		String infoFileName = infoPath.split("/")[infoPath.split("/").length - 1]; // get the file name
 			
 		// set up reader to read from file
@@ -127,7 +134,8 @@ public class SignInPane extends GridPane {
 			Alert fileNotAccessible = new Alert(AlertType.ERROR, "Unable to access \"" + infoFileName + 
 					"\" file.\nPlease create this file in the " + infoPath.substring(0, infoPath.lastIndexOf("/")) + " directory.");
 			fileNotAccessible.setTitle("Info File Not Accessible");
-			fileNotAccessible.getDialogPane().getStylesheets().add(Attendance.class.getResource(settings.get("stageSettings", "cssFile", String.class)).toExternalForm());
+			fileNotAccessible.getDialogPane().getStylesheets().add(Attendance.class.getResource(settings.get("filePaths", "cssFile", String.class)).toExternalForm());
+			fileNotAccessible.getDialogPane().lookupButton(ButtonType.OK).setId("red");
 			fileNotAccessible.showAndWait();
 			
 			Platform.exit();
@@ -183,7 +191,8 @@ public class SignInPane extends GridPane {
 					+ "- 12 hour time with or without a leading zero, with or without a time separator, with or without a space between the minutes and the meridiem, "
 					+ "with or without the \"M\" in the meridiem");
 			invalidCurfewTime.setTitle("Invalid Time Format");
-			invalidCurfewTime.getDialogPane().getStylesheets().add(Attendance.class.getResource(settings.get("stageSettings", "cssFile", String.class)).toExternalForm());
+			invalidCurfewTime.getDialogPane().getStylesheets().add(Attendance.class.getResource(settings.get("filePaths", "cssFile", String.class)).toExternalForm());
+			invalidCurfewTime.getDialogPane().lookupButton(ButtonType.OK).setId("red");
 			invalidCurfewTime.showAndWait();
 			
 			Platform.exit();
@@ -199,13 +208,15 @@ public class SignInPane extends GridPane {
 		else // otherwise, curfew is tomorrow (read: after midnight)
 			return LocalDateTime.of(LocalDate.now().plusDays(1), curfew); // return LocalDateTime object with tomorrow's date and entered time
 	}
+	
+	// TODO (maybe): add a method (and associated variables) to read information from ID key sheet (yet to be added)
 
 	// reads header row of workbook to initialize column trackers,
 	//  adds column for today to the end of the sheet and puts in name to row 2
 	// TODO: consider refactoring this method in conjunction with a set of settings in `config.ini` that specify whether columns exist and where they are
 	private void readHeaderRow() {
 
-		XSSFRow headerRow = sheet.getRow(0);
+		XSSFRow headerRow = sheet.getRow(sheet.getFirstRowNum());
 		boolean bunkExists = false, nameExists = false, idExists = false,
 				ontimeExists = false, lateExists = false, absentExists = false,
 				todayExists = false;
@@ -218,32 +229,32 @@ public class SignInPane extends GridPane {
 
 				// check to see if current cell has any of these contents
 				switch (headerRow.getCell(i).getStringCellValue().toLowerCase()) {
-				case "bunk":
-					bunkCol = i;
-					bunkExists = true;
-					break;
-				case "name":
-					nameCol = i;
-					nameExists = true;
-					break;
-				case "id":
-					idCol = i;
-					idExists = true;
-					break;
-				case "on time":
-					ontimeCol = i;
-					ontimeExists = true;
-					break;
-				case "late":
-					lateCol = i;
-					lateExists = true;
-					break;
-				case "absent":
-					absentCol = i;
-					absentExists = true;
-					break;					
-				default:
-					break;
+					case "bunk":
+						bunkCol = i;
+						bunkExists = true;
+						break;
+					case "name":
+						nameCol = i;
+						nameExists = true;
+						break;
+					case "id":
+						idCol = i;
+						idExists = true;
+						break;
+					case "on time":
+						ontimeCol = i;
+						ontimeExists = true;
+						break;
+					case "late":
+						lateCol = i;
+						lateExists = true;
+						break;
+					case "absent":
+						absentCol = i;
+						absentExists = true;
+						break;					
+					default:
+						break;
 				}
 
 				if (curfewToday) {
@@ -265,7 +276,8 @@ public class SignInPane extends GridPane {
 			Alert fileNotAccessible = new Alert(AlertType.ERROR, "The chosen file \"" + attendanceFile.getName() + "\" is formatted incorrecly.\n"
 					+ "Please choose a different file.");
 			fileNotAccessible.setTitle("Attendance File Not Formatted Correctly");
-			fileNotAccessible.getDialogPane().getStylesheets().add(Attendance.class.getResource(settings.get("stageSettings", "cssFile", String.class)).toExternalForm());
+			fileNotAccessible.getDialogPane().getStylesheets().add(Attendance.class.getResource(settings.get("filePaths", "cssFile", String.class)).toExternalForm());
+			fileNotAccessible.getDialogPane().lookupButton(ButtonType.OK).setId("red");
 			fileNotAccessible.initOwner(stage);
 			fileNotAccessible.showAndWait();
 			
@@ -288,7 +300,7 @@ public class SignInPane extends GridPane {
 			todayCol = headerRow.getLastCellNum();
 			headerRow.createCell(todayCol);
 
-			if (normalCurfew.toLocalDate().compareTo(LocalDate.now()) == 0) // if curfew is today
+			if (curfewToday) // curfew is today
 				headerRow.getCell(todayCol).setCellValue(normalCurfew.format(DateTimeFormatter.ofPattern("MM/dd/yyyy")));
 			else // curfew is tomorrow
 				headerRow.getCell(todayCol).setCellValue(normalCurfew.minusDays(1).format(DateTimeFormatter.ofPattern("MM/dd/yyyy")));
@@ -329,7 +341,7 @@ public class SignInPane extends GridPane {
 		Label title = new Label("Sign In");
 		title.setId("header");
 		SignInPane.setHalignment(title, HPos.CENTER);
-		this.add(title, 0, 0, 3, 1);
+		this.add(title, 0, 0, 2, 1);
 
 
 		/* left column (clock + time to curfew, view unaccounted for, save, exit) */
@@ -343,51 +355,67 @@ public class SignInPane extends GridPane {
 		currentTimeBox.setAlignment(Pos.CENTER);
 		currentTimeBox.getChildren().addAll(clockLabel, currentTime);
 
-		// curfew time
-		Label curfewLabel = new Label("Curfew:");
-		Label curfewTimeLabel = new Label();
-		curfewTimeLabel.setText(normalCurfew.format(DateTimeFormatter.ofPattern("h:mm a")));
-		HBox curfewBox = new HBox(this.getHgap());
-		curfewLabel.setMinWidth(USE_PREF_SIZE);
-		curfewTimeLabel.setMinWidth(USE_PREF_SIZE);
-		curfewBox.setAlignment(Pos.CENTER);
-		curfewBox.getChildren().addAll(curfewLabel, curfewTimeLabel);
-
-		// time to curfew
-		CountdownTimer timeToCurfew = new CountdownTimer(normalCurfew);
-		Label countdownLabel = new Label("Time until curfew:");
-		HBox countdownBox = new HBox(this.getHgap());
-		timeToCurfew.setMinWidth(USE_PREF_SIZE);
-		countdownLabel.setMinWidth(USE_PREF_SIZE);
-		countdownBox.setAlignment(Pos.CENTER);
-		countdownBox.getChildren().addAll(countdownLabel, timeToCurfew);
-
+		
+		// curfew times
+		
+		// normal
+		Label normalCurfewLabel = new Label("Normal Curfew:");
+		Label normalCurfewTimeLabel = new Label();
+		normalCurfewTimeLabel.setText(normalCurfew.format(DateTimeFormatter.ofPattern("h:mm a")));
+		HBox normalCurfewBox = new HBox(this.getHgap());
+		normalCurfewLabel.setMinWidth(USE_PREF_SIZE);
+		normalCurfewTimeLabel.setMinWidth(USE_PREF_SIZE);
+		normalCurfewBox.setAlignment(Pos.CENTER);
+		normalCurfewBox.getChildren().addAll(normalCurfewLabel, normalCurfewTimeLabel);
+		
+		// night off
+		Label nightOffCurfewLabel = new Label("Night off Curfew: ");
+		Label nightOffCurfewTimeLabel = new Label();
+		nightOffCurfewTimeLabel.setText(nightOffCurfew.format(DateTimeFormatter.ofPattern("h:mm a")));
+		HBox nightOffCurfewBox = new HBox(this.getHgap());
+		nightOffCurfewLabel.setMinWidth(USE_PREF_SIZE);
+		nightOffCurfewTimeLabel.setMinWidth(USE_PREF_SIZE);
+		nightOffCurfewBox.setAlignment(Pos.CENTER);
+		nightOffCurfewBox.getChildren().addAll(nightOffCurfewLabel, nightOffCurfewTimeLabel);
+		
+		// day off
+		Label dayOffCurfewLabel = new Label("Day off Curfew: ");
+		Label dayOffCurfewTimeLabel = new Label();
+		dayOffCurfewTimeLabel.setText(dayOffCurfew.format(DateTimeFormatter.ofPattern("h:mm a")));
+		HBox dayOffCurfewBox = new HBox(this.getHgap());
+		dayOffCurfewLabel.setMinWidth(USE_PREF_SIZE);
+		dayOffCurfewTimeLabel.setMinWidth(USE_PREF_SIZE);
+		dayOffCurfewBox.setAlignment(Pos.CENTER);
+		dayOffCurfewBox.getChildren().addAll(dayOffCurfewLabel, dayOffCurfewTimeLabel);
+		
+		
 		// add clocks to VBox to hold them
 		VBox clockBox = new VBox(this.getVgap() * 0.5);
-		clockBox.getChildren().addAll(currentTimeBox, curfewBox, countdownBox);
-
-		VBox listButtons = new VBox(this.getVgap() * 0.5);
-		Button viewUnaccounted = new Button("View Unaccounted-for Staff Members");
+		clockBox.getChildren().addAll(currentTimeBox, normalCurfewBox, nightOffCurfewBox, dayOffCurfewBox);
+		
+		// buttons
+		
+		VBox listButtons = new VBox(this.getVgap());
 		Button save = new Button("Save");
 		Button saveAndExit = new Button("Save and Exit");
+		
+		save.setId("red");
+		saveAndExit.setId("red");
 
-		viewUnaccounted.setMinWidth(USE_PREF_SIZE);
 		save.setMinWidth(USE_PREF_SIZE);
 		saveAndExit.setMinWidth(USE_PREF_SIZE);
 
-		HBox.setHgrow(viewUnaccounted, Priority.ALWAYS);
 		HBox.setHgrow(save, Priority.ALWAYS);
 		HBox.setHgrow(saveAndExit, Priority.ALWAYS);
 
-		viewUnaccounted.setMaxWidth(Double.MAX_VALUE);
 		save.setMaxWidth(Double.MAX_VALUE);
 		saveAndExit.setMaxWidth(Double.MAX_VALUE);
 		
-		listButtons.getChildren().addAll(new HBox(viewUnaccounted), new HBox(), new HBox(save), new HBox(saveAndExit)); // empty HBox for spacing
+		listButtons.getChildren().addAll(new HBox(save), new HBox(saveAndExit));
 
-		VBox leftColumn = new VBox(this.getVgap());
-		leftColumn.getChildren().addAll(clockBox, listButtons);
-		this.add(leftColumn, 0, 1, 1, 2);		
+		VBox leftCol = new VBox(this.getVgap());
+		leftCol.getChildren().addAll(clockBox, listButtons);
+		this.add(leftCol, 0, 1, 1, 2);
 
 		/* right column (sign-in box, confirmation area) */
 
@@ -401,11 +429,28 @@ public class SignInPane extends GridPane {
 		signIn.setDefaultButton(true);
 		HBox.setHgrow(signIn, Priority.ALWAYS);
 		signIn.setMaxWidth(Double.MAX_VALUE);
+		signIn.setId("green");
 		HBox signInBox = new HBox(this.getHgap());
 		signInBox.getChildren().addAll(idField, signIn);
 		
+		// curfew selection radio buttons
+		ToggleGroup curfewTimeSelection = new ToggleGroup();
+		RadioButton normal = new RadioButton("Normal");
+		RadioButton nightOff = new RadioButton("Night Off");
+		RadioButton dayOff = new RadioButton("Day Off");
+		normal.getStyleClass().add("radiobutton");
+		nightOff.getStyleClass().add("radiobutton");
+		dayOff.getStyleClass().add("radiobutton");
+		normal.setToggleGroup(curfewTimeSelection);
+		nightOff.setToggleGroup(curfewTimeSelection);
+		dayOff.setToggleGroup(curfewTimeSelection);
+		normal.setSelected(true);
+		
+		HBox timeSelectionBox = new HBox(this.getHgap());
+		timeSelectionBox.getChildren().addAll(normal, nightOff, dayOff);
+		
 		VBox idBox = new VBox(this.getVgap());
-		idBox.getChildren().addAll(scanLabel, signInBox);
+		idBox.getChildren().addAll(scanLabel, signInBox, timeSelectionBox);
 
 		// confirmation area
 		TextArea confirmation = new TextArea();
@@ -416,18 +461,24 @@ public class SignInPane extends GridPane {
 		idBox.getChildren().add(confirmation);
 		this.add(idBox, 1, 1);
 		
+		// button to show list of signed-out staff
+		Button signedOutList = new Button("Show Signed-Out Staff");
+		signedOutList.setMinWidth(USE_PREF_SIZE);
+		HBox.setHgrow(signedOutList, Priority.ALWAYS);
+		signedOutList.setMaxWidth(Double.MAX_VALUE);
+		signedOutList.setId("green");
+		
+		GridPane infoSpacing = new GridPane();
+		HBox.setHgrow(infoSpacing, Priority.ALWAYS);
+		
 		// add information button (will pop up credits and instructions)
-		// infoBox and infoAlign are to right-align the info button
 		Button info = new Button("i");
 		info.getStyleClass().add("info");
 		info.setMinSize(USE_PREF_SIZE, USE_PREF_SIZE);
-
-		GridPane infoAlign = new GridPane();
-		HBox.setHgrow(infoAlign, Priority.ALWAYS);
 		
-		HBox infoBox = new HBox();
-		infoBox.getChildren().addAll(infoAlign, info);
-		this.add(infoBox, 1, 2);
+		HBox signedOutandInfoBox = new HBox();
+		signedOutandInfoBox.getChildren().addAll(signedOutList, infoSpacing, info);
+		this.add(signedOutandInfoBox, 0, 2, 2, 1);
 		
 		// stage and scene for viewUnaccounted
 		Stage extraStage = new Stage();
@@ -440,7 +491,8 @@ public class SignInPane extends GridPane {
 			public void handle(ActionEvent arg0) {
 				Alert infoDialog = new Alert(AlertType.NONE, infoText, ButtonType.CLOSE);
 				infoDialog.setTitle("Credits and Instructions — Sign-in");
-				infoDialog.getDialogPane().getStylesheets().add(getClass().getResource(settings.get("stageSettings", "cssFile", String.class)).toExternalForm());
+				infoDialog.getDialogPane().getStylesheets().add(getClass().getResource(settings.get("filePaths", "cssFile", String.class)).toExternalForm());
+				infoDialog.getDialogPane().lookupButton(ButtonType.CLOSE).setId("red");
 				infoDialog.initOwner(info.getScene().getWindow());
 				infoDialog.initModality(Modality.NONE);
 				infoDialog.setResizable(true);
@@ -459,6 +511,16 @@ public class SignInPane extends GridPane {
 				// save staff ID and clear idField text
 				String staffID = idField.getText();
 				idField.clear();
+				
+				// figure out which curfew is being used				
+				LocalDateTime curfewUsed = null;
+				
+				if (normal.isSelected())
+					curfewUsed = normalCurfew;
+				else if (nightOff.isSelected())
+					curfewUsed = nightOffCurfew;
+				else if (dayOff.isSelected())
+					curfewUsed = dayOffCurfew;
 
 				// only search if an ID was actually entered
 				if (!staffID.isEmpty()) {
@@ -484,15 +546,17 @@ public class SignInPane extends GridPane {
 							// if today's attendance column does not exist or is empty, the staff member is unaccounted for
 							if ((sheet.getRow(i) != null) && sheet.getRow(i).getCell(todayCol) == null) {
 
-								sheet.getRow(i).createCell(todayCol).setCellValue(now.format(DateTimeFormatter.ofPattern("h:mm a")));
-								signInStatus(i, now);
+								sheet.getRow(i).createCell(todayCol).setCellValue(now.format(DateTimeFormatter.ofPattern("h:mm a")) + " ("
+										+ curfewUsed.format(DateTimeFormatter.ofPattern("h:mm a")) + ")");
+								signInStatus(i, now, curfewUsed);
 								confirmation.setText(sheet.getRow(i).getCell(nameCol).getStringCellValue() + " signed in");
 								break; // search is done
 
 							} else if ((sheet.getRow(i) != null) && sheet.getRow(i).getCell(todayCol).getCellType() == CellType.BLANK) {
 
-								sheet.getRow(i).getCell(todayCol).setCellValue(now.format(DateTimeFormatter.ofPattern("h:mm a")));
-								signInStatus(i, now);
+								sheet.getRow(i).getCell(todayCol).setCellValue(now.format(DateTimeFormatter.ofPattern("h:mm a")) + " ("
+										+ curfewUsed.format(DateTimeFormatter.ofPattern("h:mm a")) + ")");
+								signInStatus(i, now, curfewUsed);
 								confirmation.setText(sheet.getRow(i).getCell(nameCol).getStringCellValue() + " signed in");
 								break; // search is done
 
@@ -519,15 +583,17 @@ public class SignInPane extends GridPane {
 								// if today's attendance column does not exist or is empty, the staff member is unaccounted for
 								if ((sheet.getRow(i) != null) && sheet.getRow(i).getCell(todayCol) == null) {
 
-									sheet.getRow(i).createCell(todayCol).setCellValue(now.format(DateTimeFormatter.ofPattern("h:mm a")));
-									signInStatus(i, now);
+									sheet.getRow(i).createCell(todayCol).setCellValue(now.format(DateTimeFormatter.ofPattern("h:mm a")) + " ("
+											+ curfewUsed.format(DateTimeFormatter.ofPattern("h:mm a")) + ")");
+									signInStatus(i, now, curfewUsed);
 									confirmation.setText(sheet.getRow(i).getCell(nameCol).getStringCellValue() + " signed in");
 									break; // search is done
 
 								} else if ((sheet.getRow(i) != null) && sheet.getRow(i).getCell(todayCol).getCellType() == CellType.BLANK) {
 
-									sheet.getRow(i).getCell(todayCol).setCellValue(now.format(DateTimeFormatter.ofPattern("h:mm a")));
-									signInStatus(i, now);
+									sheet.getRow(i).getCell(todayCol).setCellValue(now.format(DateTimeFormatter.ofPattern("h:mm a")) + " ("
+											+ curfewUsed.format(DateTimeFormatter.ofPattern("h:mm a")) + ")");
+									signInStatus(i, now, curfewUsed);
 									confirmation.setText(sheet.getRow(i).getCell(nameCol).getStringCellValue() + " signed in");
 									break; // search is done
 
@@ -544,14 +610,24 @@ public class SignInPane extends GridPane {
 				} else
 					confirmation.setText("No ID entered");
 				
+				if (autosave) {
+					// write data to attendanceFile
+					try (FileOutputStream afos = new FileOutputStream(attendanceFile)) {
+						workbook.write(afos);
+						sheet.autoSizeColumn(todayCol); // resize column to fit
+					} catch (IOException e) {
+						confirmation.setText("Autosave error. Try manually saving.");
+					} 
+				}
+				
 				if (extraStage.isShowing())
-					viewUnaccounted.fire();
+					signedOutList.fire(); // TODO: there may be a better way to update the signed-out list other than clicking the button again
 			}
 
 			// given a staff member (via row number) and sign-in time, 
 			//  increments the proper summary statistic column (if it exists)
 			//  and colors the staff member's "today cell" as either green or yellow, depending on sign-in time
-			public void signInStatus(int rowNum, LocalDateTime signInTime) {
+			public void signInStatus(int rowNum, LocalDateTime signInTime, LocalDateTime curfewUsed) {
 
 				// create cell styles for on time and late
 				XSSFCellStyle onTime = workbook.createCellStyle();
@@ -565,7 +641,7 @@ public class SignInPane extends GridPane {
 				late.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 				
 				// staff member is on time
-				if (normalCurfew.compareTo(signInTime) > 0) {
+				if (curfewUsed.compareTo(signInTime) > 0) {
 					// set todayCol to onTime style
 					sheet.getRow(rowNum).getCell(todayCol).setCellStyle(onTime);
 					
@@ -594,7 +670,7 @@ public class SignInPane extends GridPane {
 		// event handlers for left column buttons
 
 		// pulls up list of staff members who have yet to sign in in this session
-		viewUnaccounted.setOnAction(new EventHandler<ActionEvent>() {
+		signedOutList.setOnAction(new EventHandler<ActionEvent>() {
 
 			@Override
 			public void handle(ActionEvent event) {
@@ -643,7 +719,7 @@ public class SignInPane extends GridPane {
 
 				// set up scene
 				unaccScene.setRoot(scrollPane);
-				unaccScene.getStylesheets().add(Attendance.class.getResource(settings.get("stageSettings", "cssFile", String.class)).toExternalForm());
+				unaccScene.getStylesheets().add(Attendance.class.getResource(settings.get("filePaths", "cssFile", String.class)).toExternalForm());
 
 				// only need to do these things if the stage isn't currently on screen
 				if (!extraStage.isShowing()) {
@@ -652,7 +728,7 @@ public class SignInPane extends GridPane {
 					extraStage.setMinWidth(scrollPane.getMinWidth());
 					extraStage.setMaxHeight(scrollPane.getMaxHeight());
 					extraStage.setTitle("Unaccounted-for Staff");
-					extraStage.getIcons().add(new Image(settings.get("stageSettings", "iconPath", String.class)));
+					extraStage.getIcons().add(new Image(settings.get("filePaths", "iconPath", String.class)));
 					extraStage.centerOnScreen();
 					extraStage.show();
 				}
@@ -750,7 +826,8 @@ public class SignInPane extends GridPane {
 											ButtonType.CANCEL);
 									options.setTitle("Manual Sign-In");
 									options.setHeaderText(staffMember.getText());
-									options.getDialogPane().getStylesheets().add(getClass().getResource(settings.get("stageSettings", "cssFile", String.class)).toExternalForm());
+									options.getDialogPane().getStylesheets().add(getClass().getResource(settings.get("filePaths", "cssFile", String.class)).toExternalForm());
+									options.getDialogPane().lookupButton(ButtonType.CANCEL).setId("red");
 									options.initOwner(staffMember.getScene().getWindow());
 									options.showAndWait();
 									
@@ -782,7 +859,17 @@ public class SignInPane extends GridPane {
 										
 										// print a confirmation
 										confirmation.setText(staffMember.getText() + " signed in as on shmira");
-
+										
+										if (autosave) {
+											// write data to attendanceFile
+											try (FileOutputStream afos = new FileOutputStream(attendanceFile)) {
+												workbook.write(afos);
+												sheet.autoSizeColumn(todayCol); // resize column to fit
+											} catch (IOException e) {
+												confirmation.setText("Autosave error. Try manually saving.");
+											} 
+										}
+										
 									} else if (options.getResult().getText().equals("Day Off")) {
 										// staff member should be signed in as on day off
 
@@ -805,16 +892,28 @@ public class SignInPane extends GridPane {
 										
 										// print a confirmation
 										confirmation.setText(staffMember.getText() + " signed in as on a day off");
+										
+										if (autosave) {
+											// write data to attendanceFile
+											try (FileOutputStream afos = new FileOutputStream(attendanceFile)) {
+												workbook.write(afos);
+												sheet.autoSizeColumn(todayCol); // resize column to fit
+											} catch (IOException e) {
+												confirmation.setText("Autosave error. Try manually saving.");
+											} 
+										}
+										
 									} else if (options.getResult().getText().equals("Sign In")) {
 										// staff member should be signed in normally
 										// do this by writing the staff member's name into the entry box and firing the sign-in button
+										// TODO: clicking this button will use the curfew selected by the radio buttons. is this expected behavior?
 										
 										idField.setText(staffMember.getText());
 										signIn.fire();
 									}
 
 									// refresh list of unaccounted staff members
-									viewUnaccounted.fire();
+									signedOutList.fire();
 								}
 							});
 						}
@@ -837,8 +936,9 @@ public class SignInPane extends GridPane {
 				// write data to attendanceFile
 				try (FileOutputStream afos = new FileOutputStream(attendanceFile)) {
 					workbook.write(afos);
+					sheet.autoSizeColumn(todayCol); // resize column to fit
 				} catch (IOException e) {
-					confirmation.setText("Unable to write to \"" + attendanceFile.getName() + "\"");
+					confirmation.setText("Unable to save to \"" + attendanceFile.getName() + "\"");
 				} 
 				
 				// print confirmation
@@ -861,7 +961,8 @@ public class SignInPane extends GridPane {
 					Alert saveAndExitConf = new Alert(AlertType.CONFIRMATION, "There are still staff members that haven't signed in.\nAre you sure you want to exit?");
 					saveAndExitConf.setHeaderText("Save and Exit Confirmation");
 					saveAndExitConf.setTitle("Save and Exit Confirmation");
-					saveAndExitConf.getDialogPane().getStylesheets().add(getClass().getResource(settings.get("stageSettings", "cssFile", String.class)).toExternalForm());
+					saveAndExitConf.getDialogPane().getStylesheets().add(getClass().getResource(settings.get("filePaths", "cssFile", String.class)).toExternalForm());
+					saveAndExitConf.getDialogPane().lookupButton(ButtonType.CANCEL).setId("red");
 					saveAndExitConf.initOwner(saveAndExit.getScene().getWindow());
 					saveAndExitConf.showAndWait();
 					
@@ -873,21 +974,9 @@ public class SignInPane extends GridPane {
 				markUnaccAbsent();
 				
 				// write data to attendanceFile
-				try (FileOutputStream afos = new FileOutputStream(attendanceFile)) {
-					workbook.write(afos);
-				} catch (IOException e) {
-					confirmation.setText("Unable to write to \"" + attendanceFile.getName() + "\"");
-				} 
+				save.fire();
 				
-				// clear clock text so that if run again they're still readable
-				currentTime.stopClock();
-				clockLabel.setText("");
-				curfewLabel.setText("");
-				curfewTimeLabel.setText("");
-				timeToCurfew.stopClock();
-				countdownLabel.setText("");
-				
-				// close unaccounted-for staff window and change scene back to setup scene
+				// close unaccounted-for staff window and stage
 				extraStage.close();
 				Platform.exit();
 			}
@@ -953,12 +1042,11 @@ public class SignInPane extends GridPane {
 			public void handle(WindowEvent event) {
 				event.consume(); // consume window-close event
 
-				Alert alert = new Alert(AlertType.CONFIRMATION, 
-						"Are you sure you want to exit?\nAll unsaved data will be lost.",
-						new ButtonType("No, Return to Sign-In", ButtonData.CANCEL_CLOSE),
-						new ButtonType("Yes, Exit", ButtonData.OK_DONE));
+				Alert alert = new Alert(AlertType.CONFIRMATION, "Are you sure you want to exit and lose all unsaved data?\n"
+						+ "Click \"OK\" to exit and \"Cancel\" to return to sign-in.");
 				alert.setTitle("Exit Confirmation");
-				alert.getDialogPane().getStylesheets().add(getClass().getResource(settings.get("stageSettings", "cssFile", String.class)).toExternalForm());
+				alert.getDialogPane().getStylesheets().add(getClass().getResource(settings.get("filePaths", "cssFile", String.class)).toExternalForm());
+				alert.getDialogPane().lookupButton(ButtonType.CANCEL).setId("red");
 				alert.initOwner(stage);
 				alert.showAndWait();
 

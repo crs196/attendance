@@ -27,8 +27,8 @@ public class Attendance extends Application {
 		}
 		
 		// obtain stage settings from config file
-		String cssFile = settings.get("stageSettings", "cssFile");
-		String iconPath = settings.get("stageSettings", "iconPath");
+		String cssFile = settings.get("filePaths", "cssFile");
+		String iconPath = settings.get("filePaths", "iconPath");
 		
 		// create sign in pane and scene
 		SignInPane siPane = new SignInPane(primaryStage, settings);

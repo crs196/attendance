@@ -111,13 +111,20 @@
 	-fx-font-family: "AGaramond";
 	-fx-font-size: 12px;
 	-fx-text-fill: white;
-	-fx-background-color: linear-gradient(#d2646b, #be1e2d);
+	-fx-background-color: linear-gradient(#9ecb94, #64964b);
 }
 
 .button:hover {
-	-fx-background-color: linear-gradient(#be1e2d, #d2646b);
+	-fx-background-color: linear-gradient(#64964b, #9ecb94);
 }
 
+#red.button {
+	-fx-background-color: linear-gradient(#d2646b, #be1e2d);
+}
+
+#red.button:hover {
+	-fx-background-color: linear-gradient(#be1e2d, #d2646b);
+}
 .radiobutton {
 	-fx-font-family: "AGaramond";
 	-fx-text-fill: white;
