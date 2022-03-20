@@ -149,16 +149,16 @@ public class SignInPane extends GridPane {
 	
 	// takes the string entered as curfew time and converts it to the date and time of curfew
 	private LocalDateTime curfewTime(String curfewString) {
-		
+
 		int hour = 0, minute = 0; // variables to hold the input hour and minute
 		
 		// a regex and matcher that matches 12-hr time with optional leading zero, optional separator
 		//  mandatory meridem indicators (but optionally separated, case-insenstive, and with optional m/M)
-		Pattern twelveHrTime = Pattern.compile("^(1[0-2]|0?[1-9]):?([0-5]\\d)\\s*([AaPp])[Mm]?$");
+		Pattern twelveHrTime = Pattern.compile("^(1[0-2]|0?[1-9]):?([0-5]\\d)?\\s*([AaPp])[Mm]?$");
 		Matcher twelveHrMatcher = twelveHrTime.matcher(curfewString);
 		
 		// a regex and matcher that matches 24-hr time with optional leading zero and optional separator
-		Pattern twentyFourHrTime = Pattern.compile("^(2[0-3]|1\\d|0?\\d):?([0-5]\\d)$");
+		Pattern twentyFourHrTime = Pattern.compile("^(2[0-3]|1\\d|0?\\d):?([0-5]\\d)?$");
 		Matcher twentyFourHrMatcher = twentyFourHrTime.matcher(curfewString);
 		
 		if (twelveHrMatcher.find()) { // if the curfew string matches 12-hr time
@@ -167,13 +167,17 @@ public class SignInPane extends GridPane {
 			if (twelveHrMatcher.group(3).toLowerCase().equals("p"))
 				hour += 12; // if the time is PM, add 12 to convert to 24-hour time
 			
-			minute = Integer.parseInt(twelveHrMatcher.group(2)); // set minute variable to input minute
+			// set minute variable to input minute (if only 2 groups, minute is 0)
+			minute = twelveHrMatcher.group(2) != null ? Integer.parseInt(twelveHrMatcher.group(2)) : 0;
 			
 		} else if (twentyFourHrMatcher.find()){ // else if the curfew string matches 24-hr time
 			
 			hour = Integer.parseInt(twentyFourHrMatcher.group(1)); // set hour variable to input hour
-			minute = Integer.parseInt(twentyFourHrMatcher.group(2)); // set minute variable to input minute
+			 // set minute variable to input minute (if only 1 group, minute is 0)
+			minute = twentyFourHrMatcher.group(2) != null ? Integer.parseInt(twentyFourHrMatcher.group(2)) : 0;
+			
 		} else { // if time is invalid, alert user
+			
 			Alert invalidCurfewTime = new Alert(AlertType.ERROR, "Curfew time was not input in a known format. Please fix this in \"config.ini\"\n"
 					+ "Valid formats are:\n- 24 hour time with or without leading zero, with or without a time separator;\n"
 					+ "- 12 hour time with or without a leading zero, with or without a time separator, with or without a space between the minutes and the meridiem, "
@@ -183,6 +187,7 @@ public class SignInPane extends GridPane {
 			invalidCurfewTime.showAndWait();
 			
 			Platform.exit();
+			
 		}
 		
 		LocalTime curfew = LocalTime.of(hour, minute);
