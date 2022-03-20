@@ -12,7 +12,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -29,9 +28,6 @@ import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.ini4j.Ini;
 
-import javafx.animation.Animation;
-import javafx.animation.KeyFrame;
-import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -57,14 +53,12 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
-import javafx.util.Duration;
 
 public class SignInPane extends GridPane {
 
 	private Stage stage;
 
-	private String name;
-	private LocalDateTime curfew;
+	private LocalDateTime normalCurfew, nightOffCurfew, dayOffCurfew;
 	private File attendanceFile;
 	private Ini settings;
 
@@ -87,9 +81,15 @@ public class SignInPane extends GridPane {
 		stage = s;
 		
 		// set instance variables
-		name = settings.get("paneSettings", "opName");
-		curfew = curfewTime(settings.get("curfewTimes", "normalCurfew")); // TODO: add other two curfew times
+		normalCurfew = curfewTime(settings.get("curfewTimes", "normalCurfew"));
+		nightOffCurfew = curfewTime(settings.get("curfewTimes", "nightOffCurfew"));
+		dayOffCurfew = curfewTime(settings.get("curfewTimes", "dayOffCurfew"));
+		
 		attendanceFile = new File(settings.get("paneSettings", "attendanceFilePath"));
+		
+		// get info text
+		infoText = "";
+		getFileContents();
 		
 		
 		// create local workbook from attendanceFile, only continue if workbook creation is acceptable
@@ -98,7 +98,8 @@ public class SignInPane extends GridPane {
 			
 			sheet = workbook.getSheetAt(0);
 			
-			readHeaderRow();
+			readHeaderRow(); // get locations of columns from header row
+			
 			setup();
 		} catch (EmptyFileException | IOException e) {			
 			Alert fileNotAccessible = new Alert(AlertType.ERROR, "Unable to access \"" + attendanceFile.getName()
@@ -110,10 +111,40 @@ public class SignInPane extends GridPane {
 			
 			Platform.exit();
 		}
+	}
+	
+	// reads information from file to display if the info button is clicked
+	private void getFileContents() {
+			
+		// get location of the info file for this pane
+		String infoPath = settings.get("paneSettings", "infoPath", String.class);
+		String infoFileName = infoPath.split("/")[infoPath.split("/").length - 1]; // get the file name
+			
+		// set up reader to read from file
+		try {
+			infoReader = new BufferedReader(new FileReader(infoPath));
+		} catch (FileNotFoundException e) {		
+			Alert fileNotAccessible = new Alert(AlertType.ERROR, "Unable to access \"" + infoFileName + 
+					"\" file.\nPlease create this file in the " + infoPath.substring(0, infoPath.lastIndexOf("/")) + " directory.");
+			fileNotAccessible.setTitle("Info File Not Accessible");
+			fileNotAccessible.getDialogPane().getStylesheets().add(Attendance.class.getResource(settings.get("stageSettings", "cssFile", String.class)).toExternalForm());
+			fileNotAccessible.showAndWait();
+			
+			Platform.exit();
+		}
 		
-		// get info text
-		infoText = "";
-		getFileContents();
+		
+		// read from file into infoText
+		try {
+			String temp = "";
+			
+			while((temp = infoReader.readLine()) != null) {
+				infoText += temp + "\n";
+			}
+			
+		} catch (IOException e) {
+			infoText = "Something went wrong while reading this text.\nCheck the \"" + infoFileName + "\" file to see if there are errors in it.";
+		}
 	}
 	
 	// takes the string entered as curfew time and converts it to the date and time of curfew
@@ -163,69 +194,6 @@ public class SignInPane extends GridPane {
 		else // otherwise, curfew is tomorrow (read: after midnight)
 			return LocalDateTime.of(LocalDate.now().plusDays(1), curfew); // return LocalDateTime object with tomorrow's date and entered time
 	}
-	
-	// reads information from file to display if the info button is clicked
-	private void getFileContents() {
-		
-		// get location of the info file for this pane
-		String infoPath = settings.get("paneSettings", "infoPath", String.class);
-		String infoFileParent = infoPath.substring(0, infoPath.lastIndexOf("/")); // get the parent name
-		String infoFileName = infoPath.split("/")[infoPath.split("/").length - 1]; // get the file name
-		
-		// set up reader to read from file
-		try {
-			infoReader = new BufferedReader(new FileReader(infoPath));
-		} catch (FileNotFoundException e) {		
-			Alert fileNotAccessible = new Alert(AlertType.ERROR, "Unable to access \"" + infoFileName + "\" file.\nPlease create this file in the " + infoFileParent + " directory.");
-			fileNotAccessible.setTitle("Info File Not Accessible");
-			fileNotAccessible.getDialogPane().getStylesheets().add(Attendance.class.getResource(settings.get("stageSettings", "cssFile", String.class)).toExternalForm());
-			fileNotAccessible.showAndWait();
-			
-			Platform.exit();
-		}
-		
-		
-		// read from file into infoText
-		try {
-			String temp = "";
-			
-			while((temp = infoReader.readLine()) != null) {
-				infoText += temp + "\n";
-			}
-			
-		} catch (IOException e) {
-			infoText = "Something went wrong while reading this text.\nCheck the \"" + infoFileName + "\" file to see if there are errors in it.";
-		}
-	}
-
-	// called when InitialPane moves to this scene
-	// TODO: add this functionality to constructor
-	@Deprecated
-	public void setPrevVars(String opName, LocalDateTime c, File af) {
-		name = opName;
-		curfew = c;
-		attendanceFile = af;
-		
-		
-		// create local workbook from attendanceFile, only continue if workbook creation is acceptable
-		try (FileInputStream afis = new FileInputStream(attendanceFile)) {
-			workbook = new XSSFWorkbook(afis);
-			
-			sheet = workbook.getSheetAt(0);
-			
-			readHeaderRow();
-			setup();
-		} catch (EmptyFileException | IOException e) {			
-			Alert fileNotAccessible = new Alert(AlertType.ERROR, "Unable to access \"" + attendanceFile.getName()
-					+ "\"\nPlease choose a different file.");
-			fileNotAccessible.setTitle("Attendance File Not Accessible");
-			fileNotAccessible.getDialogPane().getStylesheets().add(Attendance.class.getResource(settings.get("stageSettings", "cssFile", String.class)).toExternalForm());
-			fileNotAccessible.initOwner(stage);
-			fileNotAccessible.showAndWait();
-			
-			Platform.exit();
-		}
-	}
 
 	// reads header row of workbook to initialize column trackers,
 	//  adds column for today to the end of the sheet and puts in name to row 2
@@ -236,7 +204,7 @@ public class SignInPane extends GridPane {
 		boolean bunkExists = false, nameExists = false, idExists = false,
 				ontimeExists = false, lateExists = false, absentExists = false,
 				todayExists = false;
-		boolean curfewToday = (LocalDate.now().compareTo(curfew.toLocalDate()) == 0);
+		boolean curfewToday = (LocalDate.now().compareTo(normalCurfew.toLocalDate()) == 0);
 
 		// run through all cells in header row to assign column trackers
 		for (int i = headerRow.getFirstCellNum(); i < headerRow.getLastCellNum(); i++) {
@@ -274,12 +242,12 @@ public class SignInPane extends GridPane {
 				}
 
 				if (curfewToday) {
-					if (headerRow.getCell(i).getStringCellValue().equals(curfew.format(DateTimeFormatter.ofPattern("MM/dd/yyyy")))){
+					if (headerRow.getCell(i).getStringCellValue().equals(normalCurfew.format(DateTimeFormatter.ofPattern("MM/dd/yyyy")))){
 						todayCol = i;
 						todayExists = true;
 					}
 				} else {
-					if (headerRow.getCell(i).getStringCellValue().equals(curfew.minusDays(1).format(DateTimeFormatter.ofPattern("MM/dd/yyyy")))){
+					if (headerRow.getCell(i).getStringCellValue().equals(normalCurfew.minusDays(1).format(DateTimeFormatter.ofPattern("MM/dd/yyyy")))){
 						todayCol = i;
 						todayExists = true;
 					}
@@ -315,23 +283,29 @@ public class SignInPane extends GridPane {
 			todayCol = headerRow.getLastCellNum();
 			headerRow.createCell(todayCol);
 
-			if (curfew.toLocalDate().compareTo(LocalDate.now()) == 0) // if curfew is today
-				headerRow.getCell(todayCol).setCellValue(curfew.format(DateTimeFormatter.ofPattern("MM/dd/yyyy")));
+			if (normalCurfew.toLocalDate().compareTo(LocalDate.now()) == 0) // if curfew is today
+				headerRow.getCell(todayCol).setCellValue(normalCurfew.format(DateTimeFormatter.ofPattern("MM/dd/yyyy")));
 			else // curfew is tomorrow
-				headerRow.getCell(todayCol).setCellValue(curfew.minusDays(1).format(DateTimeFormatter.ofPattern("MM/dd/yyyy")));
+				headerRow.getCell(todayCol).setCellValue(normalCurfew.minusDays(1).format(DateTimeFormatter.ofPattern("MM/dd/yyyy")));
 		}
-
-		// write name of operator to row 2 in today's column if different than what's already there
-		if (sheet.getRow(1).getCell(todayCol) == null)
-			sheet.getRow(1).createCell(todayCol).setCellValue(name);
-		else if (!(sheet.getRow(1).getCell(todayCol).getStringCellValue().equals(name)))
-			sheet.getRow(1).getCell(todayCol).setCellValue(name);
 		
-		// write curfew time to row 3 in today's column if different than what's already there
+		// write normal curfew time to row 2 in today's column if different than what's already there
+		if (sheet.getRow(1).getCell(todayCol) == null)
+			sheet.getRow(1).createCell(todayCol).setCellValue(normalCurfew.format(DateTimeFormatter.ofPattern("h:mm a")));
+		else if (!(sheet.getRow(1).getCell(todayCol).getStringCellValue().equals(normalCurfew.format(DateTimeFormatter.ofPattern("h:mm a")))))
+			sheet.getRow(1).getCell(todayCol).setCellValue(normalCurfew.format(DateTimeFormatter.ofPattern("h:mm a")));
+		
+		// write night off curfew time to row 3 in today's column if different than what's already there
 		if (sheet.getRow(2).getCell(todayCol) == null)
-			sheet.getRow(2).createCell(todayCol).setCellValue(curfew.format(DateTimeFormatter.ofPattern("h:mm a")));
-		else if (!(sheet.getRow(2).getCell(todayCol).getStringCellValue().equals(curfew.format(DateTimeFormatter.ofPattern("h:mm a")))))
-			sheet.getRow(2).getCell(todayCol).setCellValue(curfew.format(DateTimeFormatter.ofPattern("h:mm a")));
+			sheet.getRow(2).createCell(todayCol).setCellValue(nightOffCurfew.format(DateTimeFormatter.ofPattern("h:mm a")));
+		else if (!(sheet.getRow(2).getCell(todayCol).getStringCellValue().equals(nightOffCurfew.format(DateTimeFormatter.ofPattern("h:mm a")))))
+			sheet.getRow(2).getCell(todayCol).setCellValue(nightOffCurfew.format(DateTimeFormatter.ofPattern("h:mm a")));
+		
+		// write day off curfew time to row 4 in today's column if different than what's already there
+		if (sheet.getRow(3).getCell(todayCol) == null)
+			sheet.getRow(3).createCell(todayCol).setCellValue(dayOffCurfew.format(DateTimeFormatter.ofPattern("h:mm a")));
+		else if (!(sheet.getRow(3).getCell(todayCol).getStringCellValue().equals(dayOffCurfew.format(DateTimeFormatter.ofPattern("h:mm a")))))
+			sheet.getRow(3).getCell(todayCol).setCellValue(dayOffCurfew.format(DateTimeFormatter.ofPattern("h:mm a")));
 		
 		sheet.autoSizeColumn(todayCol); // resize column to fit
 
@@ -367,7 +341,7 @@ public class SignInPane extends GridPane {
 		// curfew time
 		Label curfewLabel = new Label("Curfew:");
 		Label curfewTimeLabel = new Label();
-		curfewTimeLabel.setText(curfew.format(DateTimeFormatter.ofPattern("h:mm a")));
+		curfewTimeLabel.setText(normalCurfew.format(DateTimeFormatter.ofPattern("h:mm a")));
 		HBox curfewBox = new HBox(this.getHgap());
 		curfewLabel.setMinWidth(USE_PREF_SIZE);
 		curfewTimeLabel.setMinWidth(USE_PREF_SIZE);
@@ -375,7 +349,7 @@ public class SignInPane extends GridPane {
 		curfewBox.getChildren().addAll(curfewLabel, curfewTimeLabel);
 
 		// time to curfew
-		CountdownTimer timeToCurfew = new CountdownTimer(curfew);
+		CountdownTimer timeToCurfew = new CountdownTimer(normalCurfew);
 		Label countdownLabel = new Label("Time until curfew:");
 		HBox countdownBox = new HBox(this.getHgap());
 		timeToCurfew.setMinWidth(USE_PREF_SIZE);
@@ -485,7 +459,7 @@ public class SignInPane extends GridPane {
 				if (!staffID.isEmpty()) {
 					
 					boolean idFound = false; // staff member has not yet been found
-					for (int i = sheet.getFirstRowNum() + 3; i < sheet.getLastRowNum() + 1; i++) {
+					for (int i = sheet.getFirstRowNum() + 4; i < sheet.getLastRowNum() + 1; i++) {
 
 						String currentID = "";
 						
@@ -586,7 +560,7 @@ public class SignInPane extends GridPane {
 				late.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 				
 				// staff member is on time
-				if (curfew.compareTo(signInTime) > 0) {
+				if (normalCurfew.compareTo(signInTime) > 0) {
 					// set todayCol to onTime style
 					sheet.getRow(rowNum).getCell(todayCol).setCellStyle(onTime);
 					
@@ -684,7 +658,7 @@ public class SignInPane extends GridPane {
 
 				// runs through all rows of the spreadsheet and returns false if there is an
 				//  unaccounted staff member
-				for (int i = sheet.getFirstRowNum() + 3; i <= sheet.getLastRowNum(); i++)
+				for (int i = sheet.getFirstRowNum() + 4; i <= sheet.getLastRowNum(); i++)
 					// if today's attendance column does not exist or is empty, the staff member is unaccounted for
 					if ((sheet.getRow(i) != null) && (sheet.getRow(i).getCell(todayCol) == null || 
 						 								sheet.getRow(i).getCell(todayCol).getCellType() == CellType.BLANK))
@@ -698,9 +672,9 @@ public class SignInPane extends GridPane {
 
 				List<String> uniqueBunks = new ArrayList<String>();
 
-				// loop through all rows of the sheet, starting at the third row (so ignoring the two header rows)
+				// loop through all rows of the sheet, starting at the fifth row (so ignoring the header rows)
 				//  and look at the "bunk" column to count how many unique bunks there are
-				for (int i = sheet.getFirstRowNum() + 3; i <= sheet.getLastRowNum(); i++) {
+				for (int i = sheet.getFirstRowNum() + 4; i <= sheet.getLastRowNum(); i++) {
 
 					// if the current bunk is new, add it to the list of unique bunks
 					if ((sheet.getRow(i) != null) && !uniqueBunks.contains(sheet.getRow(i).getCell(bunkCol).getStringCellValue()))
@@ -716,7 +690,7 @@ public class SignInPane extends GridPane {
 
 				// runs through all rows of the spreadsheet and returns false if there is an
 				//  unaccounted staff member in this bunk
-				for (int i = sheet.getFirstRowNum() + 3; i <= sheet.getLastRowNum(); i++)
+				for (int i = sheet.getFirstRowNum() + 4; i <= sheet.getLastRowNum(); i++)
 					if ((sheet.getRow(i) != null) && sheet.getRow(i).getCell(bunkCol).getStringCellValue().equals(bunk))
 						// if today's attendance column does not exist or is empty, the staff member is unaccounted for
 						if ((sheet.getRow(i) != null) && (sheet.getRow(i).getCell(todayCol) == null || 
@@ -741,7 +715,7 @@ public class SignInPane extends GridPane {
 				bunkBox.getChildren().addAll(bunkNameBox, new HBox()); // empty HBox for spacing
 
 				// runs through all rows of the spreadsheet and adds unaccounted staff in this bunk to the VBox
-				for (int i = sheet.getFirstRowNum() + 3; i <= sheet.getLastRowNum(); i++) {
+				for (int i = sheet.getFirstRowNum() + 4; i <= sheet.getLastRowNum(); i++) {
 
 					if ((sheet.getRow(i) != null) && sheet.getRow(i).getCell(bunkCol).getStringCellValue().equals(bunk)) {
 
@@ -918,7 +892,7 @@ public class SignInPane extends GridPane {
 
 				// runs through all rows of the spreadsheet and returns false if there is an
 				//  unaccounted staff member
-				for (int i = sheet.getFirstRowNum() + 3; i <= sheet.getLastRowNum(); i++)
+				for (int i = sheet.getFirstRowNum() + 4; i <= sheet.getLastRowNum(); i++)
 					// if today's attendance column does not exist or is empty, the staff member is unaccounted for
 					if ((sheet.getRow(i) != null) && (sheet.getRow(i).getCell(todayCol) == null || 
 					       sheet.getRow(i).getCell(todayCol).getCellType() == CellType.BLANK))
@@ -938,7 +912,7 @@ public class SignInPane extends GridPane {
 				absentStyle.setFillForegroundColor(new XSSFColor(absentColor, new DefaultIndexedColorMap()));
 				absentStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 				
-				for (int i = sheet.getFirstRowNum() + 3; i < sheet.getLastRowNum() + 1; i++) {
+				for (int i = sheet.getFirstRowNum() + 4; i < sheet.getLastRowNum() + 1; i++) {
 					
 					absent = false;
 					
@@ -990,63 +964,4 @@ public class SignInPane extends GridPane {
 		});
 	}
 
-}
-
-class Clock extends Label {
-
-	Timeline timeline;
-	
-	public Clock() {
-		bindToTime();
-	}
-
-	public void stopClock() {
-		timeline.stop();
-		setText("");
-	}
-	
-	private void bindToTime() {
-		timeline = new Timeline(new KeyFrame(Duration.seconds(0), new EventHandler<ActionEvent>() {
-
-			@Override
-			public void handle(ActionEvent event) {
-				setText(LocalTime.now().format(DateTimeFormatter.ofPattern("h:mm a")));
-			}
-		}), new KeyFrame(Duration.seconds(1)));
-
-		timeline.setCycleCount(Animation.INDEFINITE);
-		timeline.play();
-	}
-}
-
-class CountdownTimer extends Label {
-
-	LocalDateTime finalTime;
-	Timeline timeline;
-
-	public CountdownTimer(LocalDateTime timeToCountTo) {
-		finalTime = timeToCountTo;
-		bindToTime();
-	}
-	
-	public void stopClock() {
-		timeline.stop();
-		setText("");
-	}
-
-	private void bindToTime() {
-		timeline = new Timeline(new KeyFrame(Duration.seconds(0), new EventHandler<ActionEvent>() {
-
-			@Override
-			public void handle(ActionEvent event) {
-				if (LocalDateTime.now().until(finalTime, ChronoUnit.MINUTES) == 0) 
-					setText((LocalDateTime.now().until(finalTime, ChronoUnit.MINUTES) + 1) + " minute");
-				else
-					setText((LocalDateTime.now().until(finalTime, ChronoUnit.MINUTES) + 1) + " minutes");
-			}
-		}), new KeyFrame(Duration.seconds(1)));
-
-		timeline.setCycleCount(Animation.INDEFINITE);
-		timeline.play();
-	}
 }
