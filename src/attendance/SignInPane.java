@@ -107,7 +107,7 @@ public class SignInPane extends GridPane {
 		try (FileInputStream afis = new FileInputStream(attendanceFile)) {
 			workbook = new XSSFWorkbook(afis);
 			
-			attendanceSheet = workbook.getSheet("Attendance");
+			attendanceSheet = workbook.getSheet("Attendance"); // TODO: might need to make a new sheet every day so that the list can grow and shrink as needed
 			keySheet = workbook.getSheet("Key");
 			
 			getMasterStaffList(); // get list of staff from keySheet
@@ -271,6 +271,7 @@ public class SignInPane extends GridPane {
 			String bunk, name, id;
 			
 			// only get cell values if there are cell values
+			// TODO: add handler for if ID is a numeric type
 			if (keySheet.getRow(i) != null) {
 			
 				bunk = keySheet.getRow(i).getCell(keyBunkCol).getStringCellValue();
@@ -675,8 +676,36 @@ public class SignInPane extends GridPane {
 						}
 					}
 					
-					if (!idFound && !staffID.isEmpty())
-						confirmation.setText("Staff member " + staffID + " not found");
+					// the id wasn't found, so it's not someone who's signing back in
+					// check if it's someone in the key sheet who's signing out
+					if (!idFound && !staffID.isEmpty()) {
+						
+						boolean signedOut = false;
+						
+						for (StaffMember sm : staffList) {
+							if (!signedOut && (staffID.equals(sm.getName()) || staffID.equals(sm.getID()))) { // if we've found the staff member
+								// add them to the sheet so that we can later sign them back in
+								// TODO: should there be a "time out" column so we can see when they left and when they return?
+								
+								// create new row at the bottom of the spreadsheet
+								// TODO: should I add spacing if it's a new bunk?
+								// TODO: if it's a bunk that already exists, should I add it with the bunk?
+								// TODO: both of these seem like too much work, but they are questions
+								XSSFRow newRow = attendanceSheet.createRow(attendanceSheet.getLastRowNum() + 1);
+								newRow.createCell(bunkCol).setCellValue(sm.getBunk()); // set the bunk
+								newRow.createCell(nameCol).setCellValue(sm.getName()); // set the name
+								newRow.createCell(idCol).setCellValue(sm.getID()); // set the ID
+								
+								confirmation.setText(sm.getName() + " signed out.");
+								signedOut = true;
+							}
+						}
+						
+						if (!signedOut) {
+							 confirmation.setText("Staff member " + staffID + " not found");
+						}
+					} 
+					
 				} else
 					confirmation.setText("No ID entered");
 				
