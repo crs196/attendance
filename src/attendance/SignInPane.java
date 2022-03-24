@@ -65,12 +65,15 @@ public class SignInPane extends GridPane {
 	private Ini settings;
 
 	private XSSFWorkbook workbook;
-	private XSSFSheet sheet;
+	private XSSFSheet attendanceSheet, keySheet;
+	
+	private List<StaffMember> staffList;
 	
 	private BufferedReader infoReader;
 	private String infoText;
 
 	// used to track which column holds each piece of information
+	private int keyBunkCol, keyNameCol, keyIDCol;
 	private int bunkCol, nameCol, idCol, ontimeCol, lateCol, absentCol, todayCol;
 	
 	private boolean autosave;
@@ -97,12 +100,17 @@ public class SignInPane extends GridPane {
 		infoText = "";
 		getFileContents();
 		
+		//initialize staff list
+		staffList = new ArrayList<StaffMember>();
 		
 		// create local workbook from attendanceFile, only continue if workbook creation is acceptable
 		try (FileInputStream afis = new FileInputStream(attendanceFile)) {
 			workbook = new XSSFWorkbook(afis);
 			
-			sheet = workbook.getSheetAt(0);
+			attendanceSheet = workbook.getSheet("Attendance");
+			keySheet = workbook.getSheet("Key");
+			
+			getMasterStaffList(); // get list of staff from keySheet
 			
 			readHeaderRow(); // get locations of columns from header row
 			
@@ -209,14 +217,76 @@ public class SignInPane extends GridPane {
 			return LocalDateTime.of(LocalDate.now().plusDays(1), curfew); // return LocalDateTime object with tomorrow's date and entered time
 	}
 	
-	// TODO (maybe): add a method (and associated variables) to read information from ID key sheet (yet to be added)
+	// reads from the "key" sheet on the spreadsheet to get a list of every possible staff member
+	//  that could sign out/in in this session and their information
+	private void getMasterStaffList() {
+		// first, read the header row to figure out which piece of information is in which column
+		XSSFRow headerRow = keySheet.getRow(keySheet.getFirstRowNum());
+		boolean bunkExists = false, nameExists = false, idExists = false;
+		
+		for (int i = headerRow.getFirstCellNum(); i < headerRow.getLastCellNum(); i++) {
+
+			if ((headerRow.getCell(i) != null) && (headerRow.getCell(i).getCellType() == CellType.STRING)) {
+				
+				// check to see if current cell has any of these contents
+				switch (headerRow.getCell(i).getStringCellValue().toLowerCase()) {
+					case "bunk":
+						keyBunkCol = i;
+						bunkExists = true;
+						break;
+					case "name":
+						keyNameCol = i;
+						nameExists = true;
+						break;
+					case "id":
+						keyIDCol = i;
+						idExists = true;
+						break;
+					default:
+						break;
+				}
+			}
+		}
+		
+		// if the bunk and/or name columns don't exist, this spreadsheet is invalid, so don't continue
+		if (!bunkExists || !nameExists) {
+			Alert fileNotAccessible = new Alert(AlertType.ERROR, "The \"Key\" sheet in \"" + attendanceFile.getName() + "\" is formatted incorrecly.\n"
+					+ "Please choose a different file.");
+			fileNotAccessible.setTitle("Attendance File Not Formatted Correctly");
+			fileNotAccessible.getDialogPane().getStylesheets().add(Attendance.class.getResource(settings.get("filePaths", "cssFile", String.class)).toExternalForm());
+			fileNotAccessible.getDialogPane().lookupButton(ButtonType.OK).setId("red");
+			fileNotAccessible.initOwner(stage);
+			fileNotAccessible.showAndWait();
+			
+			Platform.exit();
+		}
+
+		// if there is no column labeled "ID", set the ID column to be the name column
+		if (!idExists)
+			keyIDCol = keyNameCol;
+		
+		
+		// then, loop through the sheet and collect all the data
+		for (int i = keySheet.getFirstRowNum() + 1; i < keySheet.getLastRowNum() + 1; i++) {
+			String bunk, name, id;
+			
+			// only get cell values if there are cell values
+			if (keySheet.getRow(i) != null) {
+			
+				bunk = keySheet.getRow(i).getCell(keyBunkCol).getStringCellValue();
+				name = keySheet.getRow(i).getCell(keyNameCol).getStringCellValue();
+				id = keySheet.getRow(i).getCell(keyIDCol).getStringCellValue();
+			
+				staffList.add(new StaffMember(bunk, name, id));
+			}
+		}
+	}
 
 	// reads header row of workbook to initialize column trackers,
 	//  adds column for today to the end of the sheet and puts in name to row 2
-	// TODO: consider refactoring this method in conjunction with a set of settings in `config.ini` that specify whether columns exist and where they are
 	private void readHeaderRow() {
 
-		XSSFRow headerRow = sheet.getRow(sheet.getFirstRowNum());
+		XSSFRow headerRow = attendanceSheet.getRow(attendanceSheet.getFirstRowNum());
 		boolean bunkExists = false, nameExists = false, idExists = false,
 				ontimeExists = false, lateExists = false, absentExists = false,
 				todayExists = false;
@@ -273,7 +343,7 @@ public class SignInPane extends GridPane {
 		
 		// if the bunk and/or name columns don't exist, this spreadsheet is invalid, so don't continue
 		if (!bunkExists || !nameExists) {
-			Alert fileNotAccessible = new Alert(AlertType.ERROR, "The chosen file \"" + attendanceFile.getName() + "\" is formatted incorrecly.\n"
+			Alert fileNotAccessible = new Alert(AlertType.ERROR, "The \"Attendance\" sheet in \"" + attendanceFile.getName() + "\" is formatted incorrecly.\n"
 					+ "Please choose a different file.");
 			fileNotAccessible.setTitle("Attendance File Not Formatted Correctly");
 			fileNotAccessible.getDialogPane().getStylesheets().add(Attendance.class.getResource(settings.get("filePaths", "cssFile", String.class)).toExternalForm());
@@ -307,24 +377,24 @@ public class SignInPane extends GridPane {
 		}
 		
 		// write normal curfew time to row 2 in today's column if different than what's already there
-		if (sheet.getRow(1).getCell(todayCol) == null)
-			sheet.getRow(1).createCell(todayCol).setCellValue(normalCurfew.format(DateTimeFormatter.ofPattern("h:mm a")));
-		else if (!(sheet.getRow(1).getCell(todayCol).getStringCellValue().equals(normalCurfew.format(DateTimeFormatter.ofPattern("h:mm a")))))
-			sheet.getRow(1).getCell(todayCol).setCellValue(normalCurfew.format(DateTimeFormatter.ofPattern("h:mm a")));
+		if (attendanceSheet.getRow(1).getCell(todayCol) == null)
+			attendanceSheet.getRow(1).createCell(todayCol).setCellValue(normalCurfew.format(DateTimeFormatter.ofPattern("h:mm a")));
+		else if (!(attendanceSheet.getRow(1).getCell(todayCol).getStringCellValue().equals(normalCurfew.format(DateTimeFormatter.ofPattern("h:mm a")))))
+			attendanceSheet.getRow(1).getCell(todayCol).setCellValue(normalCurfew.format(DateTimeFormatter.ofPattern("h:mm a")));
 		
 		// write night off curfew time to row 3 in today's column if different than what's already there
-		if (sheet.getRow(2).getCell(todayCol) == null)
-			sheet.getRow(2).createCell(todayCol).setCellValue(nightOffCurfew.format(DateTimeFormatter.ofPattern("h:mm a")));
-		else if (!(sheet.getRow(2).getCell(todayCol).getStringCellValue().equals(nightOffCurfew.format(DateTimeFormatter.ofPattern("h:mm a")))))
-			sheet.getRow(2).getCell(todayCol).setCellValue(nightOffCurfew.format(DateTimeFormatter.ofPattern("h:mm a")));
+		if (attendanceSheet.getRow(2).getCell(todayCol) == null)
+			attendanceSheet.getRow(2).createCell(todayCol).setCellValue(nightOffCurfew.format(DateTimeFormatter.ofPattern("h:mm a")));
+		else if (!(attendanceSheet.getRow(2).getCell(todayCol).getStringCellValue().equals(nightOffCurfew.format(DateTimeFormatter.ofPattern("h:mm a")))))
+			attendanceSheet.getRow(2).getCell(todayCol).setCellValue(nightOffCurfew.format(DateTimeFormatter.ofPattern("h:mm a")));
 		
 		// write day off curfew time to row 4 in today's column if different than what's already there
-		if (sheet.getRow(3).getCell(todayCol) == null)
-			sheet.getRow(3).createCell(todayCol).setCellValue(dayOffCurfew.format(DateTimeFormatter.ofPattern("h:mm a")));
-		else if (!(sheet.getRow(3).getCell(todayCol).getStringCellValue().equals(dayOffCurfew.format(DateTimeFormatter.ofPattern("h:mm a")))))
-			sheet.getRow(3).getCell(todayCol).setCellValue(dayOffCurfew.format(DateTimeFormatter.ofPattern("h:mm a")));
+		if (attendanceSheet.getRow(3).getCell(todayCol) == null)
+			attendanceSheet.getRow(3).createCell(todayCol).setCellValue(dayOffCurfew.format(DateTimeFormatter.ofPattern("h:mm a")));
+		else if (!(attendanceSheet.getRow(3).getCell(todayCol).getStringCellValue().equals(dayOffCurfew.format(DateTimeFormatter.ofPattern("h:mm a")))))
+			attendanceSheet.getRow(3).getCell(todayCol).setCellValue(dayOffCurfew.format(DateTimeFormatter.ofPattern("h:mm a")));
 		
-		sheet.autoSizeColumn(todayCol); // resize column to fit
+		attendanceSheet.autoSizeColumn(todayCol); // resize column to fit
 
 	}
 
@@ -526,16 +596,16 @@ public class SignInPane extends GridPane {
 				if (!staffID.isEmpty()) {
 					
 					boolean idFound = false; // staff member has not yet been found
-					for (int i = sheet.getFirstRowNum() + 4; i < sheet.getLastRowNum() + 1; i++) {
+					for (int i = attendanceSheet.getFirstRowNum() + 4; i < attendanceSheet.getLastRowNum() + 1; i++) {
 
 						String currentID = "";
 						
 						// first check idCol for matches
 						
-						if((sheet.getRow(i) != null) && sheet.getRow(i).getCell(idCol).getCellType() == CellType.NUMERIC)
-							currentID = (int) sheet.getRow(i).getCell(idCol).getNumericCellValue() + "";
-						else if ((sheet.getRow(i) != null) && sheet.getRow(i).getCell(idCol).getCellType() == CellType.STRING)
-							currentID = sheet.getRow(i).getCell(idCol).getStringCellValue();
+						if((attendanceSheet.getRow(i) != null) && attendanceSheet.getRow(i).getCell(idCol).getCellType() == CellType.NUMERIC)
+							currentID = (int) attendanceSheet.getRow(i).getCell(idCol).getNumericCellValue() + "";
+						else if ((attendanceSheet.getRow(i) != null) && attendanceSheet.getRow(i).getCell(idCol).getCellType() == CellType.STRING)
+							currentID = attendanceSheet.getRow(i).getCell(idCol).getStringCellValue();
 						
 						// if the current row's ID matches the one inputted, the staff member was found
 						if (currentID.equals(staffID)) {
@@ -544,24 +614,24 @@ public class SignInPane extends GridPane {
 							LocalDateTime now = LocalDateTime.now(); // save current time in case close to curfew
 
 							// if today's attendance column does not exist or is empty, the staff member is unaccounted for
-							if ((sheet.getRow(i) != null) && sheet.getRow(i).getCell(todayCol) == null) {
+							if ((attendanceSheet.getRow(i) != null) && attendanceSheet.getRow(i).getCell(todayCol) == null) {
 
-								sheet.getRow(i).createCell(todayCol).setCellValue(now.format(DateTimeFormatter.ofPattern("h:mm a")) + " ("
+								attendanceSheet.getRow(i).createCell(todayCol).setCellValue(now.format(DateTimeFormatter.ofPattern("h:mm a")) + " ("
 										+ curfewUsed.format(DateTimeFormatter.ofPattern("h:mm a")) + ")");
 								signInStatus(i, now, curfewUsed);
-								confirmation.setText(sheet.getRow(i).getCell(nameCol).getStringCellValue() + " signed in");
+								confirmation.setText(attendanceSheet.getRow(i).getCell(nameCol).getStringCellValue() + " signed in");
 								break; // search is done
 
-							} else if ((sheet.getRow(i) != null) && sheet.getRow(i).getCell(todayCol).getCellType() == CellType.BLANK) {
+							} else if ((attendanceSheet.getRow(i) != null) && attendanceSheet.getRow(i).getCell(todayCol).getCellType() == CellType.BLANK) {
 
-								sheet.getRow(i).getCell(todayCol).setCellValue(now.format(DateTimeFormatter.ofPattern("h:mm a")) + " ("
+								attendanceSheet.getRow(i).getCell(todayCol).setCellValue(now.format(DateTimeFormatter.ofPattern("h:mm a")) + " ("
 										+ curfewUsed.format(DateTimeFormatter.ofPattern("h:mm a")) + ")");
 								signInStatus(i, now, curfewUsed);
-								confirmation.setText(sheet.getRow(i).getCell(nameCol).getStringCellValue() + " signed in");
+								confirmation.setText(attendanceSheet.getRow(i).getCell(nameCol).getStringCellValue() + " signed in");
 								break; // search is done
 
 							} else { // if cell exists and is not blank, staff member has already signed in today
-								confirmation.setText(sheet.getRow(i).getCell(nameCol).getStringCellValue() + " has already signed in");
+								confirmation.setText(attendanceSheet.getRow(i).getCell(nameCol).getStringCellValue() + " has already signed in");
 								break; // search is done
 							}
 						}
@@ -569,10 +639,10 @@ public class SignInPane extends GridPane {
 						// then, if nameCol is different than idCol, check nameCol for matches
 						if (nameCol != idCol) {
 							
-							if((sheet.getRow(i) != null) && sheet.getRow(i).getCell(nameCol).getCellType() == CellType.NUMERIC)
-								currentID = (int) sheet.getRow(i).getCell(nameCol).getNumericCellValue() + "";
-							else if ((sheet.getRow(i) != null) && sheet.getRow(i).getCell(nameCol).getCellType() == CellType.STRING)
-								currentID = sheet.getRow(i).getCell(nameCol).getStringCellValue();
+							if((attendanceSheet.getRow(i) != null) && attendanceSheet.getRow(i).getCell(nameCol).getCellType() == CellType.NUMERIC)
+								currentID = (int) attendanceSheet.getRow(i).getCell(nameCol).getNumericCellValue() + "";
+							else if ((attendanceSheet.getRow(i) != null) && attendanceSheet.getRow(i).getCell(nameCol).getCellType() == CellType.STRING)
+								currentID = attendanceSheet.getRow(i).getCell(nameCol).getStringCellValue();
 							
 							// if the current row's ID matches the one inputted, the staff member was found
 							if (currentID.equals(staffID)) {
@@ -581,24 +651,24 @@ public class SignInPane extends GridPane {
 								LocalDateTime now = LocalDateTime.now(); // save current time in case close to curfew
 
 								// if today's attendance column does not exist or is empty, the staff member is unaccounted for
-								if ((sheet.getRow(i) != null) && sheet.getRow(i).getCell(todayCol) == null) {
+								if ((attendanceSheet.getRow(i) != null) && attendanceSheet.getRow(i).getCell(todayCol) == null) {
 
-									sheet.getRow(i).createCell(todayCol).setCellValue(now.format(DateTimeFormatter.ofPattern("h:mm a")) + " ("
+									attendanceSheet.getRow(i).createCell(todayCol).setCellValue(now.format(DateTimeFormatter.ofPattern("h:mm a")) + " ("
 											+ curfewUsed.format(DateTimeFormatter.ofPattern("h:mm a")) + ")");
 									signInStatus(i, now, curfewUsed);
-									confirmation.setText(sheet.getRow(i).getCell(nameCol).getStringCellValue() + " signed in");
+									confirmation.setText(attendanceSheet.getRow(i).getCell(nameCol).getStringCellValue() + " signed in");
 									break; // search is done
 
-								} else if ((sheet.getRow(i) != null) && sheet.getRow(i).getCell(todayCol).getCellType() == CellType.BLANK) {
+								} else if ((attendanceSheet.getRow(i) != null) && attendanceSheet.getRow(i).getCell(todayCol).getCellType() == CellType.BLANK) {
 
-									sheet.getRow(i).getCell(todayCol).setCellValue(now.format(DateTimeFormatter.ofPattern("h:mm a")) + " ("
+									attendanceSheet.getRow(i).getCell(todayCol).setCellValue(now.format(DateTimeFormatter.ofPattern("h:mm a")) + " ("
 											+ curfewUsed.format(DateTimeFormatter.ofPattern("h:mm a")) + ")");
 									signInStatus(i, now, curfewUsed);
-									confirmation.setText(sheet.getRow(i).getCell(nameCol).getStringCellValue() + " signed in");
+									confirmation.setText(attendanceSheet.getRow(i).getCell(nameCol).getStringCellValue() + " signed in");
 									break; // search is done
 
 								} else { // if cell exists and is not blank, staff member has already signed in today
-									confirmation.setText(sheet.getRow(i).getCell(nameCol).getStringCellValue() + " has already signed in");
+									confirmation.setText(attendanceSheet.getRow(i).getCell(nameCol).getStringCellValue() + " has already signed in");
 									break; // search is done
 								}
 							}
@@ -614,7 +684,7 @@ public class SignInPane extends GridPane {
 					// write data to attendanceFile
 					try (FileOutputStream afos = new FileOutputStream(attendanceFile)) {
 						workbook.write(afos);
-						sheet.autoSizeColumn(todayCol); // resize column to fit
+						attendanceSheet.autoSizeColumn(todayCol); // resize column to fit
 					} catch (IOException e) {
 						confirmation.setText("Autosave error. Try manually saving.");
 					} 
@@ -643,23 +713,23 @@ public class SignInPane extends GridPane {
 				// staff member is on time
 				if (curfewUsed.compareTo(signInTime) > 0) {
 					// set todayCol to onTime style
-					sheet.getRow(rowNum).getCell(todayCol).setCellStyle(onTime);
+					attendanceSheet.getRow(rowNum).getCell(todayCol).setCellStyle(onTime);
 					
 					if (ontimeCol != -1) {// there is an "on time" column
-						if ((sheet.getRow(rowNum) != null) && sheet.getRow(rowNum).getCell(ontimeCol) != null) // the cell exists
-							sheet.getRow(rowNum).getCell(ontimeCol).setCellValue(sheet.getRow(rowNum).getCell(ontimeCol).getNumericCellValue() + 1);
+						if ((attendanceSheet.getRow(rowNum) != null) && attendanceSheet.getRow(rowNum).getCell(ontimeCol) != null) // the cell exists
+							attendanceSheet.getRow(rowNum).getCell(ontimeCol).setCellValue(attendanceSheet.getRow(rowNum).getCell(ontimeCol).getNumericCellValue() + 1);
 						else // the cell does not exist
-							sheet.getRow(rowNum).createCell(ontimeCol).setCellValue(1);
+							attendanceSheet.getRow(rowNum).createCell(ontimeCol).setCellValue(1);
 					}
 				} else { // staff member is late
 					// set todayCol to late style
-					sheet.getRow(rowNum).getCell(todayCol).setCellStyle(late);
+					attendanceSheet.getRow(rowNum).getCell(todayCol).setCellStyle(late);
 					
 					if (lateCol != -1) {// there is an "on time" column
-						if ((sheet.getRow(rowNum) != null) && sheet.getRow(rowNum).getCell(lateCol) != null) // the cell exists
-							sheet.getRow(rowNum).getCell(lateCol).setCellValue(sheet.getRow(rowNum).getCell(lateCol).getNumericCellValue() + 1);
+						if ((attendanceSheet.getRow(rowNum) != null) && attendanceSheet.getRow(rowNum).getCell(lateCol) != null) // the cell exists
+							attendanceSheet.getRow(rowNum).getCell(lateCol).setCellValue(attendanceSheet.getRow(rowNum).getCell(lateCol).getNumericCellValue() + 1);
 						else // the cell does not exist
-							sheet.getRow(rowNum).createCell(lateCol).setCellValue(1);
+							attendanceSheet.getRow(rowNum).createCell(lateCol).setCellValue(1);
 					}
 				}
 			}
@@ -739,10 +809,10 @@ public class SignInPane extends GridPane {
 
 				// runs through all rows of the spreadsheet and returns false if there is an
 				//  unaccounted staff member
-				for (int i = sheet.getFirstRowNum() + 4; i <= sheet.getLastRowNum(); i++)
+				for (int i = attendanceSheet.getFirstRowNum() + 4; i <= attendanceSheet.getLastRowNum(); i++)
 					// if today's attendance column does not exist or is empty, the staff member is unaccounted for
-					if ((sheet.getRow(i) != null) && (sheet.getRow(i).getCell(todayCol) == null || 
-						 								sheet.getRow(i).getCell(todayCol).getCellType() == CellType.BLANK))
+					if ((attendanceSheet.getRow(i) != null) && (attendanceSheet.getRow(i).getCell(todayCol) == null || 
+						 								attendanceSheet.getRow(i).getCell(todayCol).getCellType() == CellType.BLANK))
 						return false;
 
 				return true;
@@ -755,11 +825,11 @@ public class SignInPane extends GridPane {
 
 				// loop through all rows of the sheet, starting at the fifth row (so ignoring the header rows)
 				//  and look at the "bunk" column to count how many unique bunks there are
-				for (int i = sheet.getFirstRowNum() + 4; i <= sheet.getLastRowNum(); i++) {
+				for (int i = attendanceSheet.getFirstRowNum() + 4; i <= attendanceSheet.getLastRowNum(); i++) {
 
 					// if the current bunk is new, add it to the list of unique bunks
-					if ((sheet.getRow(i) != null) && !uniqueBunks.contains(sheet.getRow(i).getCell(bunkCol).getStringCellValue()))
-						uniqueBunks.add(sheet.getRow(i).getCell(bunkCol).getStringCellValue());
+					if ((attendanceSheet.getRow(i) != null) && !uniqueBunks.contains(attendanceSheet.getRow(i).getCell(bunkCol).getStringCellValue()))
+						uniqueBunks.add(attendanceSheet.getRow(i).getCell(bunkCol).getStringCellValue());
 				}
 
 				return uniqueBunks;
@@ -771,11 +841,11 @@ public class SignInPane extends GridPane {
 
 				// runs through all rows of the spreadsheet and returns false if there is an
 				//  unaccounted staff member in this bunk
-				for (int i = sheet.getFirstRowNum() + 4; i <= sheet.getLastRowNum(); i++)
-					if ((sheet.getRow(i) != null) && sheet.getRow(i).getCell(bunkCol).getStringCellValue().equals(bunk))
+				for (int i = attendanceSheet.getFirstRowNum() + 4; i <= attendanceSheet.getLastRowNum(); i++)
+					if ((attendanceSheet.getRow(i) != null) && attendanceSheet.getRow(i).getCell(bunkCol).getStringCellValue().equals(bunk))
 						// if today's attendance column does not exist or is empty, the staff member is unaccounted for
-						if ((sheet.getRow(i) != null) && (sheet.getRow(i).getCell(todayCol) == null || 
-						sheet.getRow(i).getCell(todayCol).getCellType() == CellType.BLANK))
+						if ((attendanceSheet.getRow(i) != null) && (attendanceSheet.getRow(i).getCell(todayCol) == null || 
+						attendanceSheet.getRow(i).getCell(todayCol).getCellType() == CellType.BLANK))
 							return false;
 
 				return true;
@@ -796,15 +866,15 @@ public class SignInPane extends GridPane {
 				bunkBox.getChildren().addAll(bunkNameBox, new HBox()); // empty HBox for spacing
 
 				// runs through all rows of the spreadsheet and adds unaccounted staff in this bunk to the VBox
-				for (int i = sheet.getFirstRowNum() + 4; i <= sheet.getLastRowNum(); i++) {
+				for (int i = attendanceSheet.getFirstRowNum() + 4; i <= attendanceSheet.getLastRowNum(); i++) {
 
-					if ((sheet.getRow(i) != null) && sheet.getRow(i).getCell(bunkCol).getStringCellValue().equals(bunk)) {
+					if ((attendanceSheet.getRow(i) != null) && attendanceSheet.getRow(i).getCell(bunkCol).getStringCellValue().equals(bunk)) {
 
 						// if today's attendance column does not exist or is empty, the staff member is unaccounted for
-						if ((sheet.getRow(i) != null) && (sheet.getRow(i).getCell(todayCol) == null || 
-								sheet.getRow(i).getCell(todayCol).getCellType() == CellType.BLANK)) {
+						if ((attendanceSheet.getRow(i) != null) && (attendanceSheet.getRow(i).getCell(todayCol) == null || 
+								attendanceSheet.getRow(i).getCell(todayCol).getCellType() == CellType.BLANK)) {
 
-							Button staffMember = new Button(sheet.getRow(i).getCell(nameCol).getStringCellValue());
+							Button staffMember = new Button(attendanceSheet.getRow(i).getCell(nameCol).getStringCellValue());
 							staffMember.setId("list-button");
 							staffMember.setMinWidth(USE_PREF_SIZE);
 							HBox staffNameBox = new HBox(15);
@@ -814,7 +884,7 @@ public class SignInPane extends GridPane {
 
 							// when a staff member is clicked, open a popup window to allow user to
 							//  mark them as on shmira or a day off
-							XSSFRow staffRow = sheet.getRow(i); // stores current row for use in event handler
+							XSSFRow staffRow = attendanceSheet.getRow(i); // stores current row for use in event handler
 							staffMember.setOnAction(new EventHandler<ActionEvent>() {
 
 								@Override
@@ -864,7 +934,7 @@ public class SignInPane extends GridPane {
 											// write data to attendanceFile
 											try (FileOutputStream afos = new FileOutputStream(attendanceFile)) {
 												workbook.write(afos);
-												sheet.autoSizeColumn(todayCol); // resize column to fit
+												attendanceSheet.autoSizeColumn(todayCol); // resize column to fit
 											} catch (IOException e) {
 												confirmation.setText("Autosave error. Try manually saving.");
 											} 
@@ -897,7 +967,7 @@ public class SignInPane extends GridPane {
 											// write data to attendanceFile
 											try (FileOutputStream afos = new FileOutputStream(attendanceFile)) {
 												workbook.write(afos);
-												sheet.autoSizeColumn(todayCol); // resize column to fit
+												attendanceSheet.autoSizeColumn(todayCol); // resize column to fit
 											} catch (IOException e) {
 												confirmation.setText("Autosave error. Try manually saving.");
 											} 
@@ -936,7 +1006,7 @@ public class SignInPane extends GridPane {
 				// write data to attendanceFile
 				try (FileOutputStream afos = new FileOutputStream(attendanceFile)) {
 					workbook.write(afos);
-					sheet.autoSizeColumn(todayCol); // resize column to fit
+					attendanceSheet.autoSizeColumn(todayCol); // resize column to fit
 				} catch (IOException e) {
 					confirmation.setText("Unable to save to \"" + attendanceFile.getName() + "\"");
 				} 
@@ -986,10 +1056,10 @@ public class SignInPane extends GridPane {
 
 				// runs through all rows of the spreadsheet and returns false if there is an
 				//  unaccounted staff member
-				for (int i = sheet.getFirstRowNum() + 4; i <= sheet.getLastRowNum(); i++)
+				for (int i = attendanceSheet.getFirstRowNum() + 4; i <= attendanceSheet.getLastRowNum(); i++)
 					// if today's attendance column does not exist or is empty, the staff member is unaccounted for
-					if ((sheet.getRow(i) != null) && (sheet.getRow(i).getCell(todayCol) == null || 
-					       sheet.getRow(i).getCell(todayCol).getCellType() == CellType.BLANK))
+					if ((attendanceSheet.getRow(i) != null) && (attendanceSheet.getRow(i).getCell(todayCol) == null || 
+					       attendanceSheet.getRow(i).getCell(todayCol).getCellType() == CellType.BLANK))
 						return false;
 
 				return true;
@@ -1006,29 +1076,29 @@ public class SignInPane extends GridPane {
 				absentStyle.setFillForegroundColor(new XSSFColor(absentColor, new DefaultIndexedColorMap()));
 				absentStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 				
-				for (int i = sheet.getFirstRowNum() + 4; i < sheet.getLastRowNum() + 1; i++) {
+				for (int i = attendanceSheet.getFirstRowNum() + 4; i < attendanceSheet.getLastRowNum() + 1; i++) {
 					
 					absent = false;
 					
 					// if today's attendance column does not exist or is empty, the staff member is unaccounted for
-					if ((sheet.getRow(i) != null) && sheet.getRow(i).getCell(todayCol) == null) {
-						sheet.getRow(i).createCell(todayCol).setCellValue("Absent");
+					if ((attendanceSheet.getRow(i) != null) && attendanceSheet.getRow(i).getCell(todayCol) == null) {
+						attendanceSheet.getRow(i).createCell(todayCol).setCellValue("Absent");
 						absent = true;
-					} else if ((sheet.getRow(i) != null) && sheet.getRow(i).getCell(todayCol).getCellType() == CellType.BLANK) {
-						sheet.getRow(i).getCell(todayCol).setCellValue("Absent");
+					} else if ((attendanceSheet.getRow(i) != null) && attendanceSheet.getRow(i).getCell(todayCol).getCellType() == CellType.BLANK) {
+						attendanceSheet.getRow(i).getCell(todayCol).setCellValue("Absent");
 						absent = true;
 					}
 					
 					// set cell background to red if necessary,
 					//  increment "absent" column if it exists
 					if (absent) {
-						sheet.getRow(i).getCell(todayCol).setCellStyle(absentStyle);
+						attendanceSheet.getRow(i).getCell(todayCol).setCellStyle(absentStyle);
 						
 						if (absentCol != -1) {
-							if ((sheet.getRow(i) != null) && sheet.getRow(i).getCell(absentCol) != null) // the cell exists
-								sheet.getRow(i).getCell(absentCol).setCellValue(sheet.getRow(i).getCell(absentCol).getNumericCellValue() + 1);
+							if ((attendanceSheet.getRow(i) != null) && attendanceSheet.getRow(i).getCell(absentCol) != null) // the cell exists
+								attendanceSheet.getRow(i).getCell(absentCol).setCellValue(attendanceSheet.getRow(i).getCell(absentCol).getNumericCellValue() + 1);
 							else // the cell does not exist
-								sheet.getRow(i).createCell(absentCol).setCellValue(1);
+								attendanceSheet.getRow(i).createCell(absentCol).setCellValue(1);
 						}
 					}
 				}
