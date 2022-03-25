@@ -60,7 +60,7 @@ public class SignInPane extends GridPane {
 
 	private Stage stage;
 
-	private LocalDateTime normalCurfew, nightOffCurfew, dayOffCurfew;
+	private LocalDateTime leavingCampCurfew, nightOffCurfew, dayOffCurfew;
 	private File attendanceFile;
 	private Ini settings;
 
@@ -90,7 +90,7 @@ public class SignInPane extends GridPane {
 		stage = s;
 		
 		// set instance variables
-		normalCurfew = curfewTime(settings.get("curfewTimes", "normalCurfew"));
+		leavingCampCurfew = curfewTime(settings.get("curfewTimes", "leavingCampCurfew"));
 		nightOffCurfew = curfewTime(settings.get("curfewTimes", "nightOffCurfew"));
 		dayOffCurfew = curfewTime(settings.get("curfewTimes", "dayOffCurfew"));
 		
@@ -291,7 +291,7 @@ public class SignInPane extends GridPane {
 		boolean bunkExists = false, nameExists = false, idExists = false,
 				ontimeExists = false, lateExists = false, absentExists = false,
 				todayExists = false;
-		boolean curfewToday = (LocalDate.now().compareTo(normalCurfew.toLocalDate()) == 0);
+		boolean curfewToday = (LocalDate.now().compareTo(leavingCampCurfew.toLocalDate()) == 0);
 
 		// run through all cells in header row to assign column trackers
 		for (int i = headerRow.getFirstCellNum(); i < headerRow.getLastCellNum(); i++) {
@@ -329,12 +329,12 @@ public class SignInPane extends GridPane {
 				}
 
 				if (curfewToday) {
-					if (headerRow.getCell(i).getStringCellValue().equals(normalCurfew.format(DateTimeFormatter.ofPattern("MM/dd/yyyy")))){
+					if (headerRow.getCell(i).getStringCellValue().equals(leavingCampCurfew.format(DateTimeFormatter.ofPattern("MM/dd/yyyy")))){
 						todayCol = i;
 						todayExists = true;
 					}
 				} else {
-					if (headerRow.getCell(i).getStringCellValue().equals(normalCurfew.minusDays(1).format(DateTimeFormatter.ofPattern("MM/dd/yyyy")))){
+					if (headerRow.getCell(i).getStringCellValue().equals(leavingCampCurfew.minusDays(1).format(DateTimeFormatter.ofPattern("MM/dd/yyyy")))){
 						todayCol = i;
 						todayExists = true;
 					}
@@ -372,16 +372,16 @@ public class SignInPane extends GridPane {
 			headerRow.createCell(todayCol);
 
 			if (curfewToday) // curfew is today
-				headerRow.getCell(todayCol).setCellValue(normalCurfew.format(DateTimeFormatter.ofPattern("MM/dd/yyyy")));
+				headerRow.getCell(todayCol).setCellValue(leavingCampCurfew.format(DateTimeFormatter.ofPattern("MM/dd/yyyy")));
 			else // curfew is tomorrow
-				headerRow.getCell(todayCol).setCellValue(normalCurfew.minusDays(1).format(DateTimeFormatter.ofPattern("MM/dd/yyyy")));
+				headerRow.getCell(todayCol).setCellValue(leavingCampCurfew.minusDays(1).format(DateTimeFormatter.ofPattern("MM/dd/yyyy")));
 		}
 		
-		// write normal curfew time to row 2 in today's column if different than what's already there
+		// write leaving camp curfew time to row 2 in today's column if different than what's already there
 		if (attendanceSheet.getRow(1).getCell(todayCol) == null)
-			attendanceSheet.getRow(1).createCell(todayCol).setCellValue(normalCurfew.format(DateTimeFormatter.ofPattern("h:mm a")));
-		else if (!(attendanceSheet.getRow(1).getCell(todayCol).getStringCellValue().equals(normalCurfew.format(DateTimeFormatter.ofPattern("h:mm a")))))
-			attendanceSheet.getRow(1).getCell(todayCol).setCellValue(normalCurfew.format(DateTimeFormatter.ofPattern("h:mm a")));
+			attendanceSheet.getRow(1).createCell(todayCol).setCellValue(leavingCampCurfew.format(DateTimeFormatter.ofPattern("h:mm a")));
+		else if (!(attendanceSheet.getRow(1).getCell(todayCol).getStringCellValue().equals(leavingCampCurfew.format(DateTimeFormatter.ofPattern("h:mm a")))))
+			attendanceSheet.getRow(1).getCell(todayCol).setCellValue(leavingCampCurfew.format(DateTimeFormatter.ofPattern("h:mm a")));
 		
 		// write night off curfew time to row 3 in today's column if different than what's already there
 		if (attendanceSheet.getRow(2).getCell(todayCol) == null)
@@ -430,9 +430,9 @@ public class SignInPane extends GridPane {
 		// curfew times
 		
 		// normal
-		Label normalCurfewLabel = new Label("Normal Curfew:");
+		Label normalCurfewLabel = new Label("Leaving Camp Curfew:");
 		Label normalCurfewTimeLabel = new Label();
-		normalCurfewTimeLabel.setText(normalCurfew.format(DateTimeFormatter.ofPattern("h:mm a")));
+		normalCurfewTimeLabel.setText(leavingCampCurfew.format(DateTimeFormatter.ofPattern("h:mm a")));
 		HBox normalCurfewBox = new HBox(this.getHgap());
 		normalCurfewLabel.setMinWidth(USE_PREF_SIZE);
 		normalCurfewTimeLabel.setMinWidth(USE_PREF_SIZE);
@@ -506,7 +506,7 @@ public class SignInPane extends GridPane {
 		
 		// curfew selection radio buttons
 		ToggleGroup curfewTimeSelection = new ToggleGroup();
-		RadioButton normal = new RadioButton("Normal");
+		RadioButton normal = new RadioButton("Leaving Camp");
 		RadioButton nightOff = new RadioButton("Night Off");
 		RadioButton dayOff = new RadioButton("Day Off");
 		normal.getStyleClass().add("radiobutton");
@@ -587,7 +587,7 @@ public class SignInPane extends GridPane {
 				LocalDateTime curfewUsed = null;
 				
 				if (normal.isSelected())
-					curfewUsed = normalCurfew;
+					curfewUsed = leavingCampCurfew;
 				else if (nightOff.isSelected())
 					curfewUsed = nightOffCurfew;
 				else if (dayOff.isSelected())
