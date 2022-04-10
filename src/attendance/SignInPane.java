@@ -409,7 +409,7 @@ public class SignInPane extends GridPane {
 		this.setPadding(new Insets(30));
 
 		// header
-		Label title = new Label("Sign In");
+		Label title = new Label("Sign In/Out");
 		title.setId("header");
 		SignInPane.setHalignment(title, HPos.CENTER);
 		this.add(title, 0, 0, 2, 1);
@@ -496,7 +496,7 @@ public class SignInPane extends GridPane {
 		
 		TextField idField = new TextField();
 		
-		Button signIn = new Button("Sign In");
+		Button signIn = new Button("Sign In/Out");
 		signIn.setDefaultButton(true);
 		HBox.setHgrow(signIn, Priority.ALWAYS);
 		signIn.setMaxWidth(Double.MAX_VALUE);
