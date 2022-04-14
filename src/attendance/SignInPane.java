@@ -73,8 +73,10 @@ public class SignInPane extends GridPane {
 	private String infoText;
 
 	// used to track which column holds each piece of information
-	private int keyBunkCol, keyNameCol, keyIDCol;
-	private int bunkCol, nameCol, idCol, ontimeCol, lateCol, absentCol, todayCol;
+	private int keyBunkCol, keyNameCol, keyIDCol, ontimeCol, lateCol, absentCol;
+	private int bunkCol, nameCol, idCol, timeOutCol, timeInCol;
+	@Deprecated
+	private int todayCol;
 	
 	private boolean autosave;
 
@@ -107,12 +109,19 @@ public class SignInPane extends GridPane {
 		try (FileInputStream afis = new FileInputStream(attendanceFile)) {
 			workbook = new XSSFWorkbook(afis);
 			
-			attendanceSheet = workbook.getSheet("Attendance"); // TODO: make a new sheet every day so that the list can grow and shrink as needed
+			attendanceSheet = workbook.getSheet(LocalDate.now().format(DateTimeFormatter.ofPattern("MM-dd-yyyy"))); // get sheet with today's date
+			if (attendanceSheet == null) { // no sheet with today's date exists
+				int templateIndex = workbook.getSheetIndex("Daily Attendance Template"); // get index for template sheet
+				// create copy of template with today's date as the name
+				attendanceSheet = workbook.cloneSheet(templateIndex, LocalDate.now().format(DateTimeFormatter.ofPattern("MM-dd-yyyy")));
+			}
+			workbook.setSheetOrder(attendanceSheet.getSheetName(), 0); // move today's sheet to beginning of workbook
+			
 			keySheet = workbook.getSheet("Key");
 			
 			getMasterStaffList(); // get list of staff from keySheet
 			
-			readHeaderRow(); // get locations of columns from header row
+			initializeAttendanceSheet(); // get locations of columns from header row
 			
 			setup();
 		} catch (EmptyFileException | IOException e) {			
@@ -220,6 +229,47 @@ public class SignInPane extends GridPane {
 	// reads from the "key" sheet on the spreadsheet to get a list of every possible staff member
 	//  that could sign out/in in this session and their information
 	private void getMasterStaffList() {
+		// set columns
+		keyBunkCol = 0;	// column A: bunk/position
+		keyNameCol = 1;	// column B: name
+		keyIDCol = 2;	// column C: ID
+		
+		ontimeCol = 3;	// column D: on time
+		lateCol = 4;	// column E: late
+		absentCol = 5;	// column F: absent
+		
+		// then, loop through the sheet and collect all the data
+		for (int i = keySheet.getFirstRowNum() + 1; i < keySheet.getLastRowNum() + 1; i++) {
+			String bunk, name, id;
+			int ontime, late, absent;
+			
+			// only get cell values if there are cell values
+			if (keySheet.getRow(i) != null) {
+			
+				// get name, bunk, and ID (check whether ID is a string or a number)
+				bunk = keySheet.getRow(i).getCell(keyBunkCol).getStringCellValue();
+				name = keySheet.getRow(i).getCell(keyNameCol).getStringCellValue();
+				id = keySheet.getRow(i).getCell(keyIDCol).getCellType() == CellType.STRING 
+						? keySheet.getRow(i).getCell(keyIDCol).getStringCellValue()
+								: keySheet.getRow(i).getCell(keyIDCol).getNumericCellValue() + "";
+						
+				// get summary statistics
+				ontime = keySheet.getRow(i).getCell(ontimeCol) == null
+						? 0 :(int) keySheet.getRow(i).getCell(ontimeCol).getNumericCellValue();
+				late = keySheet.getRow(i).getCell(lateCol) == null
+						? 0: (int) keySheet.getRow(i).getCell(lateCol).getNumericCellValue();
+				absent = keySheet.getRow(i).getCell(absentCol) == null
+						? 0 : (int) keySheet.getRow(i).getCell(absentCol).getNumericCellValue();
+						
+				staffList.add(new StaffMember(bunk, name, id, ontime, late, absent));
+			}
+		}
+	}
+	
+	@Deprecated
+	// reads from the "key" sheet on the spreadsheet to get a list of every possible staff member
+	//  that could sign out/in in this session and their information
+	private void getMasterStaffListOld() {
 		// first, read the header row to figure out which piece of information is in which column
 		XSSFRow headerRow = keySheet.getRow(keySheet.getFirstRowNum());
 		boolean bunkExists = false, nameExists = false, idExists = false;
@@ -272,18 +322,50 @@ public class SignInPane extends GridPane {
 			String bunk, name, id;
 			
 			// only get cell values if there are cell values
-			// TODO: add handler for if ID is a numeric type
+			// TO DO: add handler for if ID is a numeric type
 			if (keySheet.getRow(i) != null) {
 			
 				bunk = keySheet.getRow(i).getCell(keyBunkCol).getStringCellValue();
 				name = keySheet.getRow(i).getCell(keyNameCol).getStringCellValue();
 				id = keySheet.getRow(i).getCell(keyIDCol).getStringCellValue();
 			
-				staffList.add(new StaffMember(bunk, name, id, 1, 1, 1)); // TODO: fix int parameters
+				staffList.add(new StaffMember(bunk, name, id, 1, 1, 1)); // TO DO: fix int parameters
 			}
 		}
 	}
+	
+	// initializes column trackers, writes curfew times to respective cells
+	private void initializeAttendanceSheet() {
+		// set columns
+		bunkCol = 0;	// column A: bunk/position
+		nameCol = 1;	// column B: name
+		idCol = 2;		// column C: ID
+		
+		timeOutCol = 3;	// column D: time out
+		timeInCol = 4;	// column E: time in
+		
+		// write leaving camp curfew time to row 2 in today's column if different than what's already there
+		if (attendanceSheet.getRow(1).getCell(8) == null)
+			attendanceSheet.getRow(1).createCell(8).setCellValue(leavingCampCurfew.format(DateTimeFormatter.ofPattern("h:mm a")));
+		else if (!(attendanceSheet.getRow(1).getCell(8).getStringCellValue().equals(leavingCampCurfew.format(DateTimeFormatter.ofPattern("h:mm a")))))
+			attendanceSheet.getRow(1).getCell(8).setCellValue(leavingCampCurfew.format(DateTimeFormatter.ofPattern("h:mm a")));
+		
+		// write night off curfew time to row 3 in today's column if different than what's already there
+		if (attendanceSheet.getRow(2).getCell(8) == null)
+			attendanceSheet.getRow(2).createCell(8).setCellValue(nightOffCurfew.format(DateTimeFormatter.ofPattern("h:mm a")));
+		else if (!(attendanceSheet.getRow(2).getCell(8).getStringCellValue().equals(nightOffCurfew.format(DateTimeFormatter.ofPattern("h:mm a")))))
+			attendanceSheet.getRow(2).getCell(8).setCellValue(nightOffCurfew.format(DateTimeFormatter.ofPattern("h:mm a")));
+		
+		// write day off curfew time to row 4 in today's column if different than what's already there
+		if (attendanceSheet.getRow(3).getCell(8) == null)
+			attendanceSheet.getRow(3).createCell(8).setCellValue(dayOffCurfew.format(DateTimeFormatter.ofPattern("h:mm a")));
+		else if (!(attendanceSheet.getRow(3).getCell(8).getStringCellValue().equals(dayOffCurfew.format(DateTimeFormatter.ofPattern("h:mm a")))))
+			attendanceSheet.getRow(3).getCell(8).setCellValue(dayOffCurfew.format(DateTimeFormatter.ofPattern("h:mm a")));
+		
+		attendanceSheet.autoSizeColumn(8); // resize column to fit
+	}
 
+	@Deprecated
 	// reads header row of workbook to initialize column trackers,
 	//  adds column for today to the end of the sheet and puts in name to row 2
 	private void readHeaderRow() {
