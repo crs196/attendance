@@ -499,6 +499,8 @@ public class SignInPane extends GridPane {
 				// only search if an ID was actually entered
 				if (!staffID.isEmpty()) {
 					
+					// TODO: swap the order that things get checked (that is, try to sign someone out before trying to sign someone in)
+					
 					boolean idFound = false; // staff member has not yet been found
 					for (int i = attendanceSheet.getFirstRowNum() + 4; i < attendanceSheet.getLastRowNum() + 1; i++) {
 
@@ -588,16 +590,19 @@ public class SignInPane extends GridPane {
 						for (StaffMember sm : staffList) {
 							if (!signedOut && (staffID.equals(sm.getName()) || staffID.equals(sm.getID()))) { // if we've found the staff member
 								// add them to the sheet so that we can later sign them back in
-								// TODO: should there be a "time out" column so we can see when they left and when they return?
 								
 								// create new row at the bottom of the spreadsheet
-								// TODO: should I add spacing if it's a new bunk?
-								// TODO: if it's a bunk that already exists, should I add it with the bunk?
-								// TODO: both of these seem like too much work, but they are questions
+								// TODO: consider sorting spreadsheet by bunk? low priority
 								XSSFRow newRow = attendanceSheet.createRow(attendanceSheet.getLastRowNum() + 1);
 								newRow.createCell(bunkCol).setCellValue(sm.getBunk()); // set the bunk
 								newRow.createCell(nameCol).setCellValue(sm.getName()); // set the name
 								newRow.createCell(idCol).setCellValue(sm.getID()); // set the ID
+								
+								// set time out column to current time
+								newRow.createCell(timeOutCol).setCellValue(LocalTime.now().format(DateTimeFormatter.ofPattern("h:mm a")));
+								// set time in column to read the method that the staff member left by (e.g. day off)
+								newRow.createCell(timeInCol).setCellValue(((RadioButton)curfewTimeSelection.getSelectedToggle()).getText());
+								// TODO: set color of time in cell based on excursion type color?
 								
 								confirmation.setText(sm.getName() + " signed out");
 								signedOut = true;
