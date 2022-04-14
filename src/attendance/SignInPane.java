@@ -107,7 +107,7 @@ public class SignInPane extends GridPane {
 		try (FileInputStream afis = new FileInputStream(attendanceFile)) {
 			workbook = new XSSFWorkbook(afis);
 			
-			attendanceSheet = workbook.getSheet("Attendance"); // TODO: might need to make a new sheet every day so that the list can grow and shrink as needed
+			attendanceSheet = workbook.getSheet("Attendance"); // TODO: make a new sheet every day so that the list can grow and shrink as needed
 			keySheet = workbook.getSheet("Key");
 			
 			getMasterStaffList(); // get list of staff from keySheet
@@ -231,6 +231,7 @@ public class SignInPane extends GridPane {
 				// check to see if current cell has any of these contents
 				switch (headerRow.getCell(i).getStringCellValue().toLowerCase()) {
 					case "bunk":
+					case "position":
 						keyBunkCol = i;
 						bunkExists = true;
 						break;
@@ -278,7 +279,7 @@ public class SignInPane extends GridPane {
 				name = keySheet.getRow(i).getCell(keyNameCol).getStringCellValue();
 				id = keySheet.getRow(i).getCell(keyIDCol).getStringCellValue();
 			
-				staffList.add(new StaffMember(bunk, name, id));
+				staffList.add(new StaffMember(bunk, name, id, 1, 1, 1)); // TODO: fix int parameters
 			}
 		}
 	}
@@ -301,6 +302,7 @@ public class SignInPane extends GridPane {
 				// check to see if current cell has any of these contents
 				switch (headerRow.getCell(i).getStringCellValue().toLowerCase()) {
 					case "bunk":
+					case "position":
 						bunkCol = i;
 						bunkExists = true;
 						break;
@@ -409,7 +411,7 @@ public class SignInPane extends GridPane {
 		this.setPadding(new Insets(30));
 
 		// header
-		Label title = new Label("Sign In/Out");
+		Label title = new Label("Sign In, Out"); // TODO: replace comma (',') with a slash ('/') if I have a font that has one
 		title.setId("header");
 		SignInPane.setHalignment(title, HPos.CENTER);
 		this.add(title, 0, 0, 2, 1);
@@ -509,19 +511,24 @@ public class SignInPane extends GridPane {
 		RadioButton normal = new RadioButton("Leaving Camp");
 		RadioButton nightOff = new RadioButton("Night Off");
 		RadioButton dayOff = new RadioButton("Day Off");
+		RadioButton visitor = new RadioButton("Visitor"); // TODO: make this button functional
 		normal.getStyleClass().add("radiobutton");
 		nightOff.getStyleClass().add("radiobutton");
 		dayOff.getStyleClass().add("radiobutton");
+		visitor.getStyleClass().add("radiobutton");
 		normal.setToggleGroup(curfewTimeSelection);
 		nightOff.setToggleGroup(curfewTimeSelection);
 		dayOff.setToggleGroup(curfewTimeSelection);
+		visitor.setToggleGroup(curfewTimeSelection);
 		normal.setSelected(true);
 		
-		HBox timeSelectionBox = new HBox(this.getHgap());
-		timeSelectionBox.getChildren().addAll(normal, nightOff, dayOff);
+		HBox timeSelectionBox1 = new HBox(this.getHgap());
+		HBox timeSelectionBox2 = new HBox(this.getHgap());
+		timeSelectionBox1.getChildren().addAll(normal, visitor);
+		timeSelectionBox2.getChildren().addAll(nightOff, dayOff);
 		
 		VBox idBox = new VBox(this.getVgap());
-		idBox.getChildren().addAll(scanLabel, signInBox, timeSelectionBox);
+		idBox.getChildren().addAll(scanLabel, signInBox, timeSelectionBox1, timeSelectionBox2);
 
 		// confirmation area
 		TextArea confirmation = new TextArea();
