@@ -599,7 +599,7 @@ public class SignInPane extends GridPane {
 								newRow.createCell(nameCol).setCellValue(sm.getName()); // set the name
 								newRow.createCell(idCol).setCellValue(sm.getID()); // set the ID
 								
-								confirmation.setText(sm.getName() + " signed out.");
+								confirmation.setText(sm.getName() + " signed out");
 								signedOut = true;
 							}
 						}
