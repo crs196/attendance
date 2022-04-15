@@ -274,7 +274,7 @@ public class SignInPane extends GridPane {
 				absent = keySheet.getRow(i).getCell(absentCol) == null
 						? 0 : (int) keySheet.getRow(i).getCell(absentCol).getNumericCellValue();
 						
-				staffList.put(id, new StaffMember(bunk, name, id, ontime, late, absent, false, false, i)); // TODO: set boolean args to proper values
+				staffList.put(id, new StaffMember(bunk, name, id, ontime, late, absent, false, false, i)); // TODO: set boolean args to proper values by reading from yesterday's sheet
 			}
 		}
 	}
@@ -421,7 +421,7 @@ public class SignInPane extends GridPane {
 		RadioButton normal = new RadioButton("Leaving Camp");
 		RadioButton nightOff = new RadioButton("Night Off");
 		RadioButton dayOff = new RadioButton("Day Off");
-		RadioButton visitor = new RadioButton("Visitor"); // TODO: make this button have an effect
+		RadioButton visitor = new RadioButton("Visitor");
 		normal.getStyleClass().add("radiobutton");
 		nightOff.getStyleClass().add("radiobutton");
 		dayOff.getStyleClass().add("radiobutton");
@@ -535,6 +535,27 @@ public class SignInPane extends GridPane {
 								confirmation.setText(entered.getName() + " signed out");
 							}
 						}
+						
+						// save to spreadsheet if autosave is on
+						if (autosave) {
+							// write data to attendanceFile
+							try (FileOutputStream afos = new FileOutputStream(attendanceFile)) {
+								workbook.write(afos);
+								// resize columns to fit
+								for (int i = 0; i < 5; i++) {
+									attendanceSheet.autoSizeColumn(i);
+									keySheet.autoSizeColumn(i);
+								}
+								keySheet.autoSizeColumn(5); // keySheet has 1 additional column
+							} catch (IOException e) {
+								confirmation.setText("Autosave error. Try manually saving.");
+							} 
+						}
+						
+						// if signedOutList is showing, update it
+						if (extraStage.isShowing())
+							signedOutList.fire(); // TODO: there may be a better way to update the signed-out list other than clicking the button again
+
 					}
 				} else {
 					confirmation.setText("No ID entered");
@@ -722,7 +743,6 @@ public class SignInPane extends GridPane {
 								// add them to the sheet so that we can later sign them back in
 								
 								// create new row at the bottom of the spreadsheet
-								// TODO: consider sorting spreadsheet by bunk? low priority
 								XSSFRow newRow = null;
 								if (staffRowNum > attendanceSheet.getLastRowNum())
 									newRow = attendanceSheet.createRow(staffRowNum++);
@@ -806,7 +826,7 @@ public class SignInPane extends GridPane {
 				}
 				
 				if (extraStage.isShowing())
-					signedOutList.fire(); // TODO: there may be a better way to update the signed-out list other than clicking the button again
+					signedOutList.fire(); // todo: there may be a better way to update the signed-out list other than clicking the button again
 			}
 			
 			// given a staff member who needs to sign in
@@ -894,6 +914,7 @@ public class SignInPane extends GridPane {
 		// event handlers for left column buttons
 
 		// pulls up list of staff members who have yet to sign in in this session
+		// TODO: might be able to refactor this to be more efficient by using the HashMap
 		signedOutList.setOnAction(new EventHandler<ActionEvent>() {
 
 			@Override
@@ -1237,6 +1258,7 @@ public class SignInPane extends GridPane {
 			}
 
 			// returns whether or not there are still unaccounted-for staff
+			// TODO: refactor this to use HashMap
 			public boolean noUnaccountedStaff() {
 
 				// runs through all rows of the spreadsheet and returns false if there is an
@@ -1254,6 +1276,7 @@ public class SignInPane extends GridPane {
 			}
 			
 			// marks all staff that did not sign in as absent, and increments their "absent" column, if it exists
+			// TODO: refactor this to use HashMap
 			public void markUnaccAbsent() {
 				
 				boolean absent;
@@ -1261,6 +1284,7 @@ public class SignInPane extends GridPane {
 				for (int i = attendanceSheet.getFirstRowNum() + 1; i < staffRowNum; i++) {
 					
 					absent = false;
+					String id = attendanceSheet.getRow(i).getCell(idCol).getStringCellValue();
 					
 					// if today's time in column does not exist, is empty, or marks that the staff member is out, the staff member is unaccounted for
 					if ((attendanceSheet.getRow(i) != null) && (attendanceSheet.getRow(i).getCell(timeInCol) == null 
@@ -1269,23 +1293,14 @@ public class SignInPane extends GridPane {
 						|| attendanceSheet.getRow(i).getCell(timeInCol).getStringCellValue().toLowerCase().equals("night off")
 						|| attendanceSheet.getRow(i).getCell(timeInCol).getStringCellValue().toLowerCase().equals("day off")))
 						absent = true;
-//					TODO: remove this section once it's determined that it's no longer needed
-//					if ((attendanceSheet.getRow(i) != null) && attendanceSheet.getRow(i).getCell(timeInCol) == null) {
-//						attendanceSheet.getRow(i).createCell(timeInCol).setCellValue("Absent");
-//						absent = true;
-//					} else if ((attendanceSheet.getRow(i) != null) && attendanceSheet.getRow(i).getCell(timeInCol).getCellType() == CellType.BLANK) {
-//						attendanceSheet.getRow(i).getCell(timeInCol).setCellValue("Absent");
-//						absent = true;
-//					}
 					
-					// set cell background to red if necessary,
 					//  increment "absent" column
-					// TODO: i is not the correct row to use! find the matching row
 					if (absent) {				
-						if ((keySheet.getRow(i) != null) && keySheet.getRow(i).getCell(absentCol) != null) // the cell exists
-							keySheet.getRow(i).getCell(absentCol).setCellValue(keySheet.getRow(i).getCell(absentCol).getNumericCellValue() + 1);
+						if ((keySheet.getRow(staffList.get(id).getKeyRow()) != null) 
+								&& keySheet.getRow(staffList.get(id).getKeyRow()).getCell(absentCol) != null) // the cell exists
+							keySheet.getRow(staffList.get(id).getKeyRow()).getCell(absentCol).setCellValue(keySheet.getRow(staffList.get(id).getKeyRow()).getCell(absentCol).getNumericCellValue() + 1);
 						else // the cell does not exist
-							keySheet.getRow(i).createCell(absentCol).setCellValue(1);
+							keySheet.getRow(staffList.get(id).getKeyRow()).createCell(absentCol).setCellValue(1);
 					}
 				}
 			}
