@@ -511,7 +511,30 @@ public class SignInPane extends GridPane {
 						// the staff member doesn't exist
 						confirmation.setText(staffID + " not found");
 					} else {
-						// TODO: what happens with the staff member now?
+						if (entered.isSignedIn() && entered.isSignedOut()) { // if already signed in and out
+							// no further work required
+							confirmation.setText(entered.getName() + " is fully accounted-for"); // TODO: should this language be changed?
+						} else if (!entered.isSignedIn() && entered.isSignedOut()) { // if signed out but not in
+							// person is coming back to camp and needs to be signed in
+							signInAndCheckTime(entered); // update spreadsheet to sign staff member in
+							entered.signIn(); // mark them as signed in
+							confirmation.setText(entered.getName() + " signed in");
+						} else if (entered.isSignedIn() && !entered.isSignedOut()) { // if signed in but not out (thus is a visitor)
+							signVisitorOut(entered); // update spreadsheet to sign visitor out
+							entered.signOut();
+							confirmation.setText("Visitor " + entered.getName() + " signed out");
+						} else if (!entered.isSignedIn() && !entered.isSignedOut()) { // neither signed in nor out
+							// check if they're a visitor or a staff member
+							if (visitor.isSelected()) { // person is a visitor
+								signVisitorIn(entered); // update spreadsheet to sign visitor in
+								entered.signIn(); // mark them as signed in
+								confirmation.setText("Visitor " + entered.getName() + " signed in");
+							} else { // person is a staff member
+								signOutAndWriteCurfew(entered); // update spreadsheet to sign staff member out
+								entered.signOut(); // mark them as signed out
+								confirmation.setText(entered.getName() + " signed out");
+							}
+						}
 					}
 				} else {
 					confirmation.setText("No ID entered");
@@ -785,7 +808,38 @@ public class SignInPane extends GridPane {
 				if (extraStage.isShowing())
 					signedOutList.fire(); // TODO: there may be a better way to update the signed-out list other than clicking the button again
 			}
+			
+			// given a staff member who needs to sign in
+			//  updates the staff member's key sheet statistics based on the curfew they had
+			//  writes the sign in time to the staff member's time in column for today (and the curfew they had)
+			//  and colors the time in column to the correct color based on status
+			//  and updates the counts of people currently out of camp
+			public void signInAndCheckTime(StaffMember sm) {
+				// TODO: stub
+			}
+			
+			// given a visitor who needs to sign out
+			//  updates today's sheet to write the time that the visitor left camp
+			public void signVisitorOut(StaffMember sm) {
+				// TODO: stub
+			}
+			
+			// given a visitor who needs to sign in
+			//  updates today's sheet to write the time that the visitor entered camp
+			//  and that they're a visitor
+			public void signVisitorIn(StaffMember sm) {
+				// TODO: stub
+			}
+			
+			// given a staff member who needs to sign out
+			//  updates today's sheet to write the time that the staff member left camp
+			//  and writes their curfew to their time in column
+			//  and updates the counts of people currently out of camp
+			public void signOutAndWriteCurfew(StaffMember sm) {
+				// TODO: stub
+			}
 
+			@Deprecated
 			// given a staff member (via row number) and sign-in time, 
 			//  increments the proper summary statistic column (if it exists)
 			//  and colors the staff member's "today cell" as either onTimeColor or lateColor, depending on sign-in time
