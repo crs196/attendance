@@ -499,13 +499,6 @@ public class SignInPane extends GridPane {
 				
 				// figure out which curfew is being used				
 				LocalDateTime curfewUsed = null;
-				
-				if (normal.isSelected())
-					curfewUsed = leavingCampCurfew;
-				else if (nightOff.isSelected())
-					curfewUsed = nightOffCurfew;
-				else if (dayOff.isSelected())
-					curfewUsed = dayOffCurfew;
 
 				// only search if an ID was actually entered
 				if (!staffID.isEmpty()) {
@@ -526,6 +519,21 @@ public class SignInPane extends GridPane {
 						
 						// if the current row's ID matches the one inputted, the staff member was found
 						if (currentID.equals(staffID)) {
+							
+							// set which curfew they used to sign out
+							switch (attendanceSheet.getRow(i).getCell(timeInCol).getStringCellValue().toLowerCase()) {
+								case "leaving camp":
+									curfewUsed = leavingCampCurfew;
+									break;
+								case "night off":
+									curfewUsed = nightOffCurfew;
+									break;
+								case "day off":
+									curfewUsed = dayOffCurfew;
+									break;
+								default:
+									break;
+							}
 
 							idFound = true;
 							LocalDateTime now = LocalDateTime.now(); // save current time in case close to curfew
@@ -533,15 +541,19 @@ public class SignInPane extends GridPane {
 							// if today's attendance column does not exist or is empty, the staff member is unaccounted for
 							if ((attendanceSheet.getRow(i) != null) && attendanceSheet.getRow(i).getCell(timeInCol) == null) {
 
-								attendanceSheet.getRow(i).createCell(todayCol).setCellValue(now.format(DateTimeFormatter.ofPattern("h:mm a")) + " ("
+								attendanceSheet.getRow(i).createCell(timeInCol).setCellValue(now.format(DateTimeFormatter.ofPattern("h:mm a")) + " ("
 										+ curfewUsed.format(DateTimeFormatter.ofPattern("h:mm a")) + ")");
 								signInStatus(i, now, curfewUsed);
 								confirmation.setText(attendanceSheet.getRow(i).getCell(nameCol).getStringCellValue() + " signed in");
 								break; // search is done
 
-							} else if ((attendanceSheet.getRow(i) != null) && attendanceSheet.getRow(i).getCell(todayCol).getCellType() == CellType.BLANK) {
+							} else if ((attendanceSheet.getRow(i) != null) 
+									&& (attendanceSheet.getRow(i).getCell(timeInCol).getCellType() == CellType.BLANK
+									|| attendanceSheet.getRow(i).getCell(timeInCol).getStringCellValue().toLowerCase().equals("leaving camp")
+									|| attendanceSheet.getRow(i).getCell(timeInCol).getStringCellValue().toLowerCase().equals("night off")
+									|| attendanceSheet.getRow(i).getCell(timeInCol).getStringCellValue().toLowerCase().equals("day off"))) {
 
-								attendanceSheet.getRow(i).getCell(todayCol).setCellValue(now.format(DateTimeFormatter.ofPattern("h:mm a")) + " ("
+								attendanceSheet.getRow(i).getCell(timeInCol).setCellValue(now.format(DateTimeFormatter.ofPattern("h:mm a")) + " ("
 										+ curfewUsed.format(DateTimeFormatter.ofPattern("h:mm a")) + ")");
 								signInStatus(i, now, curfewUsed);
 								confirmation.setText(attendanceSheet.getRow(i).getCell(nameCol).getStringCellValue() + " signed in");
@@ -565,22 +577,41 @@ public class SignInPane extends GridPane {
 							
 							// if the current row's ID matches the one inputted, the staff member was found
 							if (currentID.equals(staffID)) {
+								
+								// set which curfew they used to sign out
+								switch (attendanceSheet.getRow(i).getCell(timeInCol).getStringCellValue().toLowerCase()) {
+									case "leaving camp":
+										curfewUsed = leavingCampCurfew;
+										break;
+									case "night off":
+										curfewUsed = nightOffCurfew;
+										break;
+									case "day off":
+										curfewUsed = dayOffCurfew;
+										break;
+									default:
+										break;
+								}
 
 								idFound = true;
 								LocalDateTime now = LocalDateTime.now(); // save current time in case close to curfew
 
 								// if today's attendance column does not exist or is empty, the staff member is unaccounted for
-								if ((attendanceSheet.getRow(i) != null) && attendanceSheet.getRow(i).getCell(todayCol) == null) {
+								if ((attendanceSheet.getRow(i) != null) && attendanceSheet.getRow(i).getCell(timeInCol) == null) {
 
-									attendanceSheet.getRow(i).createCell(todayCol).setCellValue(now.format(DateTimeFormatter.ofPattern("h:mm a")) + " ("
+									attendanceSheet.getRow(i).createCell(timeInCol).setCellValue(now.format(DateTimeFormatter.ofPattern("h:mm a")) + " ("
 											+ curfewUsed.format(DateTimeFormatter.ofPattern("h:mm a")) + ")");
 									signInStatus(i, now, curfewUsed);
 									confirmation.setText(attendanceSheet.getRow(i).getCell(nameCol).getStringCellValue() + " signed in");
 									break; // search is done
 
-								} else if ((attendanceSheet.getRow(i) != null) && attendanceSheet.getRow(i).getCell(todayCol).getCellType() == CellType.BLANK) {
+								} else if ((attendanceSheet.getRow(i) != null) 
+										&& (attendanceSheet.getRow(i).getCell(timeInCol).getCellType() == CellType.BLANK
+										|| attendanceSheet.getRow(i).getCell(timeInCol).getStringCellValue().toLowerCase().equals("leaving camp")
+										|| attendanceSheet.getRow(i).getCell(timeInCol).getStringCellValue().toLowerCase().equals("night off")
+										|| attendanceSheet.getRow(i).getCell(timeInCol).getStringCellValue().toLowerCase().equals("day off"))) {
 
-									attendanceSheet.getRow(i).getCell(todayCol).setCellValue(now.format(DateTimeFormatter.ofPattern("h:mm a")) + " ("
+									attendanceSheet.getRow(i).getCell(timeInCol).setCellValue(now.format(DateTimeFormatter.ofPattern("h:mm a")) + " ("
 											+ curfewUsed.format(DateTimeFormatter.ofPattern("h:mm a")) + ")");
 									signInStatus(i, now, curfewUsed);
 									confirmation.setText(attendanceSheet.getRow(i).getCell(nameCol).getStringCellValue() + " signed in");
@@ -606,7 +637,12 @@ public class SignInPane extends GridPane {
 								
 								// create new row at the bottom of the spreadsheet
 								// TODO: consider sorting spreadsheet by bunk? low priority
-								XSSFRow newRow = attendanceSheet.createRow(staffRowNum++);
+								XSSFRow newRow = null;
+								if (staffRowNum > attendanceSheet.getLastRowNum())
+									newRow = attendanceSheet.createRow(staffRowNum++);
+								else
+									newRow = attendanceSheet.getRow(staffRowNum++);
+								
 								newRow.createCell(bunkCol).setCellValue(sm.getBunk()); // set the bunk
 								newRow.createCell(nameCol).setCellValue(sm.getName()); // set the name
 								newRow.createCell(idCol).setCellValue(sm.getID()); // set the ID
@@ -695,24 +731,22 @@ public class SignInPane extends GridPane {
 				// staff member is on time
 				if (curfewUsed.compareTo(signInTime) > 0) {
 					// set todayCol to onTime style
-					attendanceSheet.getRow(rowNum).getCell(todayCol).setCellStyle(onTime);
+					attendanceSheet.getRow(rowNum).getCell(timeInCol).setCellStyle(onTime);
 					
-					if (ontimeCol != -1) {// there is an "on time" column
-						if ((attendanceSheet.getRow(rowNum) != null) && attendanceSheet.getRow(rowNum).getCell(ontimeCol) != null) // the cell exists
-							attendanceSheet.getRow(rowNum).getCell(ontimeCol).setCellValue(attendanceSheet.getRow(rowNum).getCell(ontimeCol).getNumericCellValue() + 1);
-						else // the cell does not exist
-							attendanceSheet.getRow(rowNum).createCell(ontimeCol).setCellValue(1);
-					}
+					// increment on time column on key sheet
+					if ((keySheet.getRow(rowNum) != null) && keySheet.getRow(rowNum).getCell(ontimeCol) != null) // the cell exists
+						keySheet.getRow(rowNum).getCell(ontimeCol).setCellValue(keySheet.getRow(rowNum).getCell(ontimeCol).getNumericCellValue() + 1);
+					else // the cell does not exist
+						keySheet.getRow(rowNum).createCell(ontimeCol).setCellValue(1);
 				} else { // staff member is late
 					// set todayCol to late style
-					attendanceSheet.getRow(rowNum).getCell(todayCol).setCellStyle(late);
+					attendanceSheet.getRow(rowNum).getCell(timeInCol).setCellStyle(late);
 					
-					if (lateCol != -1) {// there is an "on time" column
-						if ((attendanceSheet.getRow(rowNum) != null) && attendanceSheet.getRow(rowNum).getCell(lateCol) != null) // the cell exists
-							attendanceSheet.getRow(rowNum).getCell(lateCol).setCellValue(attendanceSheet.getRow(rowNum).getCell(lateCol).getNumericCellValue() + 1);
-						else // the cell does not exist
-							attendanceSheet.getRow(rowNum).createCell(lateCol).setCellValue(1);
-					}
+					// increment late column on key sheet
+					if ((keySheet.getRow(rowNum) != null) && keySheet.getRow(rowNum).getCell(lateCol) != null) // the cell exists
+						keySheet.getRow(rowNum).getCell(lateCol).setCellValue(keySheet.getRow(rowNum).getCell(lateCol).getNumericCellValue() + 1);
+					else // the cell does not exist
+						keySheet.getRow(rowNum).createCell(lateCol).setCellValue(1);
 				}
 			}
 		});
