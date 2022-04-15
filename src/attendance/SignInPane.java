@@ -149,6 +149,7 @@ public class SignInPane extends GridPane {
 	}
 	
 	// reads information from file to display if the info button is clicked
+	// TODO: need to update contents of this text file
 	private void getFileContents() {
 			
 		// get location of the info file for this pane
@@ -414,12 +415,12 @@ public class SignInPane extends GridPane {
 		signInBox.getChildren().addAll(idField, signIn);
 		
 		// curfew selection radio buttons
+		// TODO: do I need to add some kind of disclaimer that the time selection only matters when signing someone out?
 		ToggleGroup curfewTimeSelection = new ToggleGroup();
 		RadioButton normal = new RadioButton("Leaving Camp");
 		RadioButton nightOff = new RadioButton("Night Off");
 		RadioButton dayOff = new RadioButton("Day Off");
-		RadioButton visitor = new RadioButton("Visitor"); // TODO: make this button functional
-		normal.getStyleClass().add("radiobutton");
+		RadioButton visitor = new RadioButton("Visitor"); // TODO: make this button have an effect
 		nightOff.getStyleClass().add("radiobutton");
 		dayOff.getStyleClass().add("radiobutton");
 		visitor.getStyleClass().add("radiobutton");
