@@ -835,20 +835,113 @@ public class SignInPane extends GridPane {
 			//  and colors the time in column to the correct color based on status
 			//  and updates the counts of people currently out of camp
 			public void signInAndCheckTime(StaffMember sm) {
-				// TODO: stub
+				
+				// set which curfew they used to sign out
+				LocalDateTime curfewUsed = null;
+				switch (attendanceSheet.getRow(sm.getTodayRow()).getCell(timeInCol).getStringCellValue().toLowerCase()) {
+					case "leaving camp":
+						curfewUsed = leavingCampCurfew;
+						break;
+					case "night off":
+						curfewUsed = nightOffCurfew;
+						break;
+					case "day off":
+						curfewUsed = dayOffCurfew;
+						break;
+					default:
+						break;
+				}
+				
+				// set time in column to now
+				attendanceSheet.getRow(sm.getTodayRow()).getCell(timeInCol).setCellValue(LocalDateTime.now().format(DateTimeFormatter.ofPattern("h:mm a")));
+			
+				// create cell styles for on time and late
+				XSSFCellStyle onTime = workbook.createCellStyle();
+				java.awt.Color onTimeColor = Color.decode(settings.get("sheetFormat", "onTimeColor", String.class));
+				onTime.setFillForegroundColor(new XSSFColor(onTimeColor, new DefaultIndexedColorMap()));
+				onTime.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+				
+				XSSFCellStyle late = workbook.createCellStyle();
+				java.awt.Color lateColor = Color.decode(settings.get("sheetFormat", "lateColor", String.class));
+				late.setFillForegroundColor(new XSSFColor(lateColor, new DefaultIndexedColorMap()));
+				late.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+				
+				// staff member is on time
+				if (curfewUsed.compareTo(LocalDateTime.now()) > 0) {
+					// set timeInCol to onTime style
+					attendanceSheet.getRow(sm.getTodayRow()).getCell(timeInCol).setCellStyle(onTime);
+				
+					// increment on time column on key sheet
+					if ((keySheet.getRow(sm.getKeyRow()) != null) 
+							&& keySheet.getRow(sm.getKeyRow()).getCell(ontimeCol) != null) // the cell exists
+						keySheet.getRow(sm.getKeyRow()).getCell(ontimeCol).setCellValue(keySheet.getRow(sm.getKeyRow()).getCell(ontimeCol).getNumericCellValue() + 1);
+					else // the cell does not exist
+						keySheet.getRow(sm.getKeyRow()).createCell(ontimeCol).setCellValue(1);
+				} else { // staff member is late
+					// set timeInCol to late style
+					attendanceSheet.getRow(sm.getTodayRow()).getCell(timeInCol).setCellStyle(late);
+					
+					// increment late column on key sheet
+					if ((keySheet.getRow(sm.getKeyRow()) != null) 
+							&& keySheet.getRow(sm.getKeyRow()).getCell(lateCol) != null) // the cell exists
+						keySheet.getRow(sm.getKeyRow()).getCell(lateCol).setCellValue(keySheet.getRow(sm.getKeyRow()).getCell(lateCol).getNumericCellValue() + 1);
+					else // the cell does not exist
+						keySheet.getRow(sm.getKeyRow()).createCell(lateCol).setCellValue(1);
+				}
+				
+				returned++; // increment the number of people who've signed in
+				stillOut--; // decrement the number of people who are still out of camp
+				attendanceSheet.getRow(6).getCell(8).setCellValue(returned);
+				attendanceSheet.getRow(7).getCell(8).setCellValue(stillOut);
 			}
 			
 			// given a visitor who needs to sign out
 			//  updates today's sheet to write the time that the visitor left camp
 			public void signVisitorOut(StaffMember sm) {
-				// TODO: stub
+				
+				// set timeOutCol of this staff member to current time
+				attendanceSheet.getRow(sm.getTodayRow()).getCell(timeOutCol).setCellValue(LocalDateTime.now().format(DateTimeFormatter.ofPattern("h:mm a")) + " (visitor)");
+				// clear styling of this cell
+				attendanceSheet.getRow(sm.getTodayRow()).getCell(timeOutCol).setCellStyle(workbook.createCellStyle());
 			}
 			
 			// given a visitor who needs to sign in
 			//  updates today's sheet to write the time that the visitor entered camp
 			//  and that they're a visitor
 			public void signVisitorIn(StaffMember sm) {
-				// TODO: stub
+				
+				// create new row at the bottom of the spreadsheet
+				XSSFRow newRow = null;
+				if (staffRowNum > attendanceSheet.getLastRowNum())
+					newRow = attendanceSheet.createRow(staffRowNum);
+				else
+					newRow = attendanceSheet.getRow(staffRowNum);
+				
+				sm.setTodayRow(staffRowNum++); // set what row this staff member is in and increment counter
+				
+				// set identity information
+				
+				newRow.createCell(bunkCol).setCellValue(sm.getBunk());	// set the bunk
+				newRow.createCell(nameCol).setCellValue(sm.getName());	// set the name
+				newRow.createCell(idCol).setCellValue(sm.getID()); 		// set the ID
+				
+				// set cell styles for cell border, absent
+				XSSFCellStyle absent = workbook.createCellStyle();
+				java.awt.Color absentColor = Color.decode(settings.get("sheetFormat", "absentColor", String.class));
+				absent.setFillForegroundColor(new XSSFColor(absentColor, new DefaultIndexedColorMap()));
+				absent.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+				
+				XSSFCellStyle rightBorder = workbook.createCellStyle();
+				rightBorder.setBorderRight(BorderStyle.THIN);
+				
+				newRow.getCell(idCol).setCellStyle(rightBorder);
+				
+				// set time out column to visitor and color with absent color
+				newRow.createCell(timeOutCol).setCellValue("Visitor");
+				newRow.getCell(timeOutCol).setCellStyle(absent);
+				
+				// set time in column to current time
+				newRow.createCell(timeInCol).setCellValue(LocalDateTime.now().format(DateTimeFormatter.ofPattern("h:mm a")));;
 			}
 			
 			// given a staff member who needs to sign out
@@ -856,7 +949,50 @@ public class SignInPane extends GridPane {
 			//  and writes their curfew to their time in column
 			//  and updates the counts of people currently out of camp
 			public void signOutAndWriteCurfew(StaffMember sm) {
-				// TODO: stub
+
+				// create new row at the bottom of the spreadsheet
+				XSSFRow newRow = null;
+				if (staffRowNum > attendanceSheet.getLastRowNum())
+					newRow = attendanceSheet.createRow(staffRowNum);
+				else
+					newRow = attendanceSheet.getRow(staffRowNum);
+				
+				sm.setTodayRow(staffRowNum++); // set what row this staff member is in and increment counter
+				
+				// set identity information
+				
+				newRow.createCell(bunkCol).setCellValue(sm.getBunk());	// set the bunk
+				newRow.createCell(nameCol).setCellValue(sm.getName());	// set the name
+				newRow.createCell(idCol).setCellValue(sm.getID()); 		// set the ID
+				
+				// set cell styles for cell border, day off, other
+				XSSFCellStyle dayOffStyle = workbook.createCellStyle();
+				java.awt.Color dayOffColor = Color.decode(settings.get("sheetFormat", "excusedColor", String.class));
+				dayOffStyle.setFillForegroundColor(new XSSFColor(dayOffColor, new DefaultIndexedColorMap()));
+				dayOffStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+				
+				XSSFCellStyle absent = workbook.createCellStyle();
+				java.awt.Color absentColor = Color.decode(settings.get("sheetFormat", "absentColor", String.class));
+				absent.setFillForegroundColor(new XSSFColor(absentColor, new DefaultIndexedColorMap()));
+				absent.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+				
+				XSSFCellStyle rightBorder = workbook.createCellStyle();
+				rightBorder.setBorderRight(BorderStyle.THIN);
+				
+				newRow.getCell(idCol).setCellStyle(rightBorder);
+				
+				// set time out column to current time
+				newRow.createCell(timeOutCol).setCellValue(LocalDateTime.now().format(DateTimeFormatter.ofPattern("h:mm a")));
+				
+				// set time in column to curfew name and color with absent/day off color
+				newRow.createCell(timeInCol).setCellValue(((RadioButton)curfewTimeSelection.getSelectedToggle()).getText());
+				newRow.getCell(timeInCol).setCellStyle(dayOff.isSelected() ? dayOffStyle : absent);
+				
+				// increment counts of people who have left camp and are still out of camp
+				left++;
+				stillOut++;
+				attendanceSheet.getRow(5).getCell(8).setCellValue(left);
+				attendanceSheet.getRow(7).getCell(8).setCellValue(stillOut);
 			}
 
 			@Deprecated
@@ -1277,6 +1413,7 @@ public class SignInPane extends GridPane {
 			
 			// marks all staff that did not sign in as absent, and increments their "absent" column, if it exists
 			// TODO: refactor this to use HashMap
+			// TODO: make sure that someone who's on a day off doesn't get marked as absent
 			public void markUnaccAbsent() {
 				
 				boolean absent;
