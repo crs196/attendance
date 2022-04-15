@@ -274,7 +274,7 @@ public class SignInPane extends GridPane {
 				absent = keySheet.getRow(i).getCell(absentCol) == null
 						? 0 : (int) keySheet.getRow(i).getCell(absentCol).getNumericCellValue();
 						
-				staffList.put(id, new StaffMember(bunk, name, id, i, ontime, late, absent, false, false)); // TODO: set boolean args to proper values
+				staffList.put(id, new StaffMember(bunk, name, id, ontime, late, absent, false, false, i)); // TODO: set boolean args to proper values
 			}
 		}
 	}
@@ -493,12 +493,34 @@ public class SignInPane extends GridPane {
 		// set sign-in button behavior
 		signIn.setOnAction(new EventHandler<ActionEvent>() {
 
-			public void handleNew(ActionEvent event) {
+			public void handle(ActionEvent event) {
+				// save staff ID and clear idField text
+				String staffID = idField.getText();
+				idField.clear();
 				
+				// only search if something was actually entered
+				if (!staffID.isEmpty()) {
+					// check to see if an ID was entered or if it was a name
+					StaffMember entered = staffList.get(staffID); // is it an ID?
+					if (entered == null) // that ID wasn't found--check if it's a name
+						for (String id : staffList.keySet())
+							if (staffList.get(id).getName().equalsIgnoreCase(staffID))
+								entered = staffList.get(id);
+					
+					if (entered == null) { // if we still haven't found anything
+						// the staff member doesn't exist
+						confirmation.setText(staffID + " not found");
+					} else {
+						// TODO: what happens with the staff member now?
+					}
+				} else {
+					confirmation.setText("No ID entered");
+				}
 			}
 			
+			@Deprecated
 			// TODO: can probably dramatically refactor this method to use the hashmap of staff members instead of searching through the spreadsheet
-			public void handle(ActionEvent event) {
+			public void handleOld(ActionEvent event) {
 
 				// save staff ID and clear idField text
 				String staffID = idField.getText();
