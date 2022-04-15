@@ -3,16 +3,20 @@ package attendance;
 public class StaffMember implements Comparable<StaffMember>{
 	
 	private String bunk, name, ID;
-	private int onTime, late, absent;
+	private int onTime, late, absent, keyRow;
 	private boolean signedOut, signedIn;
 	
-	public StaffMember(String bk, String nm, String id, int ot, int lte, int abs, boolean out, boolean in) {
+	public StaffMember(String bk, String nm, String id, int kRow, int ot, int lte, int abs, boolean out, boolean in) {
 		bunk = bk;
 		name = nm;
 		ID = id;
+		keyRow = kRow;
+		
+		// TODO: these three properties don't actually get used
 		onTime = ot;
 		late = lte;
 		absent = abs;
+		
 		signedOut = out;
 		signedIn = in;
 	}
@@ -27,6 +31,10 @@ public class StaffMember implements Comparable<StaffMember>{
 	
 	public String getID() {
 		return ID;
+	}
+	
+	public int getKeyRow() {
+		return keyRow;
 	}
 	
 	public int getOnTime() {

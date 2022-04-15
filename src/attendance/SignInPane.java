@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -24,7 +25,6 @@ import org.apache.poi.ss.usermodel.FillPatternType;
 import org.apache.poi.xssf.usermodel.DefaultIndexedColorMap;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.xssf.usermodel.XSSFColor;
-import org.apache.poi.xssf.usermodel.XSSFFormulaEvaluator;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -69,7 +69,7 @@ public class SignInPane extends GridPane {
 	private XSSFWorkbook workbook;
 	private XSSFSheet attendanceSheet, keySheet;
 	
-	private List<StaffMember> staffList;
+	private HashMap<String, StaffMember> staffList;
 	
 	private BufferedReader infoReader;
 	private String infoText;
@@ -79,7 +79,7 @@ public class SignInPane extends GridPane {
 	private int bunkCol, nameCol, idCol, timeOutCol, timeInCol;
 	
 	// used to track how many people have left and returned
-	private int left, returned;
+	private int left, returned, stillOut;
 	//used to track what row to write the next staff member on
 	private int staffRowNum;
 	
@@ -91,6 +91,8 @@ public class SignInPane extends GridPane {
 		// no people have left or returned just yet
 		left = 0;
 		returned = 0;
+		stillOut = 0;
+		// TODO: don't just start this at 1! if the program is closed and reopened on the same day, it'll overwrite previous data
 		staffRowNum = 1; // start with writing to row 1
 		
 		// get config settings
@@ -113,7 +115,7 @@ public class SignInPane extends GridPane {
 		getFileContents();
 		
 		//initialize staff list
-		staffList = new ArrayList<StaffMember>();
+		staffList = new HashMap<String, StaffMember>();
 		
 		// create local workbook from attendanceFile, only continue if workbook creation is acceptable
 		try (FileInputStream afis = new FileInputStream(attendanceFile)) {
@@ -272,7 +274,7 @@ public class SignInPane extends GridPane {
 				absent = keySheet.getRow(i).getCell(absentCol) == null
 						? 0 : (int) keySheet.getRow(i).getCell(absentCol).getNumericCellValue();
 						
-				staffList.add(new StaffMember(bunk, name, id, ontime, late, absent, false, false)); // TODO: set boolean args to proper values
+				staffList.put(id, new StaffMember(bunk, name, id, i, ontime, late, absent, false, false)); // TODO: set boolean args to proper values
 			}
 		}
 	}
@@ -491,7 +493,11 @@ public class SignInPane extends GridPane {
 		// set sign-in button behavior
 		signIn.setOnAction(new EventHandler<ActionEvent>() {
 
-			@Override
+			public void handleNew(ActionEvent event) {
+				
+			}
+			
+			// TODO: can probably dramatically refactor this method to use the hashmap of staff members instead of searching through the spreadsheet
 			public void handle(ActionEvent event) {
 
 				// save staff ID and clear idField text
@@ -532,6 +538,9 @@ public class SignInPane extends GridPane {
 								case "day off":
 									curfewUsed = dayOffCurfew;
 									break;
+								case "visitor":
+									curfewUsed = null;
+									break;
 								default:
 									break;
 							}
@@ -542,10 +551,17 @@ public class SignInPane extends GridPane {
 							// if today's attendance column does not exist or is empty, the staff member is unaccounted for
 							if ((attendanceSheet.getRow(i) != null) && attendanceSheet.getRow(i).getCell(timeInCol) == null) {
 
-								attendanceSheet.getRow(i).createCell(timeInCol).setCellValue(now.format(DateTimeFormatter.ofPattern("h:mm a")) + " ("
-										+ curfewUsed.format(DateTimeFormatter.ofPattern("h:mm a")) + ")");
-								signInStatus(i, now, curfewUsed);
-								confirmation.setText(attendanceSheet.getRow(i).getCell(nameCol).getStringCellValue() + " signed in");
+								if (curfewUsed == null) { // if person is a visitor, sign them out
+									attendanceSheet.getRow(i).createCell(timeInCol).setCellValue(now.format(DateTimeFormatter.ofPattern("h:mm a")) + " (out)");
+									signInStatus(i, now, now.plusMinutes(5)); // use 5 minutes from now as curfew so that they're always "on time"
+									confirmation.setText("Visitor " + attendanceSheet.getRow(i).getCell(nameCol).getStringCellValue() + " signed out");
+								} else { // if person is a staff member, sign them in
+									attendanceSheet.getRow(i).createCell(timeInCol).setCellValue(now.format(DateTimeFormatter.ofPattern("h:mm a")) + " ("
+											+ curfewUsed.format(DateTimeFormatter.ofPattern("h:mm a")) + ")");
+									signInStatus(i, now, curfewUsed);
+									confirmation.setText(attendanceSheet.getRow(i).getCell(nameCol).getStringCellValue() + " signed in");
+								}
+								staffList.get(attendanceSheet.getRow(i).getCell(idCol).getStringCellValue()).signIn(); // mark staff member as having signed in
 								break; // search is done
 
 							} else if ((attendanceSheet.getRow(i) != null) 
@@ -554,10 +570,17 @@ public class SignInPane extends GridPane {
 									|| attendanceSheet.getRow(i).getCell(timeInCol).getStringCellValue().toLowerCase().equals("night off")
 									|| attendanceSheet.getRow(i).getCell(timeInCol).getStringCellValue().toLowerCase().equals("day off"))) {
 
-								attendanceSheet.getRow(i).getCell(timeInCol).setCellValue(now.format(DateTimeFormatter.ofPattern("h:mm a")) + " ("
-										+ curfewUsed.format(DateTimeFormatter.ofPattern("h:mm a")) + ")");
-								signInStatus(i, now, curfewUsed);
-								confirmation.setText(attendanceSheet.getRow(i).getCell(nameCol).getStringCellValue() + " signed in");
+								if (curfewUsed == null) { // if person is a visitor, sign them out
+									attendanceSheet.getRow(i).createCell(timeInCol).setCellValue(now.format(DateTimeFormatter.ofPattern("h:mm a")) + " (out)");
+									signInStatus(i, now, now.plusMinutes(5)); // use 5 minutes from now as curfew so that they're always "on time"
+									confirmation.setText("Visitor " + attendanceSheet.getRow(i).getCell(nameCol).getStringCellValue() + " signed out");
+								} else { // if person is a staff member, sign them in
+									attendanceSheet.getRow(i).createCell(timeInCol).setCellValue(now.format(DateTimeFormatter.ofPattern("h:mm a")) + " ("
+											+ curfewUsed.format(DateTimeFormatter.ofPattern("h:mm a")) + ")");
+									signInStatus(i, now, curfewUsed);
+									confirmation.setText(attendanceSheet.getRow(i).getCell(nameCol).getStringCellValue() + " signed in");
+								}
+								staffList.get(attendanceSheet.getRow(i).getCell(idCol).getStringCellValue()).signIn(); // mark staff member as having signed in
 								break; // search is done
 
 							} else { // if cell exists and is not blank, staff member has already signed in today
@@ -590,6 +613,9 @@ public class SignInPane extends GridPane {
 									case "day off":
 										curfewUsed = dayOffCurfew;
 										break;
+									case "visitor":
+										curfewUsed = null;
+										break;
 									default:
 										break;
 								}
@@ -600,10 +626,17 @@ public class SignInPane extends GridPane {
 								// if today's attendance column does not exist or is empty, the staff member is unaccounted for
 								if ((attendanceSheet.getRow(i) != null) && attendanceSheet.getRow(i).getCell(timeInCol) == null) {
 
-									attendanceSheet.getRow(i).createCell(timeInCol).setCellValue(now.format(DateTimeFormatter.ofPattern("h:mm a")) + " ("
-											+ curfewUsed.format(DateTimeFormatter.ofPattern("h:mm a")) + ")");
-									signInStatus(i, now, curfewUsed);
-									confirmation.setText(attendanceSheet.getRow(i).getCell(nameCol).getStringCellValue() + " signed in");
+									if (curfewUsed == null) { // if person is a visitor, sign them out
+										attendanceSheet.getRow(i).createCell(timeInCol).setCellValue(now.format(DateTimeFormatter.ofPattern("h:mm a")) + " (out)");
+										signInStatus(i, now, now.plusMinutes(5)); // use 5 minutes from now as curfew so that they're always "on time"
+										confirmation.setText("Visitor " + attendanceSheet.getRow(i).getCell(nameCol).getStringCellValue() + " signed out");
+									} else { // if person is a staff member, sign them in
+										attendanceSheet.getRow(i).createCell(timeInCol).setCellValue(now.format(DateTimeFormatter.ofPattern("h:mm a")) + " ("
+												+ curfewUsed.format(DateTimeFormatter.ofPattern("h:mm a")) + ")");
+										signInStatus(i, now, curfewUsed);
+										confirmation.setText(attendanceSheet.getRow(i).getCell(nameCol).getStringCellValue() + " signed in");
+									}
+									staffList.get(attendanceSheet.getRow(i).getCell(idCol).getStringCellValue()).signIn(); // mark staff member as having signed in
 									break; // search is done
 
 								} else if ((attendanceSheet.getRow(i) != null) 
@@ -612,10 +645,17 @@ public class SignInPane extends GridPane {
 										|| attendanceSheet.getRow(i).getCell(timeInCol).getStringCellValue().toLowerCase().equals("night off")
 										|| attendanceSheet.getRow(i).getCell(timeInCol).getStringCellValue().toLowerCase().equals("day off"))) {
 
-									attendanceSheet.getRow(i).getCell(timeInCol).setCellValue(now.format(DateTimeFormatter.ofPattern("h:mm a")) + " ("
-											+ curfewUsed.format(DateTimeFormatter.ofPattern("h:mm a")) + ")");
-									signInStatus(i, now, curfewUsed);
-									confirmation.setText(attendanceSheet.getRow(i).getCell(nameCol).getStringCellValue() + " signed in");
+									if (curfewUsed == null) { // if person is a visitor, sign them out
+										attendanceSheet.getRow(i).createCell(timeInCol).setCellValue(now.format(DateTimeFormatter.ofPattern("h:mm a")) + " (out)");
+										signInStatus(i, now, now.plusMinutes(5)); // use 5 minutes from now as curfew so that they're always "on time"
+										confirmation.setText("Visitor " + attendanceSheet.getRow(i).getCell(nameCol).getStringCellValue() + " signed out");
+									} else { // if person is a staff member, sign them in
+										attendanceSheet.getRow(i).createCell(timeInCol).setCellValue(now.format(DateTimeFormatter.ofPattern("h:mm a")) + " ("
+												+ curfewUsed.format(DateTimeFormatter.ofPattern("h:mm a")) + ")");
+										signInStatus(i, now, curfewUsed);
+										confirmation.setText(attendanceSheet.getRow(i).getCell(nameCol).getStringCellValue() + " signed in");
+									}
+									staffList.get(attendanceSheet.getRow(i).getCell(idCol).getStringCellValue()).signIn(); // mark staff member as having signed in
 									break; // search is done
 
 								} else { // if cell exists and is not blank, staff member has already signed in today
@@ -632,7 +672,7 @@ public class SignInPane extends GridPane {
 						
 						boolean signedOut = false;
 						
-						for (StaffMember sm : staffList) {
+						for (StaffMember sm : staffList.values()) {
 							if (!signedOut && (staffID.equals(sm.getName()) || staffID.equals(sm.getID()))) { // if we've found the staff member
 								// add them to the sheet so that we can later sign them back in
 								
@@ -648,16 +688,11 @@ public class SignInPane extends GridPane {
 								newRow.createCell(nameCol).setCellValue(sm.getName()); // set the name
 								newRow.createCell(idCol).setCellValue(sm.getID()); // set the ID
 								
-								// set time out column to current time
-								newRow.createCell(timeOutCol).setCellValue(LocalTime.now().format(DateTimeFormatter.ofPattern("h:mm a")));
-								// set time in column to read the method that the staff member left by (e.g. day off)
-								newRow.createCell(timeInCol).setCellValue(((RadioButton)curfewTimeSelection.getSelectedToggle()).getText());
-								
 								// set cell styles for cell border, day off, other
-								XSSFCellStyle dayOff = workbook.createCellStyle();
+								XSSFCellStyle dayOffStyle = workbook.createCellStyle();
 								java.awt.Color dayOffColor = Color.decode(settings.get("sheetFormat", "excusedColor", String.class));
-								dayOff.setFillForegroundColor(new XSSFColor(dayOffColor, new DefaultIndexedColorMap()));
-								dayOff.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+								dayOffStyle.setFillForegroundColor(new XSSFColor(dayOffColor, new DefaultIndexedColorMap()));
+								dayOffStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 								
 								XSSFCellStyle absent = workbook.createCellStyle();
 								java.awt.Color absentColor = Color.decode(settings.get("sheetFormat", "absentColor", String.class));
@@ -669,15 +704,34 @@ public class SignInPane extends GridPane {
 								
 								newRow.getCell(idCol).setCellStyle(rightBorder);
 								
-								if (((RadioButton)curfewTimeSelection.getSelectedToggle()).getText().toLowerCase().equals("day off"))
-									newRow.getCell(timeInCol).setCellStyle(dayOff);
-								else
-									newRow.getCell(timeInCol).setCellStyle(absent);
+								// set time out column to current time
+								if (visitor.isSelected()) {
+									newRow.createCell(timeInCol).setCellValue(LocalTime.now().format(DateTimeFormatter.ofPattern("h:mm a")));
+									newRow.createCell(timeOutCol).setCellValue("Visitor");
+									sm.signIn();
+									
+									newRow.getCell(timeOutCol).setCellStyle(absent);
+									
+									confirmation.setText("Visitor " + sm.getName() + " signed in");
+								} else {
+									newRow.createCell(timeOutCol).setCellValue(LocalTime.now().format(DateTimeFormatter.ofPattern("h:mm a")));
+									// set time in column to read the method that the staff member left by (e.g. day off)
+									newRow.createCell(timeInCol).setCellValue(((RadioButton)curfewTimeSelection.getSelectedToggle()).getText());
+									sm.signOut();
+									
+									if (dayOff.isSelected())
+										newRow.getCell(timeInCol).setCellStyle(dayOffStyle);
+									else
+										newRow.getCell(timeInCol).setCellStyle(absent);
+									
+									left++; // increment the number of people who've signed out
+									stillOut++; // increment the number of people who are still out of camp
+									attendanceSheet.getRow(5).getCell(8).setCellValue(left);
+									attendanceSheet.getRow(7).getCell(8).setCellValue(stillOut);
 								
-								left++; // increment the number of people who've signed out
-								attendanceSheet.getRow(5).getCell(8).setCellValue(left);
+									confirmation.setText(sm.getName() + " signed out");
+								}
 								
-								confirmation.setText(sm.getName() + " signed out");
 								signedOut = true;
 							}
 						}
@@ -695,7 +749,6 @@ public class SignInPane extends GridPane {
 					// write data to attendanceFile
 					try (FileOutputStream afos = new FileOutputStream(attendanceFile)) {
 						workbook.write(afos);
-						XSSFFormulaEvaluator.evaluateAllFormulaCells(workbook); // reevaluate formulas
 						// resize columns to fit
 						for (int i = 0; i < 5; i++) {
 							attendanceSheet.autoSizeColumn(i);
@@ -717,7 +770,12 @@ public class SignInPane extends GridPane {
 			public void signInStatus(int rowNum, LocalDateTime signInTime, LocalDateTime curfewUsed) {
 				
 				returned++; // increment the number of people who've signed in
+				stillOut--; // decrement the number of people who are still out of camp
 				attendanceSheet.getRow(6).getCell(8).setCellValue(returned);
+				attendanceSheet.getRow(7).getCell(8).setCellValue(stillOut);
+				
+				// get staff member's id for use of key sheet later
+				String id = attendanceSheet.getRow(rowNum).getCell(idCol).getStringCellValue();
 
 				// create cell styles for on time and late
 				XSSFCellStyle onTime = workbook.createCellStyle();
@@ -736,21 +794,21 @@ public class SignInPane extends GridPane {
 					attendanceSheet.getRow(rowNum).getCell(timeInCol).setCellStyle(onTime);
 					
 					// increment on time column on key sheet
-					// TODO: rowNum is not the correct row to use! find the matching row
-					if ((keySheet.getRow(rowNum) != null) && keySheet.getRow(rowNum).getCell(ontimeCol) != null) // the cell exists
-						keySheet.getRow(rowNum).getCell(ontimeCol).setCellValue(keySheet.getRow(rowNum).getCell(ontimeCol).getNumericCellValue() + 1);
+					if ((keySheet.getRow(staffList.get(id).getKeyRow()) != null) 
+							&& keySheet.getRow(staffList.get(id).getKeyRow()).getCell(ontimeCol) != null) // the cell exists
+						keySheet.getRow(staffList.get(id).getKeyRow()).getCell(ontimeCol).setCellValue(keySheet.getRow(staffList.get(id).getKeyRow()).getCell(ontimeCol).getNumericCellValue() + 1);
 					else // the cell does not exist
-						keySheet.getRow(rowNum).createCell(ontimeCol).setCellValue(1);
+						keySheet.getRow(staffList.get(id).getKeyRow()).createCell(ontimeCol).setCellValue(1);
 				} else { // staff member is late
 					// set timeInCol to late style
 					attendanceSheet.getRow(rowNum).getCell(timeInCol).setCellStyle(late);
 					
 					// increment late column on key sheet
-					// TODO: rowNum is not the correct row to use! find the matching row
-					if ((keySheet.getRow(rowNum) != null) && keySheet.getRow(rowNum).getCell(lateCol) != null) // the cell exists
-						keySheet.getRow(rowNum).getCell(lateCol).setCellValue(keySheet.getRow(rowNum).getCell(lateCol).getNumericCellValue() + 1);
+					if ((keySheet.getRow(staffList.get(id).getKeyRow()) != null) 
+							&& keySheet.getRow(staffList.get(id).getKeyRow()).getCell(lateCol) != null) // the cell exists
+						keySheet.getRow(staffList.get(id).getKeyRow()).getCell(lateCol).setCellValue(keySheet.getRow(staffList.get(id).getKeyRow()).getCell(lateCol).getNumericCellValue() + 1);
 					else // the cell does not exist
-						keySheet.getRow(rowNum).createCell(lateCol).setCellValue(1);
+						keySheet.getRow(staffList.get(id).getKeyRow()).createCell(lateCol).setCellValue(1);
 				}
 			}
 		});
@@ -970,7 +1028,6 @@ public class SignInPane extends GridPane {
 											// write data to attendanceFile
 											try (FileOutputStream afos = new FileOutputStream(attendanceFile)) {
 												workbook.write(afos);
-												XSSFFormulaEvaluator.evaluateAllFormulaCells(workbook); // reevaluate formulas
 												// resize columns to fit
 												for (int i = 0; i < 5; i++) {
 													attendanceSheet.autoSizeColumn(i);
@@ -1010,7 +1067,6 @@ public class SignInPane extends GridPane {
 											// write data to attendanceFile
 											try (FileOutputStream afos = new FileOutputStream(attendanceFile)) {
 												workbook.write(afos);
-												XSSFFormulaEvaluator.evaluateAllFormulaCells(workbook); // reevaluate formulas
 												// resize columns to fit
 												for (int i = 0; i < 5; i++) {
 													attendanceSheet.autoSizeColumn(i);
@@ -1054,7 +1110,6 @@ public class SignInPane extends GridPane {
 				// write data to attendanceFile
 				try (FileOutputStream afos = new FileOutputStream(attendanceFile)) {
 					workbook.write(afos);
-					XSSFFormulaEvaluator.evaluateAllFormulaCells(workbook); // reevaluate formulas
 					// resize columns to fit
 					for (int i = 0; i < 5; i++) {
 						attendanceSheet.autoSizeColumn(i);
