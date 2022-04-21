@@ -458,6 +458,13 @@ public class SignInPane extends GridPane {
 		signedOutList.setMaxWidth(Double.MAX_VALUE);
 		signedOutList.setId("green");
 		
+		// button to show list of staff who've not yet signed out
+		Button untrackedList = new Button("???????????????"); // TODO: ask Dylan what he thinks this button should say. change related variable names if needed
+		untrackedList.setMinWidth(USE_PREF_SIZE);
+		HBox.setHgrow(untrackedList, Priority.ALWAYS);
+		untrackedList.setMaxWidth(Double.MAX_VALUE);
+		untrackedList.setId("green");
+		
 		GridPane infoSpacing = new GridPane();
 		HBox.setHgrow(infoSpacing, Priority.ALWAYS);
 		
@@ -466,13 +473,17 @@ public class SignInPane extends GridPane {
 		info.getStyleClass().add("info");
 		info.setMinSize(USE_PREF_SIZE, USE_PREF_SIZE);
 		
-		HBox signedOutandInfoBox = new HBox();
-		signedOutandInfoBox.getChildren().addAll(signedOutList, infoSpacing, info);
+		HBox signedOutandInfoBox = new HBox(this.getHgap());
+		signedOutandInfoBox.getChildren().addAll(signedOutList, untrackedList, infoSpacing, info);
 		this.add(signedOutandInfoBox, 0, 2, 2, 1);
 		
-		// stage and scene for viewUnaccounted
-		Stage extraStage = new Stage();
-		Scene unaccScene = new Scene(new Label("Something's gone wrong"));
+		// stage and scene for signedOutList
+		Stage signedOutStage = new Stage();
+		Scene signedOutScene = new Scene(new Label("Something's gone wrong"));
+		
+		// stage and scene for untrackedList
+		Stage untrackedStage = new Stage();
+		Scene untrackedScene = new Scene(new Label("Something's gone wrong"));
 		
 		// set info button behavior (show credits, brief explanation of what to do)
 		info.setOnAction(new EventHandler<ActionEvent>() {
@@ -554,9 +565,11 @@ public class SignInPane extends GridPane {
 							} 
 						}
 						
-						// if signedOutList is showing, update it
-						if (extraStage.isShowing())
+						// if either additional list is showing, update it
+						if (signedOutStage.isShowing())
 							signedOutList.fire();
+						if (untrackedStage.isShowing())
+							untrackedList.fire();
 
 					}
 				} else {
@@ -736,7 +749,6 @@ public class SignInPane extends GridPane {
 		// event handlers for left column buttons
 
 		// pulls up list of staff members who have yet to sign in in this session
-		// TODO: might be able to refactor this to be more efficient by using the HashMap
 		signedOutList.setOnAction(new EventHandler<ActionEvent>() {
 
 			@Override
@@ -745,27 +757,27 @@ public class SignInPane extends GridPane {
 				// if there are no staff left unaccounted, print a message saying so and leave this handle method
 				if (noUnaccountedStaff()) {
 					confirmation.setText("There's currently no one who needs to sign in");
-					extraStage.close();
+					signedOutStage.close();
 					return;
 				}
 				
 				// if we get here, there are still unaccounted-for staff, so find and list them
 				
-				GridPane unaccPane = new GridPane();
+				GridPane signedOutPane = new GridPane();
 				// set up grid layout and sizing
-				unaccPane.setHgap(15);
-				unaccPane.setVgap(20);
-				unaccPane.setAlignment(Pos.CENTER);
-				unaccPane.setPadding(new Insets(20));
+				signedOutPane.setHgap(15);
+				signedOutPane.setVgap(20);
+				signedOutPane.setAlignment(Pos.CENTER);
+				signedOutPane.setPadding(new Insets(20));
 				ColumnConstraints column1 = new ColumnConstraints();
 				column1.setPercentWidth(50);
 				ColumnConstraints column2 = new ColumnConstraints();
 				column2.setPercentWidth(50);
 				ColumnConstraints column3 = new ColumnConstraints();
 				column3.setPercentWidth(50);
-				unaccPane.getColumnConstraints().addAll(column1, column2, column3);
+				signedOutPane.getColumnConstraints().addAll(column1, column2, column3);
 
-				ScrollPane scrollPane = new ScrollPane(unaccPane);
+				ScrollPane scrollPane = new ScrollPane(signedOutPane);
 				scrollPane.setMinWidth(stage.getWidth() * 0.75);
 				scrollPane.setMaxHeight(stage.getHeight());
 
@@ -774,7 +786,7 @@ public class SignInPane extends GridPane {
 
 				for (int i = 0; i < listBunks.size(); i++) {
 					if (!bunkEmpty(listBunks.get(i))) {
-						unaccPane.add(getStaffFromBunk(listBunks.get(i)), nextRow, nextCol);
+						signedOutPane.add(getStaffFromBunk(listBunks.get(i)), nextRow, nextCol);
 
 						if (++nextRow > 2) {
 							nextCol++;
@@ -785,38 +797,39 @@ public class SignInPane extends GridPane {
 
 
 				// set up scene
-				unaccScene.setRoot(scrollPane);
-				unaccScene.getStylesheets().add(Attendance.class.getResource(settings.get("filePaths", "cssFile", String.class)).toExternalForm());
+				signedOutScene.setRoot(scrollPane);
+				signedOutScene.getStylesheets().add(Attendance.class.getResource(settings.get("filePaths", "cssFile", String.class)).toExternalForm());
 
 				// only need to do these things if the stage isn't currently on screen
-				if (!extraStage.isShowing()) {
+				if (!signedOutStage.isShowing()) {
 					// set up stage
-					extraStage.setScene(unaccScene);
-					extraStage.setMinWidth(scrollPane.getMinWidth());
-					extraStage.setMaxHeight(scrollPane.getMaxHeight());
-					extraStage.setTitle("Unaccounted-for Staff");
-					extraStage.getIcons().add(new Image(settings.get("filePaths", "iconPath", String.class)));
-					extraStage.centerOnScreen();
-					extraStage.show();
+					signedOutStage.setScene(signedOutScene);
+					signedOutStage.setMinWidth(scrollPane.getMinWidth());
+					signedOutStage.setMaxHeight(scrollPane.getMaxHeight());
+					signedOutStage.setTitle("Signed-Out Staff");
+					signedOutStage.getIcons().add(new Image(settings.get("filePaths", "iconPath", String.class)));
+					signedOutStage.centerOnScreen();
+					signedOutStage.show();
 				}
 			}
 			
 			// returns whether or not there are still unaccounted-for staff
+			// in order to be "accounted for," the staff member/visitor must fall under one of the following categories:
+			// - never signed out and never signed in
+			// - signed out and signed back in
+			// - signed out for a day off and not signed back in
 			public boolean noUnaccountedStaff() {
 				
 				// if no staff have been added yet, there are also no unaccounted staff
 				if (staffRowNum == attendanceSheet.getFirstRowNum() + 1) return true;
 
-				// runs through all rows of the spreadsheet and returns false if there is an
-				//  unaccounted staff member
-				for (int i = attendanceSheet.getFirstRowNum() + 1; i < staffRowNum; i++)
-					// if today's time in column does not exist, is empty, or marks that the staff member is out, the staff member is unaccounted for
-					if ((attendanceSheet.getRow(i) != null) && (attendanceSheet.getRow(i).getCell(timeInCol) == null 
-					|| attendanceSheet.getRow(i).getCell(timeInCol).getCellType() == CellType.BLANK 
-					|| attendanceSheet.getRow(i).getCell(timeInCol).getStringCellValue().toLowerCase().equals("leaving camp")
-					|| attendanceSheet.getRow(i).getCell(timeInCol).getStringCellValue().toLowerCase().equals("night off")
-					|| attendanceSheet.getRow(i).getCell(timeInCol).getStringCellValue().toLowerCase().equals("day off")))
+				for (StaffMember sm : staffList.values())
+					if (!sm.isSignedOut() && sm.isSignedIn()) // a visitor who's signed in but not out
 						return false;
+					else if (sm.isSignedOut() && !sm.isSignedIn()) // staff member's signed out but not in. only ok if on a day off
+						// is on a day off if their time in column says so
+						if (!attendanceSheet.getRow(sm.getTodayRow()).getCell(timeInCol).getStringCellValue().equalsIgnoreCase("day off"))
+							return false;
 
 				return true;
 			}
@@ -828,13 +841,10 @@ public class SignInPane extends GridPane {
 
 				// loop through all rows of the sheet, starting at the first row (so ignoring the header rows)
 				//  and look at the "bunk" column to count how many unique bunks there are
-				for (int i = attendanceSheet.getFirstRowNum() + 1; i < staffRowNum; i++) {
-
+				for (StaffMember sm : staffList.values()) {
 					// if the current bunk is new, add it to the list of unique bunks
-					if ((attendanceSheet.getRow(i) != null) 
-							&& attendanceSheet.getRow(i).getCell(bunkCol) != null 
-							&& !uniqueBunks.contains(attendanceSheet.getRow(i).getCell(bunkCol).getStringCellValue()))
-						uniqueBunks.add(attendanceSheet.getRow(i).getCell(bunkCol).getStringCellValue());
+					if (!uniqueBunks.contains(sm.getBunk()))
+						uniqueBunks.add(sm.getBunk());
 				}
 
 				return uniqueBunks;
@@ -844,17 +854,19 @@ public class SignInPane extends GridPane {
 			//  in that bunk
 			public boolean bunkEmpty(String bunk) {
 
-				// runs through all rows of the spreadsheet and returns false if there is an
-				//  unaccounted staff member in this bunk
-				for (int i = attendanceSheet.getFirstRowNum() + 1; i < staffRowNum; i++)
-					if ((attendanceSheet.getRow(i) != null) && attendanceSheet.getRow(i).getCell(bunkCol).getStringCellValue().equals(bunk))
-						// if today's time in column does not exist, is empty, or marks that the staff member is out, the staff member is unaccounted for
-						if ((attendanceSheet.getRow(i) != null) && (attendanceSheet.getRow(i).getCell(timeInCol) == null 
-							|| attendanceSheet.getRow(i).getCell(timeInCol).getCellType() == CellType.BLANK 
-							|| attendanceSheet.getRow(i).getCell(timeInCol).getStringCellValue().toLowerCase().equals("leaving camp")
-							|| attendanceSheet.getRow(i).getCell(timeInCol).getStringCellValue().toLowerCase().equals("night off")
-							|| attendanceSheet.getRow(i).getCell(timeInCol).getStringCellValue().toLowerCase().equals("day off")))
+				for (StaffMember sm : staffList.values()) {
+					if (sm.getBunk().equals(bunk)) {
+						// if staff member is unaccounted-for, return false
+						if (!sm.isSignedOut() && sm.isSignedIn()) { // a visitor who's signed in but not out
 							return false;
+						} else if (sm.isSignedOut() && !sm.isSignedIn()) {// staff member's signed out but not in. only ok if on a day off
+							// is on a day off if their time in column says so
+							if (!attendanceSheet.getRow(sm.getTodayRow()).getCell(timeInCol).getStringCellValue().equalsIgnoreCase("day off")) {
+								return false;
+							}
+						}
+					}
+				}
 
 				return true;
 			}
@@ -874,18 +886,15 @@ public class SignInPane extends GridPane {
 				bunkBox.getChildren().addAll(bunkNameBox, new HBox()); // empty HBox for spacing
 
 				// runs through all rows of the spreadsheet and adds unaccounted staff in this bunk to the VBox
-				for (int i = attendanceSheet.getFirstRowNum() + 1; i < staffRowNum; i++) {
+				for (StaffMember sm : staffList.values()) {
 
-					if ((attendanceSheet.getRow(i) != null) && attendanceSheet.getRow(i).getCell(bunkCol).getStringCellValue().equals(bunk)) {
+					if (sm.getBunk().equals(bunk)) {
 
-						// if today's time in column does not exist, is empty, or marks that the staff member is out, the staff member is unaccounted for
-						if ((attendanceSheet.getRow(i) != null) && (attendanceSheet.getRow(i).getCell(timeInCol) == null 
-							|| attendanceSheet.getRow(i).getCell(timeInCol).getCellType() == CellType.BLANK 
-							|| attendanceSheet.getRow(i).getCell(timeInCol).getStringCellValue().toLowerCase().equals("leaving camp")
-							|| attendanceSheet.getRow(i).getCell(timeInCol).getStringCellValue().toLowerCase().equals("night off")
-							|| attendanceSheet.getRow(i).getCell(timeInCol).getStringCellValue().toLowerCase().equals("day off"))) {
+						if ((!sm.isSignedOut() && sm.isSignedIn()) 
+								|| ((sm.isSignedOut() && !sm.isSignedIn()) 
+										&& (!attendanceSheet.getRow(sm.getTodayRow()).getCell(timeInCol).getStringCellValue().equalsIgnoreCase("day off")))) {
 
-							Button staffMember = new Button(attendanceSheet.getRow(i).getCell(nameCol).getStringCellValue());
+							Button staffMember = new Button(sm.getName());
 							staffMember.setId("list-button");
 							staffMember.setMinWidth(USE_PREF_SIZE);
 							HBox staffNameBox = new HBox(15);
@@ -894,7 +903,7 @@ public class SignInPane extends GridPane {
 							bunkBox.getChildren().add(staffNameBox);
 
 							// when a staff member is clicked, open a popup window to allow user to
-							//  mark them as on shmira or a day off
+							//  mark them as on shmira or a day off or sign in normally
 //							XSSFRow staffRow = attendanceSheet.getRow(i); // stores current row for use in event handler
 							staffMember.setOnAction(new EventHandler<ActionEvent>() {
 
@@ -1006,8 +1015,192 @@ public class SignInPane extends GridPane {
 										signIn.fire();
 									}
 
-									// refresh list of unaccounted staff members
+									// refresh both additional lists
+									if (untrackedStage.isShowing())
+										untrackedList.fire();
 									signedOutList.fire();
+								}
+							});
+						}
+					}
+
+				}
+
+				bunkBox.getChildren().addAll(new HBox(), new HBox()); // empty HBoxes for spacing
+
+				return bunkBox;
+			}
+		});
+		
+		// pulls up list of staff members who have yet to sign out in this session
+		untrackedList.setOnAction(new EventHandler<ActionEvent>() {
+
+			@Override
+			public void handle(ActionEvent event) {
+
+				// if there are no staff left unaccounted, print a message saying so and leave this handle method
+				if (allStaffOut()) {
+					confirmation.setText("Everyone has signed out");
+					untrackedStage.close();
+					return;
+				}
+				
+				// if we get here, there are still staff who've not signed out, so find and list them
+				
+				GridPane untrackedPane = new GridPane();
+				// set up grid layout and sizing
+				untrackedPane.setHgap(15);
+				untrackedPane.setVgap(20);
+				untrackedPane.setAlignment(Pos.CENTER);
+				untrackedPane.setPadding(new Insets(20));
+				ColumnConstraints column1 = new ColumnConstraints();
+				column1.setPercentWidth(50);
+				ColumnConstraints column2 = new ColumnConstraints();
+				column2.setPercentWidth(50);
+				ColumnConstraints column3 = new ColumnConstraints();
+				column3.setPercentWidth(50);
+				untrackedPane.getColumnConstraints().addAll(column1, column2, column3);
+
+				ScrollPane scrollPane = new ScrollPane(untrackedPane);
+				scrollPane.setMinWidth(stage.getWidth() * 0.75);
+				scrollPane.setMaxHeight(stage.getHeight());
+
+				List<String> listBunks = countBunks();
+				int nextRow = 0, nextCol = 0;
+
+				for (int i = 0; i < listBunks.size(); i++) {
+					if (!bunkNotEmpty(listBunks.get(i))) {
+						untrackedPane.add(getStaffFromBunk(listBunks.get(i)), nextRow, nextCol);
+
+						if (++nextRow > 2) {
+							nextCol++;
+							nextRow = 0;
+						}
+					}
+				}
+
+
+				// set up scene
+				untrackedScene.setRoot(scrollPane);
+				untrackedScene.getStylesheets().add(Attendance.class.getResource(settings.get("filePaths", "cssFile", String.class)).toExternalForm());
+
+				// only need to do these things if the stage isn't currently on screen
+				if (!untrackedStage.isShowing()) {
+					// set up stage
+					untrackedStage.setScene(untrackedScene);
+					untrackedStage.setMinWidth(scrollPane.getMinWidth());
+					untrackedStage.setMaxHeight(scrollPane.getMaxHeight());
+					untrackedStage.setTitle("???????????????"); // TODO: update this with name of this button
+					untrackedStage.getIcons().add(new Image(settings.get("filePaths", "iconPath", String.class)));
+					untrackedStage.centerOnScreen();
+					untrackedStage.show();
+				}
+			}
+			
+			// returns whether or not all staff members have signed out
+			// in order to be "signed out," the person must meet one of the following characteristics
+			// - not signed out
+			// - signed in and not signed out (visitor)
+			public boolean allStaffOut() {
+
+				for (StaffMember sm : staffList.values())
+					if (!sm.isSignedOut() || (!sm.isSignedOut() && sm.isSignedIn()))
+						return false;
+
+				return true;
+			}
+
+			// counts the number of unique bunks in workbook and returns the list of unique bunks
+			public List<String> countBunks() {
+
+				List<String> uniqueBunks = new ArrayList<String>();
+
+				// loop through all rows of the sheet, starting at the first row (so ignoring the header rows)
+				//  and look at the "bunk" column to count how many unique bunks there are
+				for (StaffMember sm : staffList.values()) {
+					// if the current bunk is new, add it to the list of unique bunks
+					if (!uniqueBunks.contains(sm.getBunk()))
+						uniqueBunks.add(sm.getBunk());
+				}
+
+				return uniqueBunks;
+			}
+
+			// given a bunk name, returns whether or not there are any staff remaining to sign out
+			//  in that bunk
+			public boolean bunkNotEmpty(String bunk) {
+
+				for (StaffMember sm : staffList.values())
+					if (sm.getBunk().equals(bunk))
+						// if staff member is unaccounted-for, return false
+						if (!sm.isSignedOut() || (!sm.isSignedOut() && sm.isSignedIn()))
+							return false;
+
+				return true;
+			}
+
+			// given a bunk name, gets the names of all unaccounted staff in that bunk
+			//  and creates a VBox with the name of the bunk and each staff member in it
+			public VBox getStaffFromBunk(String bunk) {
+
+				VBox bunkBox = new VBox(10);
+
+				Label bunkName = new Label(bunk);
+				bunkName.setId("bunk-label");
+				bunkName.setMinWidth(USE_PREF_SIZE);
+				HBox bunkNameBox = new HBox(15);
+				bunkNameBox.setAlignment(Pos.CENTER);
+				bunkNameBox.getChildren().add(bunkName);
+				bunkBox.getChildren().addAll(bunkNameBox, new HBox()); // empty HBox for spacing
+
+				// runs through all rows of the spreadsheet and adds unaccounted staff in this bunk to the VBox
+				for (StaffMember sm : staffList.values()) {
+
+					if (sm.getBunk().equals(bunk)) {
+
+						if (!sm.isSignedOut() || (!sm.isSignedOut() && sm.isSignedIn())) {
+
+							Button staffMember = new Button(sm.getName());
+							staffMember.setId("list-button");
+							staffMember.setMinWidth(USE_PREF_SIZE);
+							HBox staffNameBox = new HBox(15);
+							staffNameBox.setAlignment(Pos.CENTER);
+							staffNameBox.getChildren().add(staffMember);
+							bunkBox.getChildren().add(staffNameBox);
+
+							// when a staff member is clicked, open a popup window to allow user to sign them out
+							staffMember.setOnAction(new EventHandler<ActionEvent>() {
+
+								@Override
+								public void handle(ActionEvent event) {
+									Alert options = new Alert(AlertType.NONE, "Sign this staff member out:",
+											new ButtonType("Sign Out", ButtonData.OTHER),
+											ButtonType.CANCEL);
+									options.setTitle("Manual Sign-Out");
+									options.setHeaderText(staffMember.getText());
+									options.getDialogPane().getStylesheets().add(getClass().getResource(settings.get("filePaths", "cssFile", String.class)).toExternalForm());
+									options.getDialogPane().lookupButton(ButtonType.CANCEL).setId("red");
+									options.initOwner(staffMember.getScene().getWindow());
+									options.showAndWait();
+									
+									// create cell style to be used when signing staff member in for day off or shmira
+									XSSFCellStyle onTime = workbook.createCellStyle();
+									java.awt.Color onTimeColor = Color.decode(settings.get("sheetFormat", "onTimeColor", String.class));
+									onTime.setFillForegroundColor(new XSSFColor(onTimeColor, new DefaultIndexedColorMap()));
+									onTime.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+
+									if (options.getResult().getText().equals("Sign Out")) {
+										// staff member should be signed out normally
+										// do this by writing the staff member's name into the entry box and firing the sign-in button
+										
+										idField.setText(staffMember.getText());
+										signIn.fire();
+									}
+
+									// refresh both additional lists
+									untrackedList.fire();
+									if (signedOutStage.isShowing())
+										signedOutList.fire();
 								}
 							});
 						}
@@ -1073,8 +1266,9 @@ public class SignInPane extends GridPane {
 				// write data to attendanceFile
 				save.fire();
 				
-				// close unaccounted-for staff window and stage
-				extraStage.close();
+				// close all windows
+				signedOutStage.close();
+				untrackedStage.close();
 				Platform.exit();
 			}
 
