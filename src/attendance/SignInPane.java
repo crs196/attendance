@@ -558,7 +558,7 @@ public class SignInPane extends GridPane {
 						
 						// if signedOutList is showing, update it
 						if (extraStage.isShowing())
-							signedOutList.fire(); // TODO: there may be a better way to update the signed-out list other than clicking the button again
+							signedOutList.fire();
 
 					}
 				} else {
@@ -1053,11 +1053,8 @@ public class SignInPane extends GridPane {
 			@Override
 			public void handle(ActionEvent event) {
 				
-				// see if there are any staff that haven't signed in yet
-				boolean allBunksEmpty = noUnaccountedStaff();
-				
 				// if there are still unaccounted staff, confirm that user still wants to exit
-				if (!allBunksEmpty) {
+				if (!noUnaccountedStaff()) {
 					Alert saveAndExitConf = new Alert(AlertType.CONFIRMATION, "There are still staff members that haven't signed in.\nAre you sure you want to exit?");
 					saveAndExitConf.setHeaderText("Save and Exit Confirmation");
 					saveAndExitConf.setTitle("Save and Exit Confirmation");
@@ -1082,50 +1079,46 @@ public class SignInPane extends GridPane {
 			}
 
 			// returns whether or not there are still unaccounted-for staff
-			// TODO: refactor this to use HashMap
+			// in order to be "accounted for," the staff member/visitor must fall under one of the following categories:
+			// - never signed out and never signed in
+			// - signed out and signed back in
+			// - signed out for a day off and not signed back in
 			public boolean noUnaccountedStaff() {
-
-				// runs through all rows of the spreadsheet and returns false if there is an
-				//  unaccounted staff member
-				for (int i = attendanceSheet.getFirstRowNum() + 1; i < staffRowNum; i++)
-					// if today's time in column does not exist, is empty, or marks that the staff member is out, the staff member is unaccounted for
-					if ((attendanceSheet.getRow(i) != null) && (attendanceSheet.getRow(i).getCell(timeInCol) == null 
-						|| attendanceSheet.getRow(i).getCell(timeInCol).getCellType() == CellType.BLANK 
-						|| attendanceSheet.getRow(i).getCell(timeInCol).getStringCellValue().toLowerCase().equals("leaving camp")
-						|| attendanceSheet.getRow(i).getCell(timeInCol).getStringCellValue().toLowerCase().equals("night off")
-						|| attendanceSheet.getRow(i).getCell(timeInCol).getStringCellValue().toLowerCase().equals("day off")))
+				
+				for (StaffMember sm : staffList.values())
+					if (!sm.isSignedOut() && sm.isSignedIn()) // a visitor who's signed in but not out
 						return false;
+					else if (sm.isSignedOut() && !sm.isSignedIn()) // staff member's signed out but not in. only ok if on a day off
+						// is on a day off if their time in column says so
+						if (!attendanceSheet.getRow(sm.getTodayRow()).getCell(timeInCol).getStringCellValue().equalsIgnoreCase("day off"))
+							return false;
 
 				return true;
 			}
 			
 			// marks all staff that did not sign in as absent, and increments their "absent" column, if it exists
-			// TODO: refactor this to use HashMap
-			// TODO: make sure that someone who's on a day off doesn't get marked as absent
 			public void markUnaccAbsent() {
 				
 				boolean absent;
 				
-				for (int i = attendanceSheet.getFirstRowNum() + 1; i < staffRowNum; i++) {
+				for (StaffMember sm : staffList.values()) {
 					
 					absent = false;
-					String id = attendanceSheet.getRow(i).getCell(idCol).getStringCellValue();
 					
-					// if today's time in column does not exist, is empty, or marks that the staff member is out, the staff member is unaccounted for
-					if ((attendanceSheet.getRow(i) != null) && (attendanceSheet.getRow(i).getCell(timeInCol) == null 
-						|| attendanceSheet.getRow(i).getCell(timeInCol).getCellType() == CellType.BLANK 
-						|| attendanceSheet.getRow(i).getCell(timeInCol).getStringCellValue().toLowerCase().equals("leaving camp")
-						|| attendanceSheet.getRow(i).getCell(timeInCol).getStringCellValue().toLowerCase().equals("night off")
-						|| attendanceSheet.getRow(i).getCell(timeInCol).getStringCellValue().toLowerCase().equals("day off")))
+					if (!sm.isSignedOut() && sm.isSignedIn()) // a visitor who's signed in but not out
 						absent = true;
+					else if (sm.isSignedOut() && !sm.isSignedIn()) // staff member's signed out but not in. only ok if on a day off
+						// is on a day off if their time in column says so
+						if (!attendanceSheet.getRow(sm.getTodayRow()).getCell(timeInCol).getStringCellValue().equalsIgnoreCase("day off"))
+							absent = true;
 					
 					//  increment "absent" column
 					if (absent) {				
-						if ((keySheet.getRow(staffList.get(id).getKeyRow()) != null) 
-								&& keySheet.getRow(staffList.get(id).getKeyRow()).getCell(absentCol) != null) // the cell exists
-							keySheet.getRow(staffList.get(id).getKeyRow()).getCell(absentCol).setCellValue(keySheet.getRow(staffList.get(id).getKeyRow()).getCell(absentCol).getNumericCellValue() + 1);
+						if ((keySheet.getRow(sm.getKeyRow()) != null) 
+								&& keySheet.getRow(sm.getKeyRow()).getCell(absentCol) != null) // the cell exists
+							keySheet.getRow(sm.getKeyRow()).getCell(absentCol).setCellValue(keySheet.getRow(sm.getKeyRow()).getCell(absentCol).getNumericCellValue() + 1);
 						else // the cell does not exist
-							keySheet.getRow(staffList.get(id).getKeyRow()).createCell(absentCol).setCellValue(1);
+							keySheet.getRow(sm.getKeyRow()).createCell(absentCol).setCellValue(1);
 					}
 				}
 			}
