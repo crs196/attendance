@@ -897,7 +897,7 @@ public class SignInPane extends GridPane {
 
 							// when a staff member is clicked, open a popup window to allow user to
 							//  mark them as on shmira or a day off
-							XSSFRow staffRow = attendanceSheet.getRow(i); // stores current row for use in event handler
+//							XSSFRow staffRow = attendanceSheet.getRow(i); // stores current row for use in event handler
 							staffMember.setOnAction(new EventHandler<ActionEvent>() {
 
 								@Override
@@ -905,8 +905,8 @@ public class SignInPane extends GridPane {
 									Alert options = new Alert(AlertType.NONE, "Sign this staff member in:",
 											new ButtonType("Sign In", ButtonData.OTHER),
 											// TODO: remove these two buttons (Shmira, Day Off)
-											new ButtonType("Shmira", ButtonData.OTHER),
-											new ButtonType("Day Off", ButtonData.OTHER),
+//											new ButtonType("Shmira", ButtonData.OTHER),
+//											new ButtonType("Day Off", ButtonData.OTHER),
 											ButtonType.CANCEL);
 									options.setTitle("Manual Sign-In");
 									options.setHeaderText(staffMember.getText());
@@ -922,84 +922,85 @@ public class SignInPane extends GridPane {
 									onTime.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 
 									// TODO: remove this section of code when I remove the "shmira" button
-									if (options.getResult().getText().equals("Shmira")) {
-										// staff member should be signed in as on shmira
-
-										// set time in column to show that the staff member is on shmira
-										if (staffRow.getCell(timeInCol) == null)
-											staffRow.createCell(timeInCol).setCellValue("Shmira");
-										else
-											staffRow.getCell(timeInCol).setCellValue("Shmira");
-
-										// update "on time" column (if it exists)
-										if (ontimeCol != -1) { // there is an "on time" column
-											if (staffRow.getCell(ontimeCol) != null) // the cell exists
-												staffRow.getCell(ontimeCol).setCellValue(staffRow.getCell(ontimeCol).getNumericCellValue() + 1);
-											else // the cell does not exist
-												staffRow.createCell(ontimeCol).setCellValue(1);
-										}
-										
-										// recolor cell background
-										staffRow.getCell(timeInCol).setCellStyle(onTime);
-										
-										// print a confirmation
-										confirmation.setText(staffMember.getText() + " signed in as on shmira");
-										
-										if (autosave) {
-											// write data to attendanceFile
-											try (FileOutputStream afos = new FileOutputStream(attendanceFile)) {
-												workbook.write(afos);
-												// resize columns to fit
-												for (int i = 0; i < 5; i++) {
-													attendanceSheet.autoSizeColumn(i);
-													keySheet.autoSizeColumn(i);
-												}
-												keySheet.autoSizeColumn(5); // keySheet has 1 additional column
-											} catch (IOException e) {
-												confirmation.setText("Autosave error. Try manually saving.");
-											} 
-										}
-									
+//									if (options.getResult().getText().equals("Shmira")) {
+//										// staff member should be signed in as on shmira
+//
+//										// set time in column to show that the staff member is on shmira
+//										if (staffRow.getCell(timeInCol) == null)
+//											staffRow.createCell(timeInCol).setCellValue("Shmira");
+//										else
+//											staffRow.getCell(timeInCol).setCellValue("Shmira");
+//
+//										// update "on time" column (if it exists)
+//										if (ontimeCol != -1) { // there is an "on time" column
+//											if (staffRow.getCell(ontimeCol) != null) // the cell exists
+//												staffRow.getCell(ontimeCol).setCellValue(staffRow.getCell(ontimeCol).getNumericCellValue() + 1);
+//											else // the cell does not exist
+//												staffRow.createCell(ontimeCol).setCellValue(1);
+//										}
+//										
+//										// recolor cell background
+//										staffRow.getCell(timeInCol).setCellStyle(onTime);
+//										
+//										// print a confirmation
+//										confirmation.setText(staffMember.getText() + " signed in as on shmira");
+//										
+//										if (autosave) {
+//											// write data to attendanceFile
+//											try (FileOutputStream afos = new FileOutputStream(attendanceFile)) {
+//												workbook.write(afos);
+//												// resize columns to fit
+//												for (int i = 0; i < 5; i++) {
+//													attendanceSheet.autoSizeColumn(i);
+//													keySheet.autoSizeColumn(i);
+//												}
+//												keySheet.autoSizeColumn(5); // keySheet has 1 additional column
+//											} catch (IOException e) {
+//												confirmation.setText("Autosave error. Try manually saving.");
+//											} 
+//										}
+//									
 									// TODO: remove this section of code when I remove the "day off" button
-									} else if (options.getResult().getText().equals("Day Off")) {
-										// staff member should be signed in as on day off
-
-										// set time in column to show that the staff member is on a day off
-										if (staffRow.getCell(timeInCol) == null)
-											staffRow.createCell(timeInCol).setCellValue("Day Off");
-										else
-											staffRow.getCell(timeInCol).setCellValue("Day Off");
-
-										// update "on time" column (if it exists)
-										if (ontimeCol != -1) {// there is an "on time" column
-											if (staffRow.getCell(ontimeCol) != null) // the cell exists
-												staffRow.getCell(ontimeCol).setCellValue(staffRow.getCell(ontimeCol).getNumericCellValue() + 1);
-											else // the cell does not exist
-												staffRow.createCell(ontimeCol).setCellValue(1);
-										}
-										
-										// recolor cell background
-										staffRow.getCell(timeInCol).setCellStyle(onTime);
-										
-										// print a confirmation
-										confirmation.setText(staffMember.getText() + " signed in as on a day off");
-										
-										if (autosave) {
-											// write data to attendanceFile
-											try (FileOutputStream afos = new FileOutputStream(attendanceFile)) {
-												workbook.write(afos);
-												// resize columns to fit
-												for (int i = 0; i < 5; i++) {
-													attendanceSheet.autoSizeColumn(i);
-													keySheet.autoSizeColumn(i);
-												}
-												keySheet.autoSizeColumn(5); // keySheet has 1 additional column
-											} catch (IOException e) {
-												confirmation.setText("Autosave error. Try manually saving.");
-											} 
-										}
-										
-									} else if (options.getResult().getText().equals("Sign In")) {
+//									} else if (options.getResult().getText().equals("Day Off")) {
+//										// staff member should be signed in as on day off
+//
+//										// set time in column to show that the staff member is on a day off
+//										if (staffRow.getCell(timeInCol) == null)
+//											staffRow.createCell(timeInCol).setCellValue("Day Off");
+//										else
+//											staffRow.getCell(timeInCol).setCellValue("Day Off");
+//
+//										// update "on time" column (if it exists)
+//										if (ontimeCol != -1) {// there is an "on time" column
+//											if (staffRow.getCell(ontimeCol) != null) // the cell exists
+//												staffRow.getCell(ontimeCol).setCellValue(staffRow.getCell(ontimeCol).getNumericCellValue() + 1);
+//											else // the cell does not exist
+//												staffRow.createCell(ontimeCol).setCellValue(1);
+//										}
+//										
+//										// recolor cell background
+//										staffRow.getCell(timeInCol).setCellStyle(onTime);
+//										
+//										// print a confirmation
+//										confirmation.setText(staffMember.getText() + " signed in as on a day off");
+//										
+//										if (autosave) {
+//											// write data to attendanceFile
+//											try (FileOutputStream afos = new FileOutputStream(attendanceFile)) {
+//												workbook.write(afos);
+//												// resize columns to fit
+//												for (int i = 0; i < 5; i++) {
+//													attendanceSheet.autoSizeColumn(i);
+//													keySheet.autoSizeColumn(i);
+//												}
+//												keySheet.autoSizeColumn(5); // keySheet has 1 additional column
+//											} catch (IOException e) {
+//												confirmation.setText("Autosave error. Try manually saving.");
+//											} 
+//										}
+//										
+//									} else 
+									if (options.getResult().getText().equals("Sign In")) {
 										// staff member should be signed in normally
 										// do this by writing the staff member's name into the entry box and firing the sign-in button
 										
@@ -1048,6 +1049,7 @@ public class SignInPane extends GridPane {
 
 		// pulls up list of staff members who have yet to sign in in this session
 		//  with option to mark them as on day off
+		// TODO: maybe make this a "save and restart"-type button again? instead of quitting
 		saveAndExit.setOnAction(new EventHandler<ActionEvent>() {
 
 			@Override
