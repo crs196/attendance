@@ -102,9 +102,9 @@ public class SignInPane extends GridPane {
 		stage = s;
 		
 		// set instance variables
-		leavingCampCurfew = curfewTime(settings.get("curfewTimes", "leavingCampCurfew"), settings.get("curfewTimes", "startBuffer", Integer.class));
-		nightOffCurfew = curfewTime(settings.get("curfewTimes", "nightOffCurfew"), settings.get("curfewTimes", "startBuffer", Integer.class));
-		dayOffCurfew = curfewTime(settings.get("curfewTimes", "dayOffCurfew"), settings.get("curfewTimes", "startBuffer", Integer.class));
+		leavingCampCurfew = curfewTime(settings.get("curfewTimes", "leavingCampCurfew"));
+		nightOffCurfew = curfewTime(settings.get("curfewTimes", "nightOffCurfew"));
+		dayOffCurfew = curfewTime(settings.get("curfewTimes", "dayOffCurfew"));
 		
 		attendanceFile = new File(settings.get("filePaths", "attendanceFilePath"));
 		
@@ -188,12 +188,12 @@ public class SignInPane extends GridPane {
 	}
 	
 	// takes the string entered as curfew time and converts it to the date and time of curfew
-	private LocalDateTime curfewTime(String curfewString, int buffer) {
+	private LocalDateTime curfewTime(String curfewString) {
 
 		int hour = 0, minute = 0; // variables to hold the input hour and minute
 		
 		// a regex and matcher that matches 12-hr time with optional leading zero, optional separator
-		//  mandatory meridem indicators (but optionally separated, case-insenstive, and with optional m/M)
+		//  mandatory meridem indicators (but optionally separated, case-insensitive, and with optional m/M)
 		Pattern twelveHrTime = Pattern.compile("^(1[0-2]|0?[1-9]):?([0-5]\\d)?\\s*([AaPp])[Mm]?$");
 		Matcher twelveHrMatcher = twelveHrTime.matcher(curfewString);
 		
@@ -234,7 +234,7 @@ public class SignInPane extends GridPane {
 		LocalTime curfew = LocalTime.of(hour, minute);
 		
 		// if curfew is after the current time, curfew is today
-		if (curfew.isAfter(LocalTime.now().plusMinutes(buffer)))
+		if (curfew.isAfter(LocalTime.now()))
 			return LocalDateTime.of(LocalDate.now(), curfew); // return LocalDateTime object with today's date and entered time
 		else // otherwise, curfew is tomorrow (read: after midnight)
 			return LocalDateTime.of(LocalDate.now().plusDays(1), curfew); // return LocalDateTime object with tomorrow's date and entered time
