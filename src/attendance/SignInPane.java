@@ -92,9 +92,7 @@ public class SignInPane extends GridPane {
 		left = 0;
 		returned = 0;
 		stillOut = 0;
-		// TODO: don't just start this at 1! if the program is closed and reopened on the same day, it'll overwrite previous data
-		staffRowNum = 1; // start with writing to row 1
-		
+
 		// get config settings
 		settings = set;
 		
@@ -120,22 +118,6 @@ public class SignInPane extends GridPane {
 		// create local workbook from attendanceFile, only continue if workbook creation is acceptable
 		try (FileInputStream afis = new FileInputStream(attendanceFile)) {
 			workbook = new XSSFWorkbook(afis);
-			
-			attendanceSheet = workbook.getSheet(LocalDate.now().format(DateTimeFormatter.ofPattern("MM-dd-yyyy"))); // get sheet with today's date
-			if (attendanceSheet == null) { // no sheet with today's date exists
-				int templateIndex = workbook.getSheetIndex("Daily Attendance Template"); // get index for template sheet
-				// create copy of template with today's date as the name
-				attendanceSheet = workbook.cloneSheet(templateIndex, LocalDate.now().format(DateTimeFormatter.ofPattern("MM-dd-yyyy")));
-			}
-			workbook.setSheetOrder(attendanceSheet.getSheetName(), 1); // move today's sheet to almost beginning of workbook (key sheet is first)
-			
-			keySheet = workbook.getSheet("Key");
-			
-			getMasterStaffList(); // get list of staff from keySheet
-			
-			initializeAttendanceSheet(); // get locations of columns from header row
-			
-			setup();
 		} catch (EmptyFileException | IOException e) {			
 			Alert fileNotAccessible = new Alert(AlertType.ERROR, "Unable to access \"" + attendanceFile.getName()
 					+ "\"\nPlease choose a different file.");
@@ -147,6 +129,27 @@ public class SignInPane extends GridPane {
 			
 			Platform.exit();
 		}
+		
+		attendanceSheet = workbook.getSheet(LocalDate.now().format(DateTimeFormatter.ofPattern("MM-dd-yyyy"))); // get sheet with today's date
+		if (attendanceSheet == null) { // no sheet with today's date exists
+			int templateIndex = workbook.getSheetIndex("Daily Attendance Template"); // get index for template sheet
+			// create copy of template with today's date as the name
+			attendanceSheet = workbook.cloneSheet(templateIndex, LocalDate.now().format(DateTimeFormatter.ofPattern("MM-dd-yyyy")));
+		} // TODO: if sheet with today's date exists, read from it and load the info saved there
+		workbook.setSheetOrder(attendanceSheet.getSheetName(), 1); // move today's sheet to almost beginning of workbook (key sheet is first)
+		
+		keySheet = workbook.getSheet("Key"); // get key sheet
+		
+		getMasterStaffList(); // get list of staff from keySheet
+		
+		initializeAttendanceSheet(); // get locations of columns from header row
+		
+		System.out.println(staffRowNum);
+		// sets the initial value of staffRowNum to be the first row
+		//  that doesn't have a staff member already written into it
+		while (attendanceSheet.getRow(staffRowNum++).getCell(idCol) != null);
+		
+		setup();
 	}
 	
 	// reads information from file to display if the info button is clicked
@@ -275,6 +278,7 @@ public class SignInPane extends GridPane {
 						? 0 : (int) keySheet.getRow(i).getCell(absentCol).getNumericCellValue();
 						
 				staffList.put(id, new StaffMember(bunk, name, id, ontime, late, absent, false, false, i)); // TODO: set boolean args to proper values by reading from yesterday's sheet
+																											// TODO: also set todayRow in constructor?
 			}
 		}
 	}
