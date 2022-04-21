@@ -144,10 +144,9 @@ public class SignInPane extends GridPane {
 		
 		initializeAttendanceSheet(); // get locations of columns from header row
 		
-		System.out.println(staffRowNum);
 		// sets the initial value of staffRowNum to be the first row
 		//  that doesn't have a staff member already written into it
-		while (attendanceSheet.getRow(staffRowNum++).getCell(idCol) != null);
+		while (attendanceSheet.getRow(++staffRowNum).getCell(idCol) != null);
 		
 		setup();
 	}
