@@ -79,7 +79,7 @@ public class SignInPane extends GridPane {
 	private int bunkCol, nameCol, idCol, timeOutCol, timeInCol;
 	
 	// used to track how many people have left and returned
-	private int left, returned, stillOut;
+	private int left, returned, stillOut, visitors;
 	//used to track what row to write the next staff member on
 	private int staffRowNum;
 	
@@ -92,6 +92,7 @@ public class SignInPane extends GridPane {
 		left = 0;
 		returned = 0;
 		stillOut = 0;
+		visitors = 0;
 
 		// get config settings
 		settings = set;
@@ -643,8 +644,11 @@ public class SignInPane extends GridPane {
 				
 				returned++; // increment the number of people who've signed in
 				stillOut--; // decrement the number of people who are still out of camp
+				// write all summary stats to sheet
+				attendanceSheet.getRow(5).getCell(8).setCellValue(left);
 				attendanceSheet.getRow(6).getCell(8).setCellValue(returned);
 				attendanceSheet.getRow(7).getCell(8).setCellValue(stillOut);
+				attendanceSheet.getRow(9).getCell(8).setCellValue(visitors);
 			}
 			
 			// given a visitor who needs to sign out
@@ -655,6 +659,14 @@ public class SignInPane extends GridPane {
 				attendanceSheet.getRow(sm.getTodayRow()).getCell(timeOutCol).setCellValue(LocalDateTime.now().format(DateTimeFormatter.ofPattern("h:mm a")) + " (visitor)");
 				// clear styling of this cell
 				attendanceSheet.getRow(sm.getTodayRow()).getCell(timeOutCol).setCellStyle(workbook.createCellStyle());
+				
+				// decrement number of visitors on camp
+				visitors--;
+				// write all summary stats to sheet
+				attendanceSheet.getRow(5).getCell(8).setCellValue(left);
+				attendanceSheet.getRow(6).getCell(8).setCellValue(returned);
+				attendanceSheet.getRow(7).getCell(8).setCellValue(stillOut);
+				attendanceSheet.getRow(9).getCell(8).setCellValue(visitors);
 			}
 			
 			// given a visitor who needs to sign in
@@ -693,7 +705,15 @@ public class SignInPane extends GridPane {
 				newRow.getCell(timeOutCol).setCellStyle(absent);
 				
 				// set time in column to current time
-				newRow.createCell(timeInCol).setCellValue(LocalDateTime.now().format(DateTimeFormatter.ofPattern("h:mm a")));;
+				newRow.createCell(timeInCol).setCellValue(LocalDateTime.now().format(DateTimeFormatter.ofPattern("h:mm a")));
+				
+				// increment number of visitors on camp
+				visitors++;
+				// write all summary stats to sheet
+				attendanceSheet.getRow(5).getCell(8).setCellValue(left);
+				attendanceSheet.getRow(6).getCell(8).setCellValue(returned);
+				attendanceSheet.getRow(7).getCell(8).setCellValue(stillOut);
+				attendanceSheet.getRow(9).getCell(8).setCellValue(visitors);
 			}
 			
 			// given a staff member who needs to sign out
@@ -743,8 +763,11 @@ public class SignInPane extends GridPane {
 				// increment counts of people who have left camp and are still out of camp
 				left++;
 				stillOut++;
+				// write all summary stats to sheet
 				attendanceSheet.getRow(5).getCell(8).setCellValue(left);
+				attendanceSheet.getRow(6).getCell(8).setCellValue(returned);
 				attendanceSheet.getRow(7).getCell(8).setCellValue(stillOut);
+				attendanceSheet.getRow(9).getCell(8).setCellValue(visitors);
 			}
 		});
 
