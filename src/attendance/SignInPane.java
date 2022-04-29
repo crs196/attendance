@@ -421,9 +421,9 @@ public class SignInPane extends GridPane {
 		
 		// curfew selection radio buttons
 		ToggleGroup curfewTimeSelection = new ToggleGroup();
-		RadioButton normal = new RadioButton("Leaving\nCamp");
-		RadioButton nightOff = new RadioButton("Night\nOff");
-		RadioButton dayOff = new RadioButton("Day\nOff");
+		RadioButton normal = new RadioButton("Leaving \nCamp");
+		RadioButton nightOff = new RadioButton("Night \nOff");
+		RadioButton dayOff = new RadioButton("Day \nOff");
 		RadioButton visitor = new RadioButton("Visitor");
 		normal.getStyleClass().add("radiobutton");
 		nightOff.getStyleClass().add("radiobutton");
@@ -592,13 +592,13 @@ public class SignInPane extends GridPane {
 				// set which curfew they used to sign out
 				LocalDateTime curfewUsed = null;
 				switch (attendanceSheet.getRow(sm.getTodayRow()).getCell(timeInCol).getStringCellValue().toLowerCase()) {
-					case "leaving camp":
+					case "leaving \ncamp":
 						curfewUsed = leavingCampCurfew;
 						break;
-					case "night off":
+					case "night \noff":
 						curfewUsed = nightOffCurfew;
 						break;
-					case "day off":
+					case "day \noff":
 						curfewUsed = dayOffCurfew;
 						break;
 					default:
@@ -1060,7 +1060,6 @@ public class SignInPane extends GridPane {
 		});
 		
 		// pulls up list of staff members who have yet to sign out in this session
-		// TODO: update this button to show all staff currently on camp (even if they've signed out and returned)
 		onCampList.setOnAction(new EventHandler<ActionEvent>() {
 
 			@Override
@@ -1160,8 +1159,8 @@ public class SignInPane extends GridPane {
 
 				for (StaffMember sm : staffList.values())
 					if (sm.getBunk().equals(bunk))
-						// if staff member is unaccounted-for, return false
-						if (!sm.isSignedOut() || (!sm.isSignedOut() && sm.isSignedIn()))
+						// if staff member is on camp (not signed out), return false
+						if (!sm.isSignedOut() || sm.isSignedIn())
 							return false;
 
 				return true;
@@ -1181,12 +1180,12 @@ public class SignInPane extends GridPane {
 				bunkNameBox.getChildren().add(bunkName);
 				bunkBox.getChildren().addAll(bunkNameBox, new HBox()); // empty HBox for spacing
 
-				// runs through all rows of the spreadsheet and adds unaccounted staff in this bunk to the VBox
+				// runs through all staff members and adds unaccounted staff in this bunk to the VBox
 				for (StaffMember sm : staffList.values()) {
 
 					if (sm.getBunk().equals(bunk)) {
 
-						if (!sm.isSignedOut() || (!sm.isSignedOut() && sm.isSignedIn())) {
+						if (!sm.isSignedOut() || sm.isSignedIn()) {
 
 							Button staffMember = new Button(sm.getName());
 							staffMember.setId("list-button");
