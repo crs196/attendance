@@ -15,6 +15,11 @@ public class Attendance extends Application {
 	
 	@Override
 	public void start(Stage primaryStage) {
+		createScene(primaryStage);
+		
+	}
+	
+	public static void createScene(Stage primaryStage) {
 		
 		// start by obtaining configuration settings from file
 		Ini settings = null;
@@ -25,7 +30,7 @@ public class Attendance extends Application {
 					+ "Please create this file and rerun this program");
 			Platform.exit();
 		}
-		
+				
 		// obtain stage settings from config file
 		String cssFile = settings.get("filePaths", "cssFile");
 		String iconPath = settings.get("filePaths", "iconPath");

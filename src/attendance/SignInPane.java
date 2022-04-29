@@ -1243,9 +1243,85 @@ public class SignInPane extends GridPane {
 			}
 		});
 
-		// pulls up list of staff members who have yet to sign in in this session
-		//  with option to mark them as on day off
-		// TODO: maybe make this a "save and restart"-type button again? instead of quitting
+		// marks unaccounted-for staff members as absent, writes to file, restarts program
+		saveAndRestart.setOnAction(new EventHandler<ActionEvent>() {
+
+			@Override
+			public void handle(ActionEvent event) {
+				
+				// if there are still unaccounted staff, confirm that user still wants to exit
+				if (!noUnaccountedStaff()) {
+					Alert saveAndExitConf = new Alert(AlertType.CONFIRMATION, "There are still staff members that haven't signed in.\nAre you sure you want to exit?");
+					saveAndExitConf.setHeaderText("Save and Exit Confirmation");
+					saveAndExitConf.setTitle("Save and Exit Confirmation");
+					saveAndExitConf.getDialogPane().getStylesheets().add(getClass().getResource(settings.get("filePaths", "cssFile", String.class)).toExternalForm());
+					saveAndExitConf.getDialogPane().lookupButton(ButtonType.CANCEL).setId("red");
+					saveAndExitConf.initOwner(saveAndExit.getScene().getWindow());
+					saveAndExitConf.showAndWait();
+					
+					if (saveAndExitConf.getResult() != ButtonType.OK)
+						return; // user does not want to save and exit
+				}
+				
+				// all staff are accounted for or user wants to mark unaccounted-for staff as absent
+				markUnaccAbsent();
+				
+				// write data to attendanceFile
+				save.fire();
+				
+				// close all windows
+				signedOutStage.close();
+				onCampStage.close();
+				stage.close();
+				Attendance.createScene(stage); // restart the program
+			}
+			
+			// returns whether or not there are still unaccounted-for staff
+			// in order to be "accounted for," the staff member/visitor must fall under one of the following categories:
+			// - never signed out and never signed in
+			// - signed out and signed back in
+			// - signed out for a day off and not signed back in
+			public boolean noUnaccountedStaff() {
+				
+				for (StaffMember sm : staffList.values())
+					if (!sm.isSignedOut() && sm.isSignedIn()) // a visitor who's signed in but not out
+						return false;
+					else if (sm.isSignedOut() && !sm.isSignedIn()) // staff member's signed out but not in. only ok if on a day off
+						// is on a day off if their time in column says so
+						if (!attendanceSheet.getRow(sm.getTodayRow()).getCell(timeInCol).getStringCellValue().equalsIgnoreCase("day off"))
+							return false;
+					return true;
+			}
+			
+			// marks all staff that did not sign in as absent, and increments their "absent" column, if it exists
+			public void markUnaccAbsent() {
+				
+				boolean absent;
+				
+				for (StaffMember sm : staffList.values()) {
+					
+					absent = false;
+					
+					if (!sm.isSignedOut() && sm.isSignedIn()) // a visitor who's signed in but not out
+						absent = true;
+					else if (sm.isSignedOut() && !sm.isSignedIn()) // staff member's signed out but not in. only ok if on a day off
+						// is on a day off if their time in column says so
+						if (!attendanceSheet.getRow(sm.getTodayRow()).getCell(timeInCol).getStringCellValue().equalsIgnoreCase("day off"))
+							absent = true;
+					
+					//  increment "absent" column
+					if (absent) {				
+						if ((keySheet.getRow(sm.getKeyRow()) != null) 
+								&& keySheet.getRow(sm.getKeyRow()).getCell(absentCol) != null) // the cell exists
+							keySheet.getRow(sm.getKeyRow()).getCell(absentCol).setCellValue(keySheet.getRow(sm.getKeyRow()).getCell(absentCol).getNumericCellValue() + 1);
+						else // the cell does not exist
+							keySheet.getRow(sm.getKeyRow()).createCell(absentCol).setCellValue(1);
+					}
+				}
+			}
+		});
+		
+		// marks unaccounted-for staff members as absent, writes to file, closes program
 		saveAndExit.setOnAction(new EventHandler<ActionEvent>() {
 
 			@Override
