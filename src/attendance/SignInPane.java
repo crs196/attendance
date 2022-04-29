@@ -380,7 +380,7 @@ public class SignInPane extends GridPane {
 		
 		// buttons
 		
-		VBox listButtons = new VBox(this.getVgap());
+		VBox listButtons = new VBox(this.getVgap() * 1.5);
 		
 		// button to show list of signed-out staff
 		Button signedOutList = new Button("Show Signed-Out Staff");
@@ -396,7 +396,7 @@ public class SignInPane extends GridPane {
 		onCampList.setMaxWidth(Double.MAX_VALUE);
 		onCampList.setId("green");
 		
-		listButtons.getChildren().addAll(signedOutList, onCampList);
+		listButtons.getChildren().addAll(onCampList, signedOutList);
 
 		VBox leftCol = new VBox(this.getVgap());
 		leftCol.getChildren().addAll(clockBox, listButtons);
@@ -433,7 +433,6 @@ public class SignInPane extends GridPane {
 		nightOff.setToggleGroup(curfewTimeSelection);
 		dayOff.setToggleGroup(curfewTimeSelection);
 		visitor.setToggleGroup(curfewTimeSelection);
-		normal.setSelected(true); // TODO: instead of selecting an option by default, have an error appear if no option is selected
 		
 		HBox timeSelectionBox = new HBox(this.getHgap());
 		timeSelectionBox.getChildren().addAll(normal, nightOff, dayOff, visitor);
@@ -512,6 +511,17 @@ public class SignInPane extends GridPane {
 		signIn.setOnAction(new EventHandler<ActionEvent>() {
 
 			public void handle(ActionEvent event) {
+				if (curfewTimeSelection.getSelectedToggle() == null) { // if no curfew type radio button was selected
+					// alert the user of such
+					Alert noCurfewSelected = new Alert(AlertType.WARNING, "No curfew type selected. Please select a curfew type to proceed.");
+					noCurfewSelected.setTitle("Curfew Type Not Selected");
+					noCurfewSelected.getDialogPane().getStylesheets().add(getClass().getResource(settings.get("filePaths", "cssFile", String.class)).toExternalForm());
+					noCurfewSelected.getDialogPane().lookupButton(ButtonType.OK).setId("red");
+					noCurfewSelected.initOwner(stage);
+					noCurfewSelected.showAndWait();
+					return; // don't proceed with signing staff member in/out
+				}
+				
 				// save staff ID and clear idField text
 				String staffID = idField.getText();
 				idField.clear();
@@ -1273,7 +1283,7 @@ public class SignInPane extends GridPane {
 				
 				// if there are still unaccounted staff, confirm that user still wants to exit
 				if (!noUnaccountedStaff()) {
-					Alert saveAndExitConf = new Alert(AlertType.CONFIRMATION, "There are still staff members that haven't signed in.\nAre you sure you want to exit?");
+					Alert saveAndExitConf = new Alert(AlertType.CONFIRMATION, "There are still staff members that haven't signed in.\nAre you sure you want to restart?");
 					saveAndExitConf.setHeaderText("Save and Exit Confirmation");
 					saveAndExitConf.setTitle("Save and Exit Confirmation");
 					saveAndExitConf.getDialogPane().getStylesheets().add(getClass().getResource(settings.get("filePaths", "cssFile", String.class)).toExternalForm());
