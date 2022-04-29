@@ -322,7 +322,7 @@ public class SignInPane extends GridPane {
 		this.setPadding(new Insets(30));
 
 		// header
-		Label title = new Label("Sign In/Out"); // TODO: get font that has a slash ('/')
+		Label title = new Label("Sign In, Out");
 		title.setId("header");
 		SignInPane.setHalignment(title, HPos.CENTER);
 		this.add(title, 0, 0, 2, 1);
@@ -380,22 +380,22 @@ public class SignInPane extends GridPane {
 		// buttons
 		
 		VBox listButtons = new VBox(this.getVgap());
-		Button save = new Button("Save");
-		Button saveAndExit = new Button("Save and Exit");
 		
-		save.setId("red");
-		saveAndExit.setId("red");
-
-		save.setMinWidth(USE_PREF_SIZE);
-		saveAndExit.setMinWidth(USE_PREF_SIZE);
-
-		HBox.setHgrow(save, Priority.ALWAYS);
-		HBox.setHgrow(saveAndExit, Priority.ALWAYS);
-
-		save.setMaxWidth(Double.MAX_VALUE);
-		saveAndExit.setMaxWidth(Double.MAX_VALUE);
+		// button to show list of signed-out staff
+		Button signedOutList = new Button("Show Signed-Out Staff");
+		signedOutList.setMinWidth(USE_PREF_SIZE);
+		HBox.setHgrow(signedOutList, Priority.ALWAYS);
+		signedOutList.setMaxWidth(Double.MAX_VALUE);
+		signedOutList.setId("green");
 		
-		listButtons.getChildren().addAll(new HBox(save), new HBox(saveAndExit));
+		// button to show list of staff who've not yet signed out
+		Button onCampList = new Button("Show On-Camp Staff"); // TODO: comment out this button
+		onCampList.setMinWidth(USE_PREF_SIZE);
+		HBox.setHgrow(onCampList, Priority.ALWAYS);
+		onCampList.setMaxWidth(Double.MAX_VALUE);
+		onCampList.setId("green");
+		
+		listButtons.getChildren().addAll(signedOutList, onCampList);
 
 		VBox leftCol = new VBox(this.getVgap());
 		leftCol.getChildren().addAll(clockBox, listButtons);
@@ -408,6 +408,7 @@ public class SignInPane extends GridPane {
 		scanLabel.setMinWidth(USE_PREF_SIZE);
 		
 		TextField idField = new TextField();
+		HBox.setHgrow(idField, Priority.ALWAYS);
 		
 		Button signIn = new Button("Sign In/Out");
 		signIn.setDefaultButton(true);
@@ -418,11 +419,10 @@ public class SignInPane extends GridPane {
 		signInBox.getChildren().addAll(idField, signIn);
 		
 		// curfew selection radio buttons
-		// TODO: do I need to add some kind of disclaimer that the time selection only matters when signing someone out?
 		ToggleGroup curfewTimeSelection = new ToggleGroup();
-		RadioButton normal = new RadioButton("Leaving Camp");
-		RadioButton nightOff = new RadioButton("Night Off");
-		RadioButton dayOff = new RadioButton("Day Off");
+		RadioButton normal = new RadioButton("Leaving\nCamp");
+		RadioButton nightOff = new RadioButton("Night\nOff");
+		RadioButton dayOff = new RadioButton("Day\nOff");
 		RadioButton visitor = new RadioButton("Visitor");
 		normal.getStyleClass().add("radiobutton");
 		nightOff.getStyleClass().add("radiobutton");
@@ -432,15 +432,13 @@ public class SignInPane extends GridPane {
 		nightOff.setToggleGroup(curfewTimeSelection);
 		dayOff.setToggleGroup(curfewTimeSelection);
 		visitor.setToggleGroup(curfewTimeSelection);
-		normal.setSelected(true);
+		normal.setSelected(true); // TODO: instead of selecting an option by default, have an error appear if no option is selected
 		
-		HBox timeSelectionBox1 = new HBox(this.getHgap());
-		HBox timeSelectionBox2 = new HBox(this.getHgap());
-		timeSelectionBox1.getChildren().addAll(normal, visitor);
-		timeSelectionBox2.getChildren().addAll(nightOff, dayOff);
+		HBox timeSelectionBox = new HBox(this.getHgap());
+		timeSelectionBox.getChildren().addAll(normal, nightOff, dayOff, visitor);
 		
 		VBox idBox = new VBox(this.getVgap());
-		idBox.getChildren().addAll(scanLabel, signInBox, timeSelectionBox1, timeSelectionBox2);
+		idBox.getChildren().addAll(scanLabel, signInBox, timeSelectionBox);
 
 		// confirmation area
 		TextArea confirmation = new TextArea();
@@ -451,19 +449,25 @@ public class SignInPane extends GridPane {
 		idBox.getChildren().add(confirmation);
 		this.add(idBox, 1, 1);
 		
-		// button to show list of signed-out staff
-		Button signedOutList = new Button("Show Signed-Out Staff");
-		signedOutList.setMinWidth(USE_PREF_SIZE);
-		HBox.setHgrow(signedOutList, Priority.ALWAYS);
-		signedOutList.setMaxWidth(Double.MAX_VALUE);
-		signedOutList.setId("green");
+		Button save = new Button("Save");
+		Button saveAndRestart = new Button("Save and Restart");
+		Button saveAndExit = new Button("Save and Exit");
 		
-		// button to show list of staff who've not yet signed out
-		Button untrackedList = new Button("???????????????"); // TODO: ask Dylan what he thinks this button should say. change related variable names if needed
-		untrackedList.setMinWidth(USE_PREF_SIZE);
-		HBox.setHgrow(untrackedList, Priority.ALWAYS);
-		untrackedList.setMaxWidth(Double.MAX_VALUE);
-		untrackedList.setId("green");
+		save.setId("red");
+		saveAndRestart.setId("red");
+		saveAndExit.setId("red");
+
+		save.setMinWidth(USE_PREF_SIZE);
+		saveAndRestart.setMinWidth(USE_PREF_SIZE);
+		saveAndExit.setMinWidth(USE_PREF_SIZE);
+
+		HBox.setHgrow(save, Priority.ALWAYS);
+		HBox.setHgrow(saveAndRestart, Priority.ALWAYS);
+		HBox.setHgrow(saveAndExit, Priority.ALWAYS);
+
+		save.setMaxWidth(Double.MAX_VALUE);
+		saveAndRestart.setMaxWidth(Double.MAX_VALUE);
+		saveAndExit.setMaxWidth(Double.MAX_VALUE);
 		
 		GridPane infoSpacing = new GridPane();
 		HBox.setHgrow(infoSpacing, Priority.ALWAYS);
@@ -473,17 +477,17 @@ public class SignInPane extends GridPane {
 		info.getStyleClass().add("info");
 		info.setMinSize(USE_PREF_SIZE, USE_PREF_SIZE);
 		
-		HBox signedOutandInfoBox = new HBox(this.getHgap());
-		signedOutandInfoBox.getChildren().addAll(signedOutList, untrackedList, infoSpacing, info);
-		this.add(signedOutandInfoBox, 0, 2, 2, 1);
+		HBox saveAndInfoBox = new HBox(this.getHgap());
+		saveAndInfoBox.getChildren().addAll(saveAndExit, saveAndRestart, save, infoSpacing, info);
+		this.add(saveAndInfoBox, 0, 2, 2, 1);
 		
 		// stage and scene for signedOutList
 		Stage signedOutStage = new Stage();
 		Scene signedOutScene = new Scene(new Label("Something's gone wrong"));
 		
-		// stage and scene for untrackedList
-		Stage untrackedStage = new Stage();
-		Scene untrackedScene = new Scene(new Label("Something's gone wrong"));
+		// stage and scene for onCampList
+		Stage onCampStage = new Stage();
+		Scene onCampScene = new Scene(new Label("Something's gone wrong"));
 		
 		// set info button behavior (show credits, brief explanation of what to do)
 		info.setOnAction(new EventHandler<ActionEvent>() {
@@ -526,7 +530,7 @@ public class SignInPane extends GridPane {
 					} else {
 						if (entered.isSignedIn() && entered.isSignedOut()) { // if already signed in and out
 							// no further work required
-							confirmation.setText(entered.getName() + " is fully accounted-for"); // TODO: should this language be changed?
+							confirmation.setText(entered.getName() + " is fully accounted-for");
 						} else if (!entered.isSignedIn() && entered.isSignedOut()) { // if signed out but not in
 							// person is coming back to camp and needs to be signed in
 							signInAndCheckTime(entered); // update spreadsheet to sign staff member in
@@ -568,8 +572,8 @@ public class SignInPane extends GridPane {
 						// if either additional list is showing, update it
 						if (signedOutStage.isShowing())
 							signedOutList.fire();
-						if (untrackedStage.isShowing())
-							untrackedList.fire();
+						if (onCampStage.isShowing())
+							onCampList.fire();
 
 					}
 				} else {
@@ -1016,8 +1020,8 @@ public class SignInPane extends GridPane {
 									}
 
 									// refresh both additional lists
-									if (untrackedStage.isShowing())
-										untrackedList.fire();
+									if (onCampStage.isShowing())
+										onCampList.fire();
 									signedOutList.fire();
 								}
 							});
@@ -1033,7 +1037,8 @@ public class SignInPane extends GridPane {
 		});
 		
 		// pulls up list of staff members who have yet to sign out in this session
-		untrackedList.setOnAction(new EventHandler<ActionEvent>() {
+		// TODO: update this button to show all staff currently on camp (even if they've signed out and returned)
+		onCampList.setOnAction(new EventHandler<ActionEvent>() {
 
 			@Override
 			public void handle(ActionEvent event) {
@@ -1041,27 +1046,27 @@ public class SignInPane extends GridPane {
 				// if there are no staff left unaccounted, print a message saying so and leave this handle method
 				if (allStaffOut()) {
 					confirmation.setText("Everyone has signed out");
-					untrackedStage.close();
+					onCampStage.close();
 					return;
 				}
 				
 				// if we get here, there are still staff who've not signed out, so find and list them
 				
-				GridPane untrackedPane = new GridPane();
+				GridPane onCampPane = new GridPane();
 				// set up grid layout and sizing
-				untrackedPane.setHgap(15);
-				untrackedPane.setVgap(20);
-				untrackedPane.setAlignment(Pos.CENTER);
-				untrackedPane.setPadding(new Insets(20));
+				onCampPane.setHgap(15);
+				onCampPane.setVgap(20);
+				onCampPane.setAlignment(Pos.CENTER);
+				onCampPane.setPadding(new Insets(20));
 				ColumnConstraints column1 = new ColumnConstraints();
 				column1.setPercentWidth(50);
 				ColumnConstraints column2 = new ColumnConstraints();
 				column2.setPercentWidth(50);
 				ColumnConstraints column3 = new ColumnConstraints();
 				column3.setPercentWidth(50);
-				untrackedPane.getColumnConstraints().addAll(column1, column2, column3);
+				onCampPane.getColumnConstraints().addAll(column1, column2, column3);
 
-				ScrollPane scrollPane = new ScrollPane(untrackedPane);
+				ScrollPane scrollPane = new ScrollPane(onCampPane);
 				scrollPane.setMinWidth(stage.getWidth() * 0.75);
 				scrollPane.setMaxHeight(stage.getHeight());
 
@@ -1070,7 +1075,7 @@ public class SignInPane extends GridPane {
 
 				for (int i = 0; i < listBunks.size(); i++) {
 					if (!bunkNotEmpty(listBunks.get(i))) {
-						untrackedPane.add(getStaffFromBunk(listBunks.get(i)), nextRow, nextCol);
+						onCampPane.add(getStaffFromBunk(listBunks.get(i)), nextRow, nextCol);
 
 						if (++nextRow > 2) {
 							nextCol++;
@@ -1081,19 +1086,19 @@ public class SignInPane extends GridPane {
 
 
 				// set up scene
-				untrackedScene.setRoot(scrollPane);
-				untrackedScene.getStylesheets().add(Attendance.class.getResource(settings.get("filePaths", "cssFile", String.class)).toExternalForm());
+				onCampScene.setRoot(scrollPane);
+				onCampScene.getStylesheets().add(Attendance.class.getResource(settings.get("filePaths", "cssFile", String.class)).toExternalForm());
 
 				// only need to do these things if the stage isn't currently on screen
-				if (!untrackedStage.isShowing()) {
+				if (!onCampStage.isShowing()) {
 					// set up stage
-					untrackedStage.setScene(untrackedScene);
-					untrackedStage.setMinWidth(scrollPane.getMinWidth());
-					untrackedStage.setMaxHeight(scrollPane.getMaxHeight());
-					untrackedStage.setTitle("???????????????"); // TODO: update this with name of this button
-					untrackedStage.getIcons().add(new Image(settings.get("filePaths", "iconPath", String.class)));
-					untrackedStage.centerOnScreen();
-					untrackedStage.show();
+					onCampStage.setScene(onCampScene);
+					onCampStage.setMinWidth(scrollPane.getMinWidth());
+					onCampStage.setMaxHeight(scrollPane.getMaxHeight());
+					onCampStage.setTitle("On-Camp Staff");
+					onCampStage.getIcons().add(new Image(settings.get("filePaths", "iconPath", String.class)));
+					onCampStage.centerOnScreen();
+					onCampStage.show();
 				}
 			}
 			
@@ -1198,7 +1203,7 @@ public class SignInPane extends GridPane {
 									}
 
 									// refresh both additional lists
-									untrackedList.fire();
+									onCampList.fire();
 									if (signedOutStage.isShowing())
 										signedOutList.fire();
 								}
@@ -1268,7 +1273,7 @@ public class SignInPane extends GridPane {
 				
 				// close all windows
 				signedOutStage.close();
-				untrackedStage.close();
+				onCampStage.close();
 				Platform.exit();
 			}
 
