@@ -1,16 +1,17 @@
-How to sign people in:
+How to sign people in or out:
  - scan their ID while the text box is focused
- - type their name/ID into the text box and hit "Sign In"/Enter
- - Click "View Unaccounted-for Staff Members", find their name, and click it
-   - You can then mark them as on a day off, as on shmira, or as signing in normally
+ - type their name/ID into the text box and hit "Sign In/Out"/Enter
+ - Click "Show On-Camp Staff", find their name, and click it
+   - You can then sign them out by clicking on the button for the respective curfew they should have
+ - Click "Show Off-Camp Staff", find their name, and click it
+   - You can then sign them in by clicking on the button that pops up
    
-**IMPORTANT: DO NOT HAVE THE ATTENDANCE FILE OPEN IN EXCEL WHEN YOU CLICK "Save" OR "Save and Return to Setup"! THE SAVE WILL FAIL, THE FILE MAY BECOME CORRUPTED, AND YOU ARE LIKELY TO LOSE DATA **
+**IMPORTANT: DO NOT HAVE THE ATTENDANCE FILE OPEN IN EXCEL WHEN YOU CLICK ANY OF THE "Save(...)" BUTTONS! THE SAVE WILL FAIL, THE FILE MAY BECOME CORRUPTED, AND YOU ARE LIKELY TO LOSE DATA **
 
 If you would like to save the current data, click the "Save" button.
-If you are done for the night (i.e. everyone has signed in, or you want to mark everyone who hasn't signed in as being absent), click "Save and Return to Setup".
+When everyone has signed in or you want to mark everyone who hasn't signed in as being absent, click "Save and Exit" to exit or click "Save and Restart" to restart for the next day.
 
----
-
-Copyright 2020 Cooper Schwartz
-
-Please see the README and LICENSE files in this folder for more information about the copyright on this software and more detailed instructions.
+———
+© 2022 Cooper Schwartz
+For more info, please see the README and LICENSE files in this folder.
+———
