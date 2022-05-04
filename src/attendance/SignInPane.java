@@ -153,7 +153,6 @@ public class SignInPane extends GridPane {
 	}
 	
 	// reads information from file to display if the info button is clicked
-	// TODO: need to update contents of this text file
 	private void getFileContents() {
 			
 		// get location of the info file for this pane
@@ -383,11 +382,11 @@ public class SignInPane extends GridPane {
 		VBox listButtons = new VBox(this.getVgap() * 1.5);
 		
 		// button to show list of signed-out staff
-		Button signedOutList = new Button("Show Signed-Out Staff");
-		signedOutList.setMinWidth(USE_PREF_SIZE);
-		HBox.setHgrow(signedOutList, Priority.ALWAYS);
-		signedOutList.setMaxWidth(Double.MAX_VALUE);
-		signedOutList.setId("green");
+		Button offCampList = new Button("Show Off-Camp Staff");
+		offCampList.setMinWidth(USE_PREF_SIZE);
+		HBox.setHgrow(offCampList, Priority.ALWAYS);
+		offCampList.setMaxWidth(Double.MAX_VALUE);
+		offCampList.setId("green");
 		
 		// button to show list of staff who've not yet signed out
 		Button onCampList = new Button("Show On-Camp Staff"); // TODO: comment out this button
@@ -396,7 +395,7 @@ public class SignInPane extends GridPane {
 		onCampList.setMaxWidth(Double.MAX_VALUE);
 		onCampList.setId("green");
 		
-		listButtons.getChildren().addAll(onCampList, signedOutList);
+		listButtons.getChildren().addAll(onCampList, offCampList);
 
 		VBox leftCol = new VBox(this.getVgap());
 		leftCol.getChildren().addAll(clockBox, listButtons);
@@ -477,9 +476,9 @@ public class SignInPane extends GridPane {
 		saveAndInfoBox.getChildren().addAll(saveAndExit, saveAndRestart, save, infoSpacing, info);
 		this.add(saveAndInfoBox, 0, 2, 2, 1);
 		
-		// stage and scene for signedOutList
-		Stage signedOutStage = new Stage();
-		Scene signedOutScene = new Scene(new Label("Something's gone wrong"));
+		// stage and scene for offCampList
+		Stage offCampStage = new Stage();
+		Scene offCampScene = new Scene(new Label("Something's gone wrong"));
 		
 		// stage and scene for onCampList
 		Stage onCampStage = new Stage();
@@ -577,8 +576,8 @@ public class SignInPane extends GridPane {
 						}
 						
 						// if either additional list is showing, update it
-						if (signedOutStage.isShowing())
-							signedOutList.fire();
+						if (offCampStage.isShowing())
+							offCampList.fire();
 						if (onCampStage.isShowing())
 							onCampList.fire();
 
@@ -782,35 +781,35 @@ public class SignInPane extends GridPane {
 		// event handlers for left column buttons
 
 		// pulls up list of staff members who have yet to sign in in this session
-		signedOutList.setOnAction(new EventHandler<ActionEvent>() {
+		offCampList.setOnAction(new EventHandler<ActionEvent>() {
 
 			@Override
 			public void handle(ActionEvent event) {
 
 				// if there are no staff left unaccounted, print a message saying so and leave this handle method
 				if (noUnaccountedStaff()) {
-					confirmation.setText("There's currently no one who needs to sign in");
-					signedOutStage.close();
+					confirmation.setText("There's currently no one off-camp to sign in");
+					offCampStage.close();
 					return;
 				}
 				
 				// if we get here, there are still unaccounted-for staff, so find and list them
 				
-				GridPane signedOutPane = new GridPane();
+				GridPane offCampPane = new GridPane();
 				// set up grid layout and sizing
-				signedOutPane.setHgap(15);
-				signedOutPane.setVgap(20);
-				signedOutPane.setAlignment(Pos.CENTER);
-				signedOutPane.setPadding(new Insets(20));
+				offCampPane.setHgap(15);
+				offCampPane.setVgap(20);
+				offCampPane.setAlignment(Pos.CENTER);
+				offCampPane.setPadding(new Insets(20));
 				ColumnConstraints column1 = new ColumnConstraints();
 				column1.setPercentWidth(50);
 				ColumnConstraints column2 = new ColumnConstraints();
 				column2.setPercentWidth(50);
 				ColumnConstraints column3 = new ColumnConstraints();
 				column3.setPercentWidth(50);
-				signedOutPane.getColumnConstraints().addAll(column1, column2, column3);
+				offCampPane.getColumnConstraints().addAll(column1, column2, column3);
 
-				ScrollPane scrollPane = new ScrollPane(signedOutPane);
+				ScrollPane scrollPane = new ScrollPane(offCampPane);
 				scrollPane.setMinWidth(stage.getWidth() * 0.75);
 				scrollPane.setMaxHeight(stage.getHeight());
 
@@ -819,7 +818,7 @@ public class SignInPane extends GridPane {
 
 				for (int i = 0; i < listBunks.size(); i++) {
 					if (!bunkEmpty(listBunks.get(i))) {
-						signedOutPane.add(getStaffFromBunk(listBunks.get(i)), nextRow, nextCol);
+						offCampPane.add(getStaffFromBunk(listBunks.get(i)), nextRow, nextCol);
 
 						if (++nextRow > 2) {
 							nextCol++;
@@ -830,19 +829,19 @@ public class SignInPane extends GridPane {
 
 
 				// set up scene
-				signedOutScene.setRoot(scrollPane);
-				signedOutScene.getStylesheets().add(Attendance.class.getResource(settings.get("filePaths", "cssFile", String.class)).toExternalForm());
+				offCampScene.setRoot(scrollPane);
+				offCampScene.getStylesheets().add(Attendance.class.getResource(settings.get("filePaths", "cssFile", String.class)).toExternalForm());
 
 				// only need to do these things if the stage isn't currently on screen
-				if (!signedOutStage.isShowing()) {
+				if (!offCampStage.isShowing()) {
 					// set up stage
-					signedOutStage.setScene(signedOutScene);
-					signedOutStage.setMinWidth(scrollPane.getMinWidth());
-					signedOutStage.setMaxHeight(scrollPane.getMaxHeight());
-					signedOutStage.setTitle("Signed-Out Staff");
-					signedOutStage.getIcons().add(new Image(settings.get("filePaths", "iconPath", String.class)));
-					signedOutStage.centerOnScreen();
-					signedOutStage.show();
+					offCampStage.setScene(offCampScene);
+					offCampStage.setMinWidth(scrollPane.getMinWidth());
+					offCampStage.setMaxHeight(scrollPane.getMaxHeight());
+					offCampStage.setTitle("Signed-Out Staff");
+					offCampStage.getIcons().add(new Image(settings.get("filePaths", "iconPath", String.class)));
+					offCampStage.centerOnScreen();
+					offCampStage.show();
 				}
 			}
 			
@@ -1051,7 +1050,7 @@ public class SignInPane extends GridPane {
 									// refresh both additional lists
 									if (onCampStage.isShowing())
 										onCampList.fire();
-									signedOutList.fire();
+									offCampList.fire();
 								}
 							});
 						}
@@ -1073,7 +1072,7 @@ public class SignInPane extends GridPane {
 
 				// if there are no staff left unaccounted, print a message saying so and leave this handle method
 				if (allStaffOut()) {
-					confirmation.setText("Everyone has signed out");
+					confirmation.setText("There's currently no one on-camp to sign out");
 					onCampStage.close();
 					return;
 				}
@@ -1207,7 +1206,10 @@ public class SignInPane extends GridPane {
 								@Override
 								public void handle(ActionEvent event) {
 									Alert options = new Alert(AlertType.NONE, "Sign this staff member out:",
-											new ButtonType("Sign Out", ButtonData.OTHER),
+											new ButtonType("Leaving Camp", ButtonData.OTHER),
+											new ButtonType("Night Off", ButtonData.OTHER),
+											new ButtonType("Day Off", ButtonData.OTHER),
+											new ButtonType("Visitor", ButtonData.OTHER),
 											ButtonType.CANCEL);
 									options.setTitle("Manual Sign-Out");
 									options.setHeaderText(staffMember.getText());
@@ -1222,18 +1224,48 @@ public class SignInPane extends GridPane {
 									onTime.setFillForegroundColor(new XSSFColor(onTimeColor, new DefaultIndexedColorMap()));
 									onTime.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 
-									if (options.getResult().getText().equals("Sign Out")) {
-										// staff member should be signed out normally
-										// do this by writing the staff member's name into the entry box and firing the sign-in button
+									if (options.getResult().getText().equals("Leaving Camp")) {
+										// staff member should be signed out as leaving camp
+										// do this by writing the staff member's name into the entry box, 
+										//  selecting the right curfew time
+										//  and firing the sign-in button
 										
 										idField.setText(staffMember.getText());
+										normal.setSelected(true);
+										signIn.fire();
+									} else if (options.getResult().getText().equals("Night Off")) {
+										// staff member should be signed out as on a night off
+										// do this by writing the staff member's name into the entry box, 
+										//  selecting the right curfew time
+										//  and firing the sign-in button
+										
+										idField.setText(staffMember.getText());
+										nightOff.setSelected(true);
+										signIn.fire();
+									} else if (options.getResult().getText().equals("Day Off")) {
+										// staff member should be signed out as on a day off
+										// do this by writing the staff member's name into the entry box, 
+										//  selecting the right curfew time
+										//  and firing the sign-in button
+										
+										idField.setText(staffMember.getText());
+										dayOff.setSelected(true);
+										signIn.fire();
+									} else if (options.getResult().getText().equals("Visitor")) {
+										// staff member should be signed in as a visitor
+										// do this by writing the staff member's name into the entry box, 
+										//  selecting the right curfew time
+										//  and firing the sign-in button
+										
+										idField.setText(staffMember.getText());
+										visitor.setSelected(true);
 										signIn.fire();
 									}
 
 									// refresh both additional lists
 									onCampList.fire();
-									if (signedOutStage.isShowing())
-										signedOutList.fire();
+									if (offCampStage.isShowing())
+										offCampList.fire();
 								}
 							});
 						}
@@ -1298,7 +1330,7 @@ public class SignInPane extends GridPane {
 				save.fire();
 				
 				// close all windows
-				signedOutStage.close();
+				offCampStage.close();
 				onCampStage.close();
 				stage.close();
 				Attendance.createScene(stage); // restart the program
@@ -1376,7 +1408,7 @@ public class SignInPane extends GridPane {
 				save.fire();
 				
 				// close all windows
-				signedOutStage.close();
+				offCampStage.close();
 				onCampStage.close();
 				Platform.exit();
 			}
