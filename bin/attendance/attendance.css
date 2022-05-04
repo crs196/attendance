@@ -72,17 +72,17 @@
 .label {
 	-fx-font-family: "AGaramond";
 	-fx-text-fill: white;
-	-fx-font-size: 14px;
+	-fx-font-size: 16px;
 }
 
 #bunk-label {
 	-fx-font-family: "Nexa Rust Sans Black";
 	-fx-text-fill: white;
-	-fx-font-size: 18px;
+	-fx-font-size: 20px;
 }
 
 .text-area {
-	-fx-font-size: 18px;
+	-fx-font-size: 20px;
 	-fx-font-family: "AGaramond";
 	-fx-text-fill: white;
 	-fx-background-color: #005baa;
@@ -99,17 +99,17 @@
 .dialog-pane .label {
 	-fx-font-family: "AGaramond";
 	-fx-text-fill: white;
-	-fx-font-size: 12px;
+	-fx-font-size: 14px;
 }
 
 .dialog-pane:header .header-panel .label {
-	-fx-font-size: 20px;
+	-fx-font-size: 22px;
 	-fx-text-fill: white;
 }
 
 .button {
 	-fx-font-family: "AGaramond";
-	-fx-font-size: 12px;
+	-fx-font-size: 14px;
 	-fx-text-fill: white;
 	-fx-background-color: linear-gradient(#9ecb94, #64964b);
 }
@@ -125,10 +125,11 @@
 #red.button:hover {
 	-fx-background-color: linear-gradient(#be1e2d, #d2646b);
 }
-.radiobutton {
+
+.radio-button {
 	-fx-font-family: "AGaramond";
 	-fx-text-fill: white;
-	-fx-font-size: 12px;
+	-fx-font-size: 14px;
 }
 
 .info {
@@ -147,7 +148,7 @@
 
 #list-button {
 	-fx-font-family: "AGaramond";
-	-fx-font-size: 14px;
+	-fx-font-size: 16px;
 	-fx-text-fill: white;
 	-fx-background-color: transparent;
 }

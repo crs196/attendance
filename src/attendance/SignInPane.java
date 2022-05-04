@@ -405,7 +405,7 @@ public class SignInPane extends GridPane {
 		/* right column (sign-in box, confirmation area) */
 
 		// sign-in instructions, entry point, and confirm button
-		Label scanLabel = new Label("Please enter a staff member's ID");
+		Label scanLabel = new Label("Enter a name or ID and select curfew:");
 		scanLabel.setMinWidth(USE_PREF_SIZE);
 		
 		TextField idField = new TextField();
@@ -425,10 +425,6 @@ public class SignInPane extends GridPane {
 		RadioButton nightOff = new RadioButton("Night \nOff");
 		RadioButton dayOff = new RadioButton("Day \nOff");
 		RadioButton visitor = new RadioButton("Visitor");
-		normal.getStyleClass().add("radiobutton");
-		nightOff.getStyleClass().add("radiobutton");
-		dayOff.getStyleClass().add("radiobutton");
-		visitor.getStyleClass().add("radiobutton");
 		normal.setToggleGroup(curfewTimeSelection);
 		nightOff.setToggleGroup(curfewTimeSelection);
 		dayOff.setToggleGroup(curfewTimeSelection);
