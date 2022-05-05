@@ -613,7 +613,7 @@ public class SignInPane extends GridPane {
 		offCampList.setId("green");
 		
 		// button to show list of staff who've not yet signed out
-		Button onCampList = new Button("Show On-Camp Staff"); // TODO: comment out this button
+		Button onCampList = new Button("Show On-Camp Staff");
 		onCampList.setMinWidth(USE_PREF_SIZE);
 		HBox.setHgrow(onCampList, Priority.ALWAYS);
 		onCampList.setMaxWidth(Double.MAX_VALUE);
@@ -764,8 +764,10 @@ public class SignInPane extends GridPane {
 							if (entered.getCurfewType() == CurfewType.VISITOR) {
 								signVisitorIn(entered); // they're a visitor so sign them in
 								entered.unSignOut(); // un-sign the visitor out (they're back in camp)
-								confirmation.setText("Visitor" + entered.getName() + " signed in again");
+								confirmation.setText("Visitor " + entered.getName() + " signed in again");
 							} else {
+								left--;
+								returned--;
 								signOutAndWriteCurfew(entered); // they're a staff member so sign them out
 								entered.unSignIn(); // un-sign the staff member in (they're out of camp again)
 								confirmation.setText(entered.getName() + " signed out again");
