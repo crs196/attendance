@@ -1,8 +1,6 @@
 How to sign people in or out:
  - scan their ID while the text box is focused
  - type their name/ID into the text box and hit "Sign In/Out"/Enter
- - Click "Show On-Camp Staff", find their name, and click it
-   - You can then sign them out by clicking on the button for the respective curfew they should have
  - Click "Show Off-Camp Staff", find their name, and click it
    - You can then sign them in by clicking on the button that pops up
    

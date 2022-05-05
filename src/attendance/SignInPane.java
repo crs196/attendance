@@ -538,7 +538,7 @@ public class SignInPane extends GridPane {
 
 	// sets up layout and functionality of SignInPane
 	private void setup() {
-
+		
 		// set up grid layout and sizing
 		this.setAlignment(Pos.CENTER);
 		this.setHgap(15);
@@ -610,7 +610,7 @@ public class SignInPane extends GridPane {
 		RadioButton normal = new RadioButton("Leaving \nCamp");
 		RadioButton nightOff = new RadioButton("Night \nOff");
 		RadioButton dayOff = new RadioButton("Day \nOff");
-		RadioButton visitor = new RadioButton("Visitor");
+		RadioButton visitor = new RadioButton("Camp \nVisitor");
 		normal.setToggleGroup(curfewTimeSelection);
 		nightOff.setToggleGroup(curfewTimeSelection);
 		dayOff.setToggleGroup(curfewTimeSelection);
@@ -657,9 +657,9 @@ public class SignInPane extends GridPane {
 		confirmation.setEditable(false);
 		confirmation.setWrapText(true);
 		confirmation.setPrefWidth(scanLabel.getWidth());
-		confirmation.setPrefRowCount(3);
+		confirmation.setPrefRowCount(5);
 		idBox.getChildren().add(confirmation);
-		this.add(idBox, 1, 1, 1, 2);
+		this.add(idBox, 1, 1, 1, 3);
 		
 		Button save = new Button("Save");
 		Button saveAndRestart = new Button("Save and Restart");
