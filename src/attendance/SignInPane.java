@@ -605,6 +605,20 @@ public class SignInPane extends GridPane {
 		
 		VBox listButtons = new VBox(this.getVgap() * 1.5);
 		
+		// curfew selection radio buttons
+		ToggleGroup curfewTimeSelection = new ToggleGroup();
+		RadioButton normal = new RadioButton("Leaving \nCamp");
+		RadioButton nightOff = new RadioButton("Night \nOff");
+		RadioButton dayOff = new RadioButton("Day \nOff");
+		RadioButton visitor = new RadioButton("Visitor");
+		normal.setToggleGroup(curfewTimeSelection);
+		nightOff.setToggleGroup(curfewTimeSelection);
+		dayOff.setToggleGroup(curfewTimeSelection);
+		visitor.setToggleGroup(curfewTimeSelection);
+		
+		HBox timeSelectionBox = new HBox(this.getHgap());
+		timeSelectionBox.getChildren().addAll(normal, nightOff, dayOff, visitor);
+		
 		// button to show list of signed-out staff
 		Button offCampList = new Button("Show Off-Camp Staff");
 		offCampList.setMinWidth(USE_PREF_SIZE);
@@ -612,11 +626,11 @@ public class SignInPane extends GridPane {
 		offCampList.setMaxWidth(Double.MAX_VALUE);
 		offCampList.setId("green");
 		
-		listButtons.getChildren().add(offCampList);
+		listButtons.getChildren().addAll(timeSelectionBox, offCampList);
 
 		VBox leftCol = new VBox(this.getVgap());
 		leftCol.getChildren().addAll(clockBox, listButtons);
-		this.add(leftCol, 0, 1, 1, 2);
+		this.add(leftCol, 0, 1, 1, 3);
 
 		/* right column (sign-in box, confirmation area) */
 
@@ -635,22 +649,8 @@ public class SignInPane extends GridPane {
 		HBox signInBox = new HBox(this.getHgap());
 		signInBox.getChildren().addAll(idField, signIn);
 		
-		// curfew selection radio buttons
-		ToggleGroup curfewTimeSelection = new ToggleGroup();
-		RadioButton normal = new RadioButton("Leaving \nCamp");
-		RadioButton nightOff = new RadioButton("Night \nOff");
-		RadioButton dayOff = new RadioButton("Day \nOff");
-		RadioButton visitor = new RadioButton("Visitor");
-		normal.setToggleGroup(curfewTimeSelection);
-		nightOff.setToggleGroup(curfewTimeSelection);
-		dayOff.setToggleGroup(curfewTimeSelection);
-		visitor.setToggleGroup(curfewTimeSelection);
-		
-		HBox timeSelectionBox = new HBox(this.getHgap());
-		timeSelectionBox.getChildren().addAll(normal, nightOff, dayOff, visitor);
-		
 		VBox idBox = new VBox(this.getVgap());
-		idBox.getChildren().addAll(scanLabel, signInBox, timeSelectionBox);
+		idBox.getChildren().addAll(scanLabel, signInBox);
 
 		// confirmation area
 		TextArea confirmation = new TextArea();
@@ -659,7 +659,7 @@ public class SignInPane extends GridPane {
 		confirmation.setPrefWidth(scanLabel.getWidth());
 		confirmation.setPrefRowCount(3);
 		idBox.getChildren().add(confirmation);
-		this.add(idBox, 1, 1);
+		this.add(idBox, 1, 1, 1, 2);
 		
 		Button save = new Button("Save");
 		Button saveAndRestart = new Button("Save and Restart");
@@ -691,7 +691,7 @@ public class SignInPane extends GridPane {
 		
 		HBox saveAndInfoBox = new HBox(this.getHgap());
 		saveAndInfoBox.getChildren().addAll(saveAndExit, saveAndRestart, save, infoSpacing, info);
-		this.add(saveAndInfoBox, 0, 2, 2, 1);
+		this.add(saveAndInfoBox, 0, 4, 2, 1);
 		
 		// stage and scene for offCampList
 		Stage offCampStage = new Stage();
