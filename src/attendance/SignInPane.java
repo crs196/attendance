@@ -768,6 +768,7 @@ public class SignInPane extends GridPane {
 							} else {
 								left--;
 								returned--;
+								// TODO: will need to un-mark this staff member as on time in key sheet
 								signOutAndWriteCurfew(entered); // they're a staff member so sign them out
 								entered.unSignIn(); // un-sign the staff member in (they're out of camp again)
 								confirmation.setText(entered.getName() + " signed out again");
