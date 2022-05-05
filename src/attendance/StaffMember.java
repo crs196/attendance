@@ -5,8 +5,9 @@ public class StaffMember implements Comparable<StaffMember>{
 	private String bunk, name, ID;
 	private int keyRow, todayRow;
 	private boolean signedOut, signedIn;
+	private CurfewType curfewType;
 	
-	public StaffMember(String bk, String nm, String id, boolean out, boolean in, int kRow) {
+	public StaffMember(String bk, String nm, String id, boolean out, boolean in, CurfewType ct, int kRow) {
 		bunk = bk;
 		name = nm;
 		ID = id;
@@ -16,9 +17,11 @@ public class StaffMember implements Comparable<StaffMember>{
 		
 		signedOut = out;
 		signedIn = in;
+		
+		curfewType = ct;
 	}
 	
-	public StaffMember(String bk, String nm, String id, boolean out, boolean in, int kRow, int tRow) {
+	public StaffMember(String bk, String nm, String id, boolean out, boolean in, CurfewType ct, int kRow, int tRow) {
 		bunk = bk;
 		name = nm;
 		ID = id;
@@ -28,6 +31,8 @@ public class StaffMember implements Comparable<StaffMember>{
 		
 		signedOut = out;
 		signedIn = in;
+		
+		curfewType = ct;
 	}
 	
 	public String getBunk() {
@@ -62,12 +67,28 @@ public class StaffMember implements Comparable<StaffMember>{
 		signedOut = true;
 	}
 	
+	public void unSignOut() {
+		signedOut = false;
+	}
+	
 	public boolean isSignedIn() {
 		return signedIn;
 	}
 	
 	public void signIn() {
 		signedIn = true;
+	}
+	
+	public void unSignIn() {
+		signedIn = false;
+	}
+	
+	public CurfewType getCurfewType() {
+		return curfewType;
+	}
+	
+	public void setCurfewType(CurfewType ct) {
+		curfewType = ct;
 	}
 
 	@Override

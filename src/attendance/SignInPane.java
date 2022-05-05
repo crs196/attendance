@@ -62,6 +62,8 @@ public class SignInPane extends GridPane {
 
 	private Stage stage;
 
+	// TODO: might need to have two separate curfews for "day off day 1" and "day off day 2"
+	// TODO:  currently either day 2 people get marked incorrectly on time or day 1 people get marked incorrectly late
 	private LocalDateTime leavingCampCurfew, nightOffCurfew, dayOffCurfew;
 	private File attendanceFile;
 	private Ini settings;
@@ -318,9 +320,29 @@ public class SignInPane extends GridPane {
 					}
 					
 					// create staff member and add them to the hashmap
+					// get what curfew type the person used when siging out
+					CurfewType ct;
+					if (visitor) {
+						ct = CurfewType.VISITOR;
+					} else {
+						switch (yesterday.getRow(i).getCell(timeInCol).getStringCellValue().toLowerCase()) {
+							case "leaving \ncamp":
+								ct = CurfewType.NORMAL;
+								break;
+							case "night \noff":
+								ct = CurfewType.NIGHT_OFF;
+								break;
+							case "day \noff":
+								ct = CurfewType.DAY_OFF_DAY_2;
+								break;
+							default:
+								ct = CurfewType.NONE;
+								break;
+						}
+					}
 					// if person is visitor, isn't out. if person isn't visitor, is out
 					// if person is visitor, is in. if person isn't visitor, is out
-					StaffMember sm = new StaffMember(bunk, name, id, !visitor, visitor, keyRow, i);
+					StaffMember sm = new StaffMember(bunk, name, id, !visitor, visitor, ct, keyRow, i);
 					staffList.put(id, sm);
 					
 					// write this person to today's attendance sheet in order to track them today
@@ -435,7 +457,33 @@ public class SignInPane extends GridPane {
 				}
 				
 				// create staff member and add them to the hashmap
-				staffList.put(id, new StaffMember(bunk, name, id, out, in, keyRow, i));
+				CurfewType ct;
+				if (attendanceSheet.getRow(i).getCell(timeOutCol).getStringCellValue().equalsIgnoreCase("visitor")) {
+					ct = CurfewType.VISITOR;
+				} else {
+					switch (attendanceSheet.getRow(i).getCell(timeInCol).getStringCellValue().toLowerCase()) {
+						case "leaving \ncamp":
+							ct = CurfewType.NORMAL;
+							break;
+						case "night \noff":
+							ct = CurfewType.NIGHT_OFF;
+							break;
+						case "day \noff":
+							// check whether this is the first or second day of a day off by the cell color
+							XSSFColor cellColor = attendanceSheet.getRow(i).getCell(timeInCol).getCellStyle().getFillForegroundXSSFColor();
+							XSSFColor absentColor = new XSSFColor(Color.decode(settings.get("sheetFormat", "absentColor", String.class)) , new DefaultIndexedColorMap());
+							if (cellColor.equals(absentColor)) {
+								ct = CurfewType.DAY_OFF_DAY_2;
+							} else {
+								ct = CurfewType.DAY_OFF_DAY_1;
+							}
+							break;
+						default:
+							ct = CurfewType.NONE;
+							break;
+					}
+				}
+				staffList.put(id, new StaffMember(bunk, name, id, out, in, ct, keyRow, i));
 			}
 		}
 	}
@@ -458,8 +506,8 @@ public class SignInPane extends GridPane {
 						? keySheet.getRow(i).getCell(keyIDCol).getStringCellValue()
 								: keySheet.getRow(i).getCell(keyIDCol).getNumericCellValue() + "";
 				
-				// put staff member into the hashmaps unless it already exists
-				if (staffList.get(id) == null) staffList.put(id, new StaffMember(bunk, name, id, false, false, i));
+				// put staff member into the hashmap unless it already exists
+				if (staffList.get(id) == null) staffList.put(id, new StaffMember(bunk, name, id, false, false, CurfewType.NONE, i));
 			}
 		}
 	}
@@ -680,8 +728,6 @@ public class SignInPane extends GridPane {
 
 		// set sign-in button behavior
 		signIn.setOnAction(new EventHandler<ActionEvent>() {
-
-			// TODO: what if someone leaves again after coming back?
 			
 			public void handle(ActionEvent event) {
 				if (curfewTimeSelection.getSelectedToggle() == null) { // if no curfew type radio button was selected
@@ -714,8 +760,16 @@ public class SignInPane extends GridPane {
 					} else {
 						
 						if (entered.isSignedIn() && entered.isSignedOut()) { // if already signed in and out
-							// no further work required
-							confirmation.setText(entered.getName() + " is fully accounted-for");
+							// check if staff member is visitor or not and send them to the proper handling method
+							if (entered.getCurfewType() == CurfewType.VISITOR) {
+								signVisitorIn(entered); // they're a visitor so sign them in
+								entered.unSignOut(); // un-sign the visitor out (they're back in camp)
+								confirmation.setText("Visitor" + entered.getName() + " signed in again");
+							} else {
+								signOutAndWriteCurfew(entered); // they're a staff member so sign them out
+								entered.unSignIn(); // un-sign the staff member in (they're out of camp again)
+								confirmation.setText(entered.getName() + " signed out again");
+							}
 						} else if (!entered.isSignedIn() && entered.isSignedOut()) { // if signed out but not in
 							// person is coming back to camp and needs to be signed in
 							signInAndCheckTime(entered); // update spreadsheet to sign staff member in
@@ -772,17 +826,17 @@ public class SignInPane extends GridPane {
 			//  and colors the time in column to the correct color based on status
 			//  and updates the counts of people currently out of camp
 			public void signInAndCheckTime(StaffMember sm) {
-				
 				// set which curfew they used to sign out
 				LocalDateTime curfewUsed = null;
-				switch (attendanceSheet.getRow(sm.getTodayRow()).getCell(timeInCol).getStringCellValue().toLowerCase()) {
-					case "leaving \ncamp":
+				switch (sm.getCurfewType()) {
+					case NORMAL:
 						curfewUsed = leavingCampCurfew;
 						break;
-					case "night \noff":
+					case NIGHT_OFF:
 						curfewUsed = nightOffCurfew;
 						break;
-					case "day \noff":
+					case DAY_OFF_DAY_1:
+					case DAY_OFF_DAY_2:
 						curfewUsed = dayOffCurfew;
 						break;
 					default:
@@ -866,6 +920,7 @@ public class SignInPane extends GridPane {
 					newRow = attendanceSheet.getRow(staffRowNum);
 				
 				sm.setTodayRow(staffRowNum++); // set what row this staff member is in and increment counter
+				sm.setCurfewType(CurfewType.VISITOR); // set that this staff member is a visitor
 				
 				// set identity information
 				
@@ -914,6 +969,20 @@ public class SignInPane extends GridPane {
 					newRow = attendanceSheet.getRow(staffRowNum);
 				
 				sm.setTodayRow(staffRowNum++); // set what row this staff member is in and increment counter
+				// set the curfew type of the staff member unless it's already set
+				if (sm.getCurfewType() == CurfewType.NONE) {
+					switch (((RadioButton)curfewTimeSelection.getSelectedToggle()).getText().toLowerCase()) {
+						case "leaving \ncamp":
+							sm.setCurfewType(CurfewType.NORMAL);
+							break;
+						case "night \noff":
+							sm.setCurfewType(CurfewType.NIGHT_OFF);
+							break;
+						case "day \noff":
+							sm.setCurfewType(CurfewType.DAY_OFF_DAY_1);
+							break;
+					}
+				}
 				
 				// set identity information
 				
@@ -941,8 +1010,8 @@ public class SignInPane extends GridPane {
 				newRow.createCell(timeOutCol).setCellValue(LocalDateTime.now().format(DateTimeFormatter.ofPattern("h:mm a")));
 				
 				// set time in column to curfew name and color with absent/day off color
-				newRow.createCell(timeInCol).setCellValue(((RadioButton)curfewTimeSelection.getSelectedToggle()).getText());
-				newRow.getCell(timeInCol).setCellStyle(dayOff.isSelected() ? dayOffStyle : absent);
+				newRow.createCell(timeInCol).setCellValue(sm.getCurfewType().writeByType());
+				newRow.getCell(timeInCol).setCellStyle(sm.getCurfewType() == CurfewType.DAY_OFF_DAY_1 ? dayOffStyle : absent);
 				
 				// increment counts of people who have left camp and are still out of camp
 				left++;
