@@ -1036,8 +1036,10 @@ public class SignInPane extends GridPane {
 
 				// if there are no staff left unaccounted, print a message saying so and leave this handle method
 				if (noUnaccountedStaff()) {
-					confirmation.setText("There's currently no one off-camp to sign in");
-					offCampStage.close();
+					if (!offCampStage.isShowing())
+						confirmation.setText("There's currently no one off-camp to sign in");
+					else
+						offCampStage.close();
 					return;
 				}
 				
@@ -1239,8 +1241,10 @@ public class SignInPane extends GridPane {
 
 				// if there are no staff left unaccounted, print a message saying so and leave this handle method
 				if (allStaffOut()) {
-					confirmation.setText("There's currently no one on-camp to sign out");
-					onCampStage.close();
+					if (!onCampStage.isShowing())
+						confirmation.setText("There's currently no one on-camp to sign out");
+					else	
+						onCampStage.close();
 					return;
 				}
 				
