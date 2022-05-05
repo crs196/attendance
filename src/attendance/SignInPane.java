@@ -612,14 +612,7 @@ public class SignInPane extends GridPane {
 		offCampList.setMaxWidth(Double.MAX_VALUE);
 		offCampList.setId("green");
 		
-		// button to show list of staff who've not yet signed out
-		Button onCampList = new Button("Show On-Camp Staff"); // TODO: comment out this button
-		onCampList.setMinWidth(USE_PREF_SIZE);
-		HBox.setHgrow(onCampList, Priority.ALWAYS);
-		onCampList.setMaxWidth(Double.MAX_VALUE);
-		onCampList.setId("green");
-		
-		listButtons.getChildren().addAll(onCampList, offCampList);
+		listButtons.getChildren().add(offCampList);
 
 		VBox leftCol = new VBox(this.getVgap());
 		leftCol.getChildren().addAll(clockBox, listButtons);
@@ -703,10 +696,6 @@ public class SignInPane extends GridPane {
 		// stage and scene for offCampList
 		Stage offCampStage = new Stage();
 		Scene offCampScene = new Scene(new Label("Something's gone wrong"));
-		
-		// stage and scene for onCampList
-		Stage onCampStage = new Stage();
-		Scene onCampScene = new Scene(new Label("Something's gone wrong"));
 		
 		// set info button behavior (show credits, brief explanation of what to do)
 		info.setOnAction(new EventHandler<ActionEvent>() {
@@ -810,9 +799,7 @@ public class SignInPane extends GridPane {
 						
 						// if either additional list is showing, update it
 						if (offCampStage.isShowing())
-							offCampList.fire();
-						if (onCampStage.isShowing())
-							onCampList.fire();
+							offCampList.fire();;
 
 					}
 				} else {
@@ -1215,226 +1202,7 @@ public class SignInPane extends GridPane {
 									}
 
 									// refresh both additional lists
-									if (onCampStage.isShowing())
-										onCampList.fire();
 									offCampList.fire();
-								}
-							});
-						}
-					}
-
-				}
-
-				bunkBox.getChildren().addAll(new HBox(), new HBox()); // empty HBoxes for spacing
-
-				return bunkBox;
-			}
-		});
-		
-		// pulls up list of staff members who have yet to sign out in this session
-		onCampList.setOnAction(new EventHandler<ActionEvent>() {
-
-			@Override
-			public void handle(ActionEvent event) {
-
-				// if there are no staff left unaccounted, print a message saying so and leave this handle method
-				if (allStaffOut()) {
-					confirmation.setText("There's currently no one on-camp to sign out");
-					onCampStage.close();
-					return;
-				}
-				
-				// if we get here, there are still staff who've not signed out, so find and list them
-				
-				GridPane onCampPane = new GridPane();
-				// set up grid layout and sizing
-				onCampPane.setHgap(15);
-				onCampPane.setVgap(20);
-				onCampPane.setAlignment(Pos.CENTER);
-				onCampPane.setPadding(new Insets(20));
-				ColumnConstraints column1 = new ColumnConstraints();
-				column1.setPercentWidth(50);
-				ColumnConstraints column2 = new ColumnConstraints();
-				column2.setPercentWidth(50);
-				ColumnConstraints column3 = new ColumnConstraints();
-				column3.setPercentWidth(50);
-				onCampPane.getColumnConstraints().addAll(column1, column2, column3);
-
-				ScrollPane scrollPane = new ScrollPane(onCampPane);
-				scrollPane.setMinWidth(stage.getWidth() * 0.75);
-				scrollPane.setMaxHeight(stage.getHeight());
-
-				List<String> listBunks = countBunks();
-				int nextRow = 0, nextCol = 0;
-
-				for (int i = 0; i < listBunks.size(); i++) {
-					if (!bunkNotEmpty(listBunks.get(i))) {
-						onCampPane.add(getStaffFromBunk(listBunks.get(i)), nextRow, nextCol);
-
-						if (++nextRow > 2) {
-							nextCol++;
-							nextRow = 0;
-						}
-					}
-				}
-
-
-				// set up scene
-				onCampScene.setRoot(scrollPane);
-				onCampScene.getStylesheets().add(Attendance.class.getResource(settings.get("filePaths", "cssFile", String.class)).toExternalForm());
-
-				// only need to do these things if the stage isn't currently on screen
-				if (!onCampStage.isShowing()) {
-					// set up stage
-					onCampStage.setScene(onCampScene);
-					onCampStage.setMinWidth(scrollPane.getMinWidth());
-					onCampStage.setMaxHeight(scrollPane.getMaxHeight());
-					onCampStage.setTitle("On-Camp Staff");
-					onCampStage.getIcons().add(new Image(settings.get("filePaths", "iconPath", String.class)));
-					onCampStage.centerOnScreen();
-					onCampStage.show();
-				} else {
-					onCampStage.toFront();
-				}
-			}
-			
-			// returns whether or not all staff members have signed out
-			// in order to be "signed out," the person must meet one of the following characteristics
-			// - not signed out
-			// - signed in and not signed out (visitor)
-			public boolean allStaffOut() {
-
-				for (StaffMember sm : staffList.values())
-					if (!sm.isSignedOut() || (!sm.isSignedOut() && sm.isSignedIn()))
-						return false;
-
-				return true;
-			}
-
-			// counts the number of unique bunks in workbook and returns the list of unique bunks
-			public List<String> countBunks() {
-
-				List<String> uniqueBunks = new ArrayList<String>();
-
-				// loop through all rows of the sheet, starting at the first row (so ignoring the header rows)
-				//  and look at the "bunk" column to count how many unique bunks there are
-				for (StaffMember sm : staffList.values()) {
-					// if the current bunk is new, add it to the list of unique bunks
-					if (!uniqueBunks.contains(sm.getBunk()))
-						uniqueBunks.add(sm.getBunk());
-				}
-
-				return uniqueBunks;
-			}
-
-			// given a bunk name, returns whether or not there are any staff remaining to sign out
-			//  in that bunk
-			public boolean bunkNotEmpty(String bunk) {
-
-				for (StaffMember sm : staffList.values())
-					if (sm.getBunk().equals(bunk))
-						// if staff member is on camp (not signed out), return false
-						if (!sm.isSignedOut() || sm.isSignedIn())
-							return false;
-
-				return true;
-			}
-
-			// given a bunk name, gets the names of all unaccounted staff in that bunk
-			//  and creates a VBox with the name of the bunk and each staff member in it
-			public VBox getStaffFromBunk(String bunk) {
-
-				VBox bunkBox = new VBox(10);
-
-				Label bunkName = new Label(bunk);
-				bunkName.setId("bunk-label");
-				bunkName.setMinWidth(USE_PREF_SIZE);
-				HBox bunkNameBox = new HBox(15);
-				bunkNameBox.setAlignment(Pos.CENTER);
-				bunkNameBox.getChildren().add(bunkName);
-				bunkBox.getChildren().addAll(bunkNameBox, new HBox()); // empty HBox for spacing
-
-				// runs through all staff members and adds unaccounted staff in this bunk to the VBox
-				for (StaffMember sm : staffList.values()) {
-
-					if (sm.getBunk().equals(bunk)) {
-
-						if (!sm.isSignedOut() || sm.isSignedIn()) {
-
-							Button staffMember = new Button(sm.getName());
-							staffMember.setId("list-button");
-							staffMember.setMinWidth(USE_PREF_SIZE);
-							HBox staffNameBox = new HBox(15);
-							staffNameBox.setAlignment(Pos.CENTER);
-							staffNameBox.getChildren().add(staffMember);
-							bunkBox.getChildren().add(staffNameBox);
-
-							// when a staff member is clicked, open a popup window to allow user to sign them out
-							staffMember.setOnAction(new EventHandler<ActionEvent>() {
-
-								@Override
-								public void handle(ActionEvent event) {
-									Alert options = new Alert(AlertType.NONE, "Sign this staff member out:",
-											new ButtonType("Leaving Camp", ButtonData.OTHER),
-											new ButtonType("Night Off", ButtonData.OTHER),
-											new ButtonType("Day Off", ButtonData.OTHER),
-											new ButtonType("Visitor", ButtonData.OTHER),
-											ButtonType.CANCEL);
-									options.setTitle("Manual Sign-Out");
-									options.setHeaderText(staffMember.getText());
-									options.getDialogPane().getStylesheets().add(getClass().getResource(settings.get("filePaths", "cssFile", String.class)).toExternalForm());
-									options.getDialogPane().lookupButton(ButtonType.CANCEL).setId("red");
-									options.initOwner(staffMember.getScene().getWindow());
-									options.showAndWait();
-									
-									// create cell style to be used when signing staff member in for day off or shmira
-									XSSFCellStyle onTime = workbook.createCellStyle();
-									java.awt.Color onTimeColor = Color.decode(settings.get("sheetFormat", "onTimeColor", String.class));
-									onTime.setFillForegroundColor(new XSSFColor(onTimeColor, new DefaultIndexedColorMap()));
-									onTime.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-
-									if (options.getResult().getText().equals("Leaving Camp")) {
-										// staff member should be signed out as leaving camp
-										// do this by writing the staff member's name into the entry box, 
-										//  selecting the right curfew time
-										//  and firing the sign-in button
-										
-										idField.setText(staffMember.getText());
-										normal.setSelected(true);
-										signIn.fire();
-									} else if (options.getResult().getText().equals("Night Off")) {
-										// staff member should be signed out as on a night off
-										// do this by writing the staff member's name into the entry box, 
-										//  selecting the right curfew time
-										//  and firing the sign-in button
-										
-										idField.setText(staffMember.getText());
-										nightOff.setSelected(true);
-										signIn.fire();
-									} else if (options.getResult().getText().equals("Day Off")) {
-										// staff member should be signed out as on a day off
-										// do this by writing the staff member's name into the entry box, 
-										//  selecting the right curfew time
-										//  and firing the sign-in button
-										
-										idField.setText(staffMember.getText());
-										dayOff.setSelected(true);
-										signIn.fire();
-									} else if (options.getResult().getText().equals("Visitor")) {
-										// staff member should be signed in as a visitor
-										// do this by writing the staff member's name into the entry box, 
-										//  selecting the right curfew time
-										//  and firing the sign-in button
-										
-										idField.setText(staffMember.getText());
-										visitor.setSelected(true);
-										signIn.fire();
-									}
-
-									// refresh both additional lists
-									onCampList.fire();
-									if (offCampStage.isShowing())
-										offCampList.fire();
 								}
 							});
 						}
@@ -1500,7 +1268,6 @@ public class SignInPane extends GridPane {
 				
 				// close all windows
 				offCampStage.close();
-				onCampStage.close();
 				stage.close();
 				Attendance.createScene(stage); // restart the program
 			}
@@ -1578,7 +1345,6 @@ public class SignInPane extends GridPane {
 				
 				// close all windows
 				offCampStage.close();
-				onCampStage.close();
 				Platform.exit();
 			}
 
