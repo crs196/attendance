@@ -768,7 +768,7 @@ public class SignInPane extends GridPane {
 							} else {
 								left--;
 								returned--;
-								// TODO: will need to un-mark this staff member as on time in key sheet
+								decrementOnTimeCount(entered); // the staff member is leaving again so they're no longer on time
 								signOutAndWriteCurfew(entered); // they're a staff member so sign them out
 								entered.unSignIn(); // un-sign the staff member in (they're out of camp again)
 								confirmation.setText(entered.getName() + " signed out again");
@@ -1024,6 +1024,15 @@ public class SignInPane extends GridPane {
 				attendanceSheet.getRow(6).getCell(8).setCellValue(returned);
 				attendanceSheet.getRow(7).getCell(8).setCellValue(stillOut);
 				attendanceSheet.getRow(9).getCell(8).setCellValue(visitors);
+			}
+			
+			// given a staff member, decrements the number in their on-time column
+			public void decrementOnTimeCount(StaffMember sm) {
+				int onTimeCount = 0;
+				if (keySheet.getRow(sm.getKeyRow()).getCell(ontimeCol) != null
+						&& (onTimeCount = (int) keySheet.getRow(sm.getKeyRow()).getCell(ontimeCol).getNumericCellValue()) > 0) {
+					keySheet.getRow(sm.getKeyRow()).getCell(ontimeCol).setCellValue(onTimeCount - 1);
+				}
 			}
 		});
 
