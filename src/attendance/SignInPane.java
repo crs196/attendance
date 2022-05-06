@@ -715,6 +715,19 @@ public class SignInPane extends GridPane {
 					
 				}, Date.from(rolloverTime.atZone(ZoneId.systemDefault()).toInstant()));
 		
+		// schedule saveAndRestart to be clicked at the specified time
+		new Timer().schedule(
+				new TimerTask() {
+
+					@Override
+					public void run() {
+						Platform.runLater(() -> {
+							saveAndRestart.fire();	// TODO: maybe change this to not click the button (what happens if alert window shows up?)
+						});
+					}
+
+				}, Date.from(rolloverTime.atZone(ZoneId.systemDefault()).toInstant()));
+		
 		// set info button behavior (show credits, brief explanation of what to do)
 		info.setOnAction(new EventHandler<ActionEvent>() {
 
