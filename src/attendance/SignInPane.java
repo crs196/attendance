@@ -11,10 +11,14 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -64,7 +68,7 @@ public class SignInPane extends GridPane {
 
 	// TODO: might need to have two separate curfews for "day off day 1" and "day off day 2"
 	// TODO:  currently either day 2 people get marked incorrectly on time or day 1 people get marked incorrectly late
-	private LocalDateTime leavingCampCurfew, nightOffCurfew, dayOffCurfew;
+	private LocalDateTime leavingCampCurfew, nightOffCurfew, dayOffCurfew, rolloverTime;
 	private File attendanceFile;
 	private Ini settings;
 
@@ -105,9 +109,10 @@ public class SignInPane extends GridPane {
 		stage = s;
 		
 		// set instance variables
-		leavingCampCurfew = curfewTime(settings.get("curfewTimes", "leavingCampCurfew"));
-		nightOffCurfew = curfewTime(settings.get("curfewTimes", "nightOffCurfew"));
-		dayOffCurfew = curfewTime(settings.get("curfewTimes", "dayOffCurfew"));
+		leavingCampCurfew = curfewTime(settings.get("times", "leavingCampCurfew"));
+		nightOffCurfew = curfewTime(settings.get("times", "nightOffCurfew"));
+		dayOffCurfew = curfewTime(settings.get("times", "dayOffCurfew"));
+		rolloverTime = curfewTime(settings.get("times", "rolloverTime"));
 		
 		attendanceFile = new File(settings.get("filePaths", "attendanceFilePath"));
 		
@@ -707,6 +712,19 @@ public class SignInPane extends GridPane {
 		// stage and scene for onCampList
 		Stage onCampStage = new Stage();
 		Scene onCampScene = new Scene(new Label("Something's gone wrong"));
+		
+		// schedule saveAndRestart to be clicked at the specified time
+		new Timer().schedule(
+				new TimerTask() {
+
+					@Override
+					public void run() {
+						Platform.runLater(() -> {
+							saveAndRestart.fire();	// TODO: maybe change this to not click the button (what happens if alert window shows up?)
+						});
+					}
+
+				}, Date.from(rolloverTime.atZone(ZoneId.systemDefault()).toInstant()));
 		
 		// set info button behavior (show credits, brief explanation of what to do)
 		info.setOnAction(new EventHandler<ActionEvent>() {
@@ -1488,6 +1506,7 @@ public class SignInPane extends GridPane {
 			}
 		});
 
+		// TODO: maybe write one handler for both "save and restart" and "save and exit" to minimize repeated code
 		// marks unaccounted-for staff members as absent, writes to file, restarts program
 		saveAndRestart.setOnAction(new EventHandler<ActionEvent>() {
 
