@@ -753,8 +753,11 @@ public class SignInPane extends GridPane {
 							if (entered.getCurfewType() == CurfewType.VISITOR) {
 								signVisitorIn(entered); // they're a visitor so sign them in
 								entered.unSignOut(); // un-sign the visitor out (they're back in camp)
-								confirmation.setText("Visitor" + entered.getName() + " signed in again");
+								confirmation.setText("Visitor " + entered.getName() + " signed in again");
 							} else {
+								left--;
+								returned--;
+								decrementOnTimeCount(entered); // the staff member is leaving again so they're no longer on time
 								signOutAndWriteCurfew(entered); // they're a staff member so sign them out
 								entered.unSignIn(); // un-sign the staff member in (they're out of camp again)
 								confirmation.setText(entered.getName() + " signed out again");
@@ -1009,6 +1012,15 @@ public class SignInPane extends GridPane {
 				attendanceSheet.getRow(7).getCell(8).setCellValue(stillOut);
 				attendanceSheet.getRow(9).getCell(8).setCellValue(visitors);
 			}
+			
+			// given a staff member, decrements the number in their on-time column
+			public void decrementOnTimeCount(StaffMember sm) {
+				int onTimeCount = 0;
+				if (keySheet.getRow(sm.getKeyRow()).getCell(ontimeCol) != null
+						&& (onTimeCount = (int) keySheet.getRow(sm.getKeyRow()).getCell(ontimeCol).getNumericCellValue()) > 0) {
+					keySheet.getRow(sm.getKeyRow()).getCell(ontimeCol).setCellValue(onTimeCount - 1);
+				}
+			}
 		});
 
 
@@ -1023,8 +1035,10 @@ public class SignInPane extends GridPane {
 
 				// if there are no staff left unaccounted, print a message saying so and leave this handle method
 				if (noUnaccountedStaff()) {
-					confirmation.setText("There's currently no one off-camp to sign in");
-					offCampStage.close();
+					if (!offCampStage.isShowing())
+						confirmation.setText("There's currently no one off-camp to sign in");
+					else
+						offCampStage.close();
 					return;
 				}
 				
