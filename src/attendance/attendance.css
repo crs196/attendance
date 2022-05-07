@@ -156,3 +156,8 @@
 #list-button:hover {
 	-fx-text-fill: #c8c8c8;
 }
+
+.popup {
+	-fx-background-color: white;
+	-fx-background-radius: 0px 0px 8px 8px;
+}

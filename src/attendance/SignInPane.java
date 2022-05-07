@@ -1225,7 +1225,9 @@ public class SignInPane extends GridPane {
 									Popup popup = new Popup();
 									popup.setAutoHide(true);
 									Button popupSignIn = new Button("Sign In");
-									popup.getContent().add(popupSignIn);
+									VBox popupButtons = new VBox(8, popupSignIn);
+									popupButtons.setPadding(new Insets(4, 8, 8, 8));
+									popup.getContent().add(popupButtons);
 									
 									// locate popup on screen
 									Point2D point = staffMember.localToScreen(0, 0); // get location of button in screen space
@@ -1409,61 +1411,69 @@ public class SignInPane extends GridPane {
 
 								@Override
 								public void handle(ActionEvent event) {
-									Alert options = new Alert(AlertType.NONE, "Sign this staff member out:",
-											new ButtonType("Leaving Camp", ButtonData.OTHER),
-											new ButtonType("Night Off", ButtonData.OTHER),
-											new ButtonType("Day Off", ButtonData.OTHER),
-											new ButtonType("Visitor", ButtonData.OTHER),
-											ButtonType.CANCEL);
-									options.setTitle("Manual Sign-Out");
-									options.setHeaderText(staffMember.getText());
-									options.getDialogPane().getStylesheets().add(getClass().getResource(settings.get("filePaths", "cssFile", String.class)).toExternalForm());
-									options.getDialogPane().lookupButton(ButtonType.CANCEL).setId("red");
-									options.initOwner(staffMember.getScene().getWindow());
-									options.showAndWait();
+									// create popup and button, add button to popup
+									Popup popup = new Popup();
+									popup.setAutoHide(true);
+									
+									Button popupLeaving = new Button("Leaving Camp");
+									Button popupNightOff = new Button("Night Off");
+									Button popupDayOff = new Button("Day Off");
+									Button popupVisitor = new Button("Visitor");
+									popupLeaving.setMaxWidth(Double.MAX_VALUE);
+									popupNightOff.setMaxWidth(Double.MAX_VALUE);
+									popupDayOff.setMaxWidth(Double.MAX_VALUE);
+									popupVisitor.setMaxWidth(Double.MAX_VALUE);
+									
+									VBox popupButtons = new VBox(8, popupLeaving, popupNightOff, popupDayOff, popupVisitor);
+									popupButtons.setAlignment(Pos.CENTER);
+									popupButtons.setPadding(new Insets(4, 8, 8, 8));
+									popup.getContent().addAll(popupButtons);
+									
+									// locate popup on screen
+									Point2D point = staffMember.localToScreen(0, 0); // get location of button in screen space
+									popup.show(onCampStage);
+									popup.setY(point.getY() + staffMember.getHeight()); // y location is just below name
+									popup.setX(point.getX()  + (staffMember.getWidth() - popup.getWidth()) / 2); // center popup below name
+									
+									// handler class to minimize repeated code for all four buttons
+									class ButtonHandler implements EventHandler<ActionEvent> {
 
-									if (options.getResult().getText().equals("Leaving Camp")) {
-										// staff member should be signed out as leaving camp
-										// do this by writing the staff member's name into the entry box, 
-										//  selecting the right curfew time
-										//  and firing the sign-in button
+										RadioButton buttonToToggle;
 										
-										idField.setText(staffMember.getText());
-										normal.setSelected(true);
-										signIn.fire();
-									} else if (options.getResult().getText().equals("Night Off")) {
-										// staff member should be signed out as on a night off
-										// do this by writing the staff member's name into the entry box, 
-										//  selecting the right curfew time
-										//  and firing the sign-in button
+										public ButtonHandler(RadioButton bTT) {
+											buttonToToggle = bTT;
+										}
 										
-										idField.setText(staffMember.getText());
-										nightOff.setSelected(true);
-										signIn.fire();
-									} else if (options.getResult().getText().equals("Day Off")) {
-										// staff member should be signed out as on a day off
-										// do this by writing the staff member's name into the entry box, 
-										//  selecting the right curfew time
-										//  and firing the sign-in button
+										@Override
+										public void handle(ActionEvent arg0) {
+											
+											// get currently selected button
+											RadioButton selected = (RadioButton) curfewTimeSelection.getSelectedToggle();
+											
+											// sign staff member in by writing the staff member's name into the entry box and firing the sign-in button	
+											idField.setText(staffMember.getText());
+											buttonToToggle.setSelected(true); // select the radio button for the relevant curfew
+											signIn.fire();
+											if (selected != null) 
+												selected.setSelected(true); // reselect the previously selected curfew selection radio button
+											else
+												buttonToToggle.setSelected(false); // if no button to reselect, just deselect
+											popup.hide(); // hide the popup list
+		
+											// refresh both additional lists
+											if (offCampStage.isShowing())
+												offCampList.fire();
+											onCampList.fire();
+											
+										}
 										
-										idField.setText(staffMember.getText());
-										dayOff.setSelected(true);
-										signIn.fire();
-									} else if (options.getResult().getText().equals("Visitor")) {
-										// staff member should be signed in as a visitor
-										// do this by writing the staff member's name into the entry box, 
-										//  selecting the right curfew time
-										//  and firing the sign-in button
-										
-										idField.setText(staffMember.getText());
-										visitor.setSelected(true);
-										signIn.fire();
 									}
-
-									// refresh both additional lists
-									onCampList.fire();
-									if (offCampStage.isShowing())
-										offCampList.fire();
+									
+									// set button event handlers
+									popupLeaving.setOnAction(new ButtonHandler(normal)); // select normal curfew
+									popupNightOff.setOnAction(new ButtonHandler(nightOff)); // select night off curfew
+									popupDayOff.setOnAction(new ButtonHandler(dayOff)); // select day off curfew
+									popupVisitor.setOnAction(new ButtonHandler(visitor)); // select visitor
 								}
 							});
 						}
