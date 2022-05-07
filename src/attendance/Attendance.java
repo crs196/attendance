@@ -32,13 +32,13 @@ public class Attendance extends Application {
 		}
 				
 		// obtain stage settings from config file
-		String cssFile = settings.get("filePaths", "cssFile");
+		String cssPath = settings.get("filePaths", "cssPath");
 		String iconPath = settings.get("filePaths", "iconPath");
 		
 		// create sign in pane and scene
 		SignInPane siPane = new SignInPane(primaryStage, settings);
 		Scene siScene = new Scene(siPane);
-		siScene.getStylesheets().add(Attendance.class.getResource(cssFile).toExternalForm());
+		siScene.getStylesheets().add(Attendance.class.getResource(cssPath).toExternalForm());
 		
 		// set up stage for viewing
 		primaryStage.setTitle("Attendance");

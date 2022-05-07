@@ -138,7 +138,7 @@ public class SignInPane extends GridPane {
 			Alert fileNotAccessible = new Alert(AlertType.ERROR, "Unable to access \"" + attendanceFile.getName()
 					+ "\"\nPlease choose a different file.");
 			fileNotAccessible.setTitle("Attendance File Not Accessible");
-			fileNotAccessible.getDialogPane().getStylesheets().add(Attendance.class.getResource(settings.get("filePaths", "cssFile", String.class)).toExternalForm());
+			fileNotAccessible.getDialogPane().getStylesheets().add(Attendance.class.getResource(settings.get("filePaths", "cssPath", String.class)).toExternalForm());
 			fileNotAccessible.getDialogPane().lookupButton(ButtonType.OK).setId("red");
 			fileNotAccessible.initOwner(stage);
 			fileNotAccessible.showAndWait();
@@ -234,7 +234,7 @@ public class SignInPane extends GridPane {
 					+ "- 12 hour time with or without a leading zero, with or without a time separator, with or without a space between the minutes and the meridiem, "
 					+ "with or without the \"M\" in the meridiem");
 			invalidCurfewTime.setTitle("Invalid Time Format");
-			invalidCurfewTime.getDialogPane().getStylesheets().add(Attendance.class.getResource(settings.get("filePaths", "cssFile", String.class)).toExternalForm());
+			invalidCurfewTime.getDialogPane().getStylesheets().add(Attendance.class.getResource(settings.get("filePaths", "cssPath", String.class)).toExternalForm());
 			invalidCurfewTime.getDialogPane().lookupButton(ButtonType.OK).setId("red");
 			invalidCurfewTime.showAndWait();
 			
@@ -265,7 +265,7 @@ public class SignInPane extends GridPane {
 			Alert fileNotAccessible = new Alert(AlertType.ERROR, "Unable to access \"" + infoFileName + 
 					"\" file.\nPlease create this file in the " + infoPath.substring(0, infoPath.lastIndexOf("/")) + " directory.");
 			fileNotAccessible.setTitle("Info File Not Accessible");
-			fileNotAccessible.getDialogPane().getStylesheets().add(Attendance.class.getResource(settings.get("filePaths", "cssFile", String.class)).toExternalForm());
+			fileNotAccessible.getDialogPane().getStylesheets().add(Attendance.class.getResource(settings.get("filePaths", "cssPath", String.class)).toExternalForm());
 			fileNotAccessible.getDialogPane().lookupButton(ButtonType.OK).setId("red");
 			fileNotAccessible.showAndWait();
 			
@@ -731,7 +731,7 @@ public class SignInPane extends GridPane {
 			public void handle(ActionEvent arg0) {
 				Alert infoDialog = new Alert(AlertType.NONE, infoText, ButtonType.CLOSE);
 				infoDialog.setTitle("Credits and Instructions — Sign-in");
-				infoDialog.getDialogPane().getStylesheets().add(getClass().getResource(settings.get("filePaths", "cssFile", String.class)).toExternalForm());
+				infoDialog.getDialogPane().getStylesheets().add(getClass().getResource(settings.get("filePaths", "cssPath", String.class)).toExternalForm());
 				infoDialog.getDialogPane().lookupButton(ButtonType.CLOSE).setId("red");
 				infoDialog.initOwner(info.getScene().getWindow());
 				infoDialog.initModality(Modality.NONE);
@@ -750,7 +750,7 @@ public class SignInPane extends GridPane {
 					// alert the user of such
 					Alert noCurfewSelected = new Alert(AlertType.WARNING, "No curfew type selected. Please select a curfew type to proceed.");
 					noCurfewSelected.setTitle("Curfew Type Not Selected");
-					noCurfewSelected.getDialogPane().getStylesheets().add(getClass().getResource(settings.get("filePaths", "cssFile", String.class)).toExternalForm());
+					noCurfewSelected.getDialogPane().getStylesheets().add(getClass().getResource(settings.get("filePaths", "cssPath", String.class)).toExternalForm());
 					noCurfewSelected.getDialogPane().lookupButton(ButtonType.OK).setId("red");
 					noCurfewSelected.initOwner(stage);
 					noCurfewSelected.showAndWait();
@@ -1110,7 +1110,7 @@ public class SignInPane extends GridPane {
 
 				// set up scene
 				offCampScene.setRoot(scrollPane);
-				offCampScene.getStylesheets().add(Attendance.class.getResource(settings.get("filePaths", "cssFile", String.class)).toExternalForm());
+				offCampScene.getStylesheets().add(Attendance.class.getResource(settings.get("filePaths", "cssPath", String.class)).toExternalForm());
 
 				// only need to do these things if the stage isn't currently on screen
 				if (!offCampStage.isShowing()) {
@@ -1318,7 +1318,7 @@ public class SignInPane extends GridPane {
 
 				// set up scene
 				onCampScene.setRoot(scrollPane);
-				onCampScene.getStylesheets().add(Attendance.class.getResource(settings.get("filePaths", "cssFile", String.class)).toExternalForm());
+				onCampScene.getStylesheets().add(Attendance.class.getResource(settings.get("filePaths", "cssPath", String.class)).toExternalForm());
 
 				// only need to do these things if the stage isn't currently on screen
 				if (!onCampStage.isShowing()) {
@@ -1529,7 +1529,7 @@ public class SignInPane extends GridPane {
 					Alert saveAndExitConf = new Alert(AlertType.CONFIRMATION, "There are still staff members that haven't signed in.\nAre you sure you want to proceed?");
 					saveAndExitConf.setHeaderText("Save and Exit Confirmation");
 					saveAndExitConf.setTitle("Save and Exit Confirmation");
-					saveAndExitConf.getDialogPane().getStylesheets().add(getClass().getResource(settings.get("filePaths", "cssFile", String.class)).toExternalForm());
+					saveAndExitConf.getDialogPane().getStylesheets().add(getClass().getResource(settings.get("filePaths", "cssPath", String.class)).toExternalForm());
 					saveAndExitConf.getDialogPane().lookupButton(ButtonType.CANCEL).setId("red");
 					saveAndExitConf.initOwner(saveAndExit.getScene().getWindow());
 					saveAndExitConf.showAndWait();
@@ -1631,7 +1631,7 @@ public class SignInPane extends GridPane {
 				Alert alert = new Alert(AlertType.CONFIRMATION, "Are you sure you want to exit and lose all unsaved data?\n"
 						+ "Click \"OK\" to exit and \"Cancel\" to return to sign-in.");
 				alert.setTitle("Exit Confirmation");
-				alert.getDialogPane().getStylesheets().add(getClass().getResource(settings.get("filePaths", "cssFile", String.class)).toExternalForm());
+				alert.getDialogPane().getStylesheets().add(getClass().getResource(settings.get("filePaths", "cssPath", String.class)).toExternalForm());
 				alert.getDialogPane().lookupButton(ButtonType.CANCEL).setId("red");
 				alert.initOwner(stage);
 				alert.showAndWait();
