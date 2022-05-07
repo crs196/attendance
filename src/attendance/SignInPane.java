@@ -68,7 +68,7 @@ public class SignInPane extends GridPane {
 
 	// TODO: might need to have two separate curfews for "day off day 1" and "day off day 2"
 	// TODO:  currently either day 2 people get marked incorrectly on time or day 1 people get marked incorrectly late
-	private LocalDateTime leavingCampCurfew, nightOffCurfew, dayOffCurfew, rolloverTime;
+	private LocalDateTime leavingCampCurfew, nightOffCurfew, dayOffDay1Curfew, dayOffDay2Curfew, rolloverTime;
 	private File attendanceFile;
 	private Ini settings;
 
@@ -112,8 +112,15 @@ public class SignInPane extends GridPane {
 		// set instance variables
 		leavingCampCurfew = curfewTime(settings.get("times", "leavingCampCurfew"));
 		nightOffCurfew = curfewTime(settings.get("times", "nightOffCurfew"));
-		dayOffCurfew = curfewTime(settings.get("times", "dayOffCurfew"));
 		rolloverTime = curfewTime(settings.get("times", "rolloverTime"));
+		// set both day off curfews
+		dayOffDay1Curfew = curfewTime(settings.get("times", "dayOffCurfew"));
+		if(dayOffDay1Curfew.toLocalDate().isEqual(LocalDate.now())) { // if the day off curfew is today
+			dayOffDay2Curfew = dayOffDay1Curfew; // it's actually the curfew for people on the 2nd day of their day off
+			dayOffDay1Curfew = dayOffDay1Curfew.plusDays(1); // and the curfew for people on the 1st day of their day off is tomorrow
+		} else { // if the day off curfew is tomorrow, it's the curfew for the people on the 1st day of their day off
+			dayOffDay2Curfew = dayOffDay1Curfew.minusDays(1); // and the curfew for people on the 2nd day of their day off is today
+		}
 		
 		attendanceFile = new File(settings.get("filePaths", "attendanceFilePath"));
 		
@@ -538,9 +545,9 @@ public class SignInPane extends GridPane {
 		
 		// write day off curfew time to row 4 in today's column if different than what's already there
 		if (attendanceSheet.getRow(3).getCell(8) == null)
-			attendanceSheet.getRow(3).createCell(8).setCellValue(dayOffCurfew.format(DateTimeFormatter.ofPattern("h:mm a")));
-		else if (!(attendanceSheet.getRow(3).getCell(8).getStringCellValue().equals(dayOffCurfew.format(DateTimeFormatter.ofPattern("h:mm a")))))
-			attendanceSheet.getRow(3).getCell(8).setCellValue(dayOffCurfew.format(DateTimeFormatter.ofPattern("h:mm a")));
+			attendanceSheet.getRow(3).createCell(8).setCellValue(dayOffDay1Curfew.format(DateTimeFormatter.ofPattern("h:mm a")));
+		else if (!(attendanceSheet.getRow(3).getCell(8).getStringCellValue().equals(dayOffDay1Curfew.format(DateTimeFormatter.ofPattern("h:mm a")))))
+			attendanceSheet.getRow(3).getCell(8).setCellValue(dayOffDay1Curfew.format(DateTimeFormatter.ofPattern("h:mm a")));
 		
 		attendanceSheet.autoSizeColumn(8); // resize column to fit
 	}
@@ -598,7 +605,7 @@ public class SignInPane extends GridPane {
 		// day off
 		Label dayOffCurfewLabel = new Label("Day off Curfew: ");
 		Label dayOffCurfewTimeLabel = new Label();
-		dayOffCurfewTimeLabel.setText(dayOffCurfew.format(DateTimeFormatter.ofPattern("h:mm a")));
+		dayOffCurfewTimeLabel.setText(dayOffDay1Curfew.format(DateTimeFormatter.ofPattern("h:mm a")));
 		HBox dayOffCurfewBox = new HBox(this.getHgap());
 		dayOffCurfewLabel.setMinWidth(USE_PREF_SIZE);
 		dayOffCurfewTimeLabel.setMinWidth(USE_PREF_SIZE);
@@ -848,8 +855,10 @@ public class SignInPane extends GridPane {
 						curfewUsed = nightOffCurfew;
 						break;
 					case DAY_OFF_DAY_1:
+						curfewUsed = dayOffDay1Curfew;
+						break;
 					case DAY_OFF_DAY_2:
-						curfewUsed = dayOffCurfew;
+						curfewUsed = dayOffDay2Curfew;
 						break;
 					default:
 						break;
@@ -1623,8 +1632,10 @@ public class SignInPane extends GridPane {
 				alert.initOwner(stage);
 				alert.showAndWait();
 
-				if (alert.getResult().getButtonData() == ButtonData.OK_DONE)
+				if (alert.getResult().getButtonData() == ButtonData.OK_DONE) {
 					Platform.exit();
+					System.exit(0);
+				}
 
 			}
 		});
