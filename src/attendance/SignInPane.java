@@ -39,6 +39,7 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
+import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
@@ -59,6 +60,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
+import javafx.stage.Popup;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 
@@ -66,8 +68,6 @@ public class SignInPane extends GridPane {
 
 	private Stage stage;
 
-	// TODO: might need to have two separate curfews for "day off day 1" and "day off day 2"
-	// TODO:  currently either day 2 people get marked incorrectly on time or day 1 people get marked incorrectly late
 	private LocalDateTime leavingCampCurfew, nightOffCurfew, dayOffDay1Curfew, dayOffDay2Curfew, rolloverTime;
 	private File attendanceFile;
 	private Ini settings;
@@ -1118,7 +1118,7 @@ public class SignInPane extends GridPane {
 					offCampStage.setScene(offCampScene);
 					offCampStage.setMinWidth(scrollPane.getMinWidth());
 					offCampStage.setMaxHeight(scrollPane.getMaxHeight());
-					offCampStage.setTitle("Signed-Out Staff");
+					offCampStage.setTitle("Off-Camp Staff");
 					offCampStage.getIcons().add(new Image(settings.get("filePaths", "iconPath", String.class)));
 					offCampStage.centerOnScreen();
 					offCampStage.show();
@@ -1216,40 +1216,41 @@ public class SignInPane extends GridPane {
 							staffNameBox.getChildren().add(staffMember);
 							bunkBox.getChildren().add(staffNameBox);
 
-							// when a staff member is clicked, open a popup window to allow user to
-							//  mark them as on shmira or a day off or sign in normally
+							// when a staff member is clicked, open a popup window to allow user to sign them in normally
 							staffMember.setOnAction(new EventHandler<ActionEvent>() {
-
+								
 								@Override
 								public void handle(ActionEvent event) {
-									Alert options = new Alert(AlertType.NONE, "Sign this staff member in:",
-											new ButtonType("Sign In", ButtonData.OTHER),
-											ButtonType.CANCEL);
-									options.setTitle("Manual Sign-In");
-									options.setHeaderText(staffMember.getText());
-									options.getDialogPane().getStylesheets().add(getClass().getResource(settings.get("filePaths", "cssFile", String.class)).toExternalForm());
-									options.getDialogPane().lookupButton(ButtonType.CANCEL).setId("red");
-									options.initOwner(staffMember.getScene().getWindow());
-									options.showAndWait();
+									// create popup and button, add button to popup
+									Popup popup = new Popup();
+									popup.setAutoHide(true);
+									Button popupSignIn = new Button("Sign In");
+									popup.getContent().add(popupSignIn);
 									
-									// create cell style to be used when signing staff member in for day off or shmira
-									XSSFCellStyle onTime = workbook.createCellStyle();
-									java.awt.Color onTimeColor = Color.decode(settings.get("sheetFormat", "onTimeColor", String.class));
-									onTime.setFillForegroundColor(new XSSFColor(onTimeColor, new DefaultIndexedColorMap()));
-									onTime.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+									// locate popup on screen
+									Point2D point = staffMember.localToScreen(0, 0); // get location of button in screen space
+									popup.show(offCampStage);
+									popup.setY(point.getY() + staffMember.getHeight()); // y location is just below name
+									popup.setX(point.getX()  + (staffMember.getWidth() - popup.getWidth()) / 2); // center popup below name
+									
+									// set button action
+									popupSignIn.setOnAction(new EventHandler<ActionEvent>() {
 
-									if (options.getResult().getText().equals("Sign In")) {
-										// staff member should be signed in normally
-										// do this by writing the staff member's name into the entry box and firing the sign-in button
-										
-										idField.setText(staffMember.getText());
-										signIn.fire();
-									}
-
-									// refresh both additional lists
-									if (onCampStage.isShowing())
-										onCampList.fire();
-									offCampList.fire();
+										@Override
+										public void handle(ActionEvent arg0) {
+											
+											// sign staff member in by writing the staff member's name into the entry box and firing the sign-in button	
+											idField.setText(staffMember.getText());
+											signIn.fire();
+											popup.hide(); // hide the button
+		
+											// refresh both additional lists
+											if (onCampStage.isShowing())
+												onCampList.fire();
+											offCampList.fire();
+											
+										}	
+									});
 								}
 							});
 						}
@@ -1420,12 +1421,6 @@ public class SignInPane extends GridPane {
 									options.getDialogPane().lookupButton(ButtonType.CANCEL).setId("red");
 									options.initOwner(staffMember.getScene().getWindow());
 									options.showAndWait();
-									
-									// create cell style to be used when signing staff member in for day off or shmira
-									XSSFCellStyle onTime = workbook.createCellStyle();
-									java.awt.Color onTimeColor = Color.decode(settings.get("sheetFormat", "onTimeColor", String.class));
-									onTime.setFillForegroundColor(new XSSFColor(onTimeColor, new DefaultIndexedColorMap()));
-									onTime.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 
 									if (options.getResult().getText().equals("Leaving Camp")) {
 										// staff member should be signed out as leaving camp
@@ -1473,7 +1468,6 @@ public class SignInPane extends GridPane {
 							});
 						}
 					}
-
 				}
 
 				bunkBox.getChildren().addAll(new HBox(), new HBox()); // empty HBoxes for spacing
@@ -1636,9 +1630,7 @@ public class SignInPane extends GridPane {
 					Platform.exit();
 					System.exit(0);
 				}
-
 			}
 		});
 	}
-
 }
