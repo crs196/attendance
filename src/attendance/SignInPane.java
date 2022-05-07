@@ -86,9 +86,10 @@ public class SignInPane extends GridPane {
 	
 	// used to track how many people have left and returned
 	private int left, returned, stillOut, visitors;
-	//used to track what row to write the next staff member on
+	// used to track what row to write the next staff member on
 	private int staffRowNum;
 	
+	// used to track whether the "sign in/out" should also write to the excel file
 	private boolean autosave;
 
 	public SignInPane(Stage s, Ini set) {
@@ -189,7 +190,10 @@ public class SignInPane extends GridPane {
 	
 	// takes the string entered as curfew time and converts it to the date and time of curfew
 	private LocalDateTime curfewTime(String curfewString) {
-	
+		
+		if (curfewString == null)
+			return null;
+		
 		int hour = 0, minute = 0; // variables to hold the input hour and minute
 		
 		// a regex and matcher that matches 12-hr time with optional leading zero, optional separator
@@ -701,32 +705,6 @@ public class SignInPane extends GridPane {
 		// stage and scene for offCampList
 		Stage offCampStage = new Stage();
 		Scene offCampScene = new Scene(new Label("Something's gone wrong"));
-		
-		// schedule saveAndRestart to be clicked at the specified time
-		new Timer().schedule(
-				new TimerTask() {
-					
-					@Override
-					public void run() {
-						Platform.runLater(() -> {
-							saveAndRestart.fire();	// TODO: maybe change this to not click the button (what happens if alert window shows up?)
-						});
-					}
-					
-				}, Date.from(rolloverTime.atZone(ZoneId.systemDefault()).toInstant()));
-		
-		// schedule saveAndRestart to be clicked at the specified time
-		new Timer().schedule(
-				new TimerTask() {
-
-					@Override
-					public void run() {
-						Platform.runLater(() -> {
-							saveAndRestart.fire();	// TODO: maybe change this to not click the button (what happens if alert window shows up?)
-						});
-					}
-
-				}, Date.from(rolloverTime.atZone(ZoneId.systemDefault()).toInstant()));
 		
 		// set info button behavior (show credits, brief explanation of what to do)
 		info.setOnAction(new EventHandler<ActionEvent>() {
@@ -1284,17 +1262,24 @@ public class SignInPane extends GridPane {
 				confirmation.setText("Data saved to \"" + attendanceFile.getName() + "\"");
 			}
 		});
+		
+		// this event handler is used for the "save and restart" and "save and exit" buttons as well as the auto-rollover
+		//  in order to minimize duplicate code
+		class EndSaveHandler implements EventHandler<ActionEvent> {
 
-		// TODO: maybe write one handler for both "save and restart" and "save and exit" to minimize repeated code
-		// marks unaccounted-for staff members as absent, writes to file, restarts program
-		saveAndRestart.setOnAction(new EventHandler<ActionEvent>() {
-
+			private boolean exit, alertPopup;
+			
+			public EndSaveHandler(boolean e, boolean ap) {
+				exit = e;
+				alertPopup = ap;
+			}
+			
 			@Override
 			public void handle(ActionEvent event) {
 				
-				// if there are still unaccounted staff, confirm that user still wants to exit
-				if (!noUnaccountedStaff()) {
-					Alert saveAndExitConf = new Alert(AlertType.CONFIRMATION, "There are still staff members that haven't signed in.\nAre you sure you want to restart?");
+				// if the popup should be shown and there are still unaccounted staff, confirm that user still wants to exit
+				if (alertPopup && !noUnaccountedStaff()) {
+					Alert saveAndExitConf = new Alert(AlertType.CONFIRMATION, "There are still staff members that haven't signed in.\nAre you sure you want to proceed?");
 					saveAndExitConf.setHeaderText("Save and Exit Confirmation");
 					saveAndExitConf.setTitle("Save and Exit Confirmation");
 					saveAndExitConf.getDialogPane().getStylesheets().add(getClass().getResource(settings.get("filePaths", "cssFile", String.class)).toExternalForm());
@@ -1314,8 +1299,14 @@ public class SignInPane extends GridPane {
 				
 				// close all windows
 				offCampStage.close();
-				stage.close();
-				Attendance.createScene(stage); // restart the program
+				// if we should exit
+				if (exit) {
+					Platform.exit(); //exit
+					System.exit(0);
+				} else { // otherwise restart
+					stage.close();
+					Attendance.createScene(stage);
+				}
 			}
 			
 			// returns whether or not there are still unaccounted-for staff
@@ -1361,84 +1352,26 @@ public class SignInPane extends GridPane {
 					}
 				}
 			}
-		});
+		}
+		
+		// marks unaccounted-for staff members as absent, writes to file, restarts program
+		saveAndRestart.setOnAction(new EndSaveHandler(false, true)); // restart, show popup
 		
 		// marks unaccounted-for staff members as absent, writes to file, closes program
-		saveAndExit.setOnAction(new EventHandler<ActionEvent>() {
-
-			@Override
-			public void handle(ActionEvent event) {
-				
-				// if there are still unaccounted staff, confirm that user still wants to exit
-				if (!noUnaccountedStaff()) {
-					Alert saveAndExitConf = new Alert(AlertType.CONFIRMATION, "There are still staff members that haven't signed in.\nAre you sure you want to exit?");
-					saveAndExitConf.setHeaderText("Save and Exit Confirmation");
-					saveAndExitConf.setTitle("Save and Exit Confirmation");
-					saveAndExitConf.getDialogPane().getStylesheets().add(getClass().getResource(settings.get("filePaths", "cssFile", String.class)).toExternalForm());
-					saveAndExitConf.getDialogPane().lookupButton(ButtonType.CANCEL).setId("red");
-					saveAndExitConf.initOwner(saveAndExit.getScene().getWindow());
-					saveAndExitConf.showAndWait();
-					
-					if (saveAndExitConf.getResult() != ButtonType.OK)
-						return; // user does not want to save and exit
-				}
-				
-				// all staff are accounted for or user wants to mark unaccounted-for staff as absent
-				markUnaccAbsent();
-				
-				// write data to attendanceFile
-				save.fire();
-				
-				// close all windows
-				offCampStage.close();
-				Platform.exit();
-			}
-
-			// returns whether or not there are still unaccounted-for staff
-			// in order to be "accounted for," the staff member/visitor must fall under one of the following categories:
-			// - never signed out and never signed in
-			// - signed out and signed back in
-			// - signed out for a day off and not signed back in
-			public boolean noUnaccountedStaff() {
-				
-				for (StaffMember sm : staffList.values())
-					if (!sm.isSignedOut() && sm.isSignedIn()) // a visitor who's signed in but not out
-						return false;
-					else if (sm.isSignedOut() && !sm.isSignedIn()) // staff member's signed out but not in. only ok if on a day off
-						// is on a day off if their time in column says so
-						if (!attendanceSheet.getRow(sm.getTodayRow()).getCell(timeInCol).getStringCellValue().equalsIgnoreCase("day off"))
-							return false;
-
-				return true;
-			}
-			
-			// marks all staff that did not sign in as absent, and increments their "absent" column, if it exists
-			public void markUnaccAbsent() {
-				
-				boolean absent;
-				
-				for (StaffMember sm : staffList.values()) {
-					
-					absent = false;
-					
-					if (!sm.isSignedOut() && sm.isSignedIn()) // a visitor who's signed in but not out
-						absent = true;
-					else if (sm.isSignedOut() && !sm.isSignedIn()) // staff member's signed out but not in. only ok if on a day off
-						// is on a day off if their time in column says so
-						if (!attendanceSheet.getRow(sm.getTodayRow()).getCell(timeInCol).getStringCellValue().equalsIgnoreCase("day off"))
-							absent = true;
-					
-					//  increment "absent" column
-					if (absent) {				
-						if ((keySheet.getRow(sm.getKeyRow()) != null) 
-								&& keySheet.getRow(sm.getKeyRow()).getCell(absentCol) != null) // the cell exists
-							keySheet.getRow(sm.getKeyRow()).getCell(absentCol).setCellValue(keySheet.getRow(sm.getKeyRow()).getCell(absentCol).getNumericCellValue() + 1);
-						else // the cell does not exist
-							keySheet.getRow(sm.getKeyRow()).createCell(absentCol).setCellValue(1);
-					}
-				}
-			}
-		});
+		saveAndExit.setOnAction(new EndSaveHandler(true, true)); // exit, show popup
+		
+		// schedule the program to restart at the specified time
+		if (rolloverTime != null) {
+			new Timer().schedule(
+					new TimerTask() {
+						@Override
+						public void run() {
+							Platform.runLater(() -> {
+								new EndSaveHandler(false, false).handle(new ActionEvent());; // restart, don't show popup
+							});
+						}
+					}, Date.from(rolloverTime.atZone(ZoneId.systemDefault()).toInstant()));
+		}
 
 		/* change stage close behavior */
 		stage.setOnCloseRequest(new EventHandler<WindowEvent>() {
