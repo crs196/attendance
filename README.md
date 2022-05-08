@@ -11,7 +11,7 @@
   - [*Configuration File*](#configuration-file)
   - [*Application Use*](#application-use)
 - [Changelog](#changelog)
-  - [*Version 2.0 (to be released 5/8/2022)*](#version-20-to-be-released-582022)
+  - [*Version 2.0 (released 5/8/2022)*](#version-20-released-582022)
   - [*Version 1.3 (released 3/12/2021)*](#version-13-released-3122021)
   - [*Version 1.2 (released 2/11/2021)*](#version-12-released-2112021)
   - [*Version 1.1 (released 8/7/2020)*](#version-11-released-872020)
