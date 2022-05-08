@@ -1,4 +1,4 @@
-# Camp Attendance-Tracking Software <!-- omit in TOC -->
+# OSRUI Attendance-Tracking Software <!-- omit in TOC -->
 
 *written by Cooper Schwartz*
 
