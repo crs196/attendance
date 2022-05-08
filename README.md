@@ -9,7 +9,7 @@
     - [*Key Sheet*](#key-sheet)
     - [*Daily Attendance Template Sheet*](#daily-attendance-template-sheet)
   - [*Configuration File*](#configuration-file)
-  - [*Application Use* -- TODO](#application-use----todo)
+  - [*Application Use*](#application-use)
 - [Changelog](#changelog)
   - [*Version 2.0 (to be released 5/8/2022)*](#version-20-to-be-released-582022)
   - [*Version 1.3 (released 3/12/2021)*](#version-13-released-3122021)
@@ -104,13 +104,13 @@ To change an option, simply replace the text to the right of an `=` to what you'
     - With or without a space between the time and meridiem indicators (e.g. `5p`, `5 p`)
     - With or without the "M"/"m" in a meridiem indicator (e.g. `3a`, `3am`)
 - `onTimeColor`: the color that the spreadsheet cell should be colored when a staff member signs in on time.
-  - *Default:* <img valign='middle' alt='#b7e1cd' src='https://readme-swatches.vercel.app/b7e1cd'/>
+  - *Default:* `#b7e1cd` <img valign='middle' alt='#b7e1cd' src='https://readme-swatches.vercel.app/b7e1cd'/>
 - `lateColor`: the color that the spreadsheet cell should be colored when a staff member signs in late.
-  -  *Default:* <img valign='middle' alt='#ffe599' src='https://readme-swatches.vercel.app/ffe599'/>
+  -  *Default:* `#ff3599` <img valign='middle' alt='#ffe599' src='https://readme-swatches.vercel.app/ffe599'/>
 - `absentColor`: the color that the spreadsheet cell should be colored when a staff member hasn't signed in or a visitor hasn't signed out.
-  -  *Default:* <img valign='middle' alt='#ea9999' src='https://readme-swatches.vercel.app/ea9999'/>
+  -  *Default:* `#ea9999` <img valign='middle' alt='#ea9999' src='https://readme-swatches.vercel.app/ea9999'/>
 - `excusedColor`: the color that the spreadsheet cell should be colored when a staff member has signed out on the first day of their day off and may not return tonight.
-  -  *Default:* <img valign='middle' alt='#00a7e1' src='https://readme-swatches.vercel.app/00a7e1'/>
+  -  *Default:* `#00a7e1` <img valign='middle' alt='#00a7e1' src='https://readme-swatches.vercel.app/00a7e1'/>
   -  *Constraints for all four colors:* must be a valid hex color code (case-insensitive).
 
 **Settings you probably don't need to change:**
@@ -125,26 +125,41 @@ To change an option, simply replace the text to the right of an `=` to what you'
   - *Default:* `resources/files/signInInfo.txt`
   - *Constraints:* must be a valid filepath to a text file.
 
-### *Application Use* -- TODO
+### *Application Use*
 
-![initial screen of application](resources/images/instructions/start_window.png)
+![Main Application Window](resources/images/instructions/sign_in_window.png)
 
-The first screen that shows up on application start-up is relatively self-explanatory. Type in your name and what time curfew is, then select `Choose File` to select the attendance spreadsheet.
+This is the main window of the application. In order to sign a staff member out or a visitor in, type/scan/enter their name or ID into the text field, select the radio button for the correct curfew, and click the **Sign In/Out** button or press Enter. 
 
-![sign in window of application](resources/images/instructions/sign_in_window.png)
+In order to sign a staff member in or a visitor out, simply type/scan/enter their name or ID into the text field, and click the **Sign In/Out** button or press Enter. There's no need to select the same radio button as previously.
 
-This is the main window of the application. In order to sign in a staff member, type/scan/enter their name (or ID, if it exists) into the text field and click the `Sign In` button or press Enter. Confirmation and error messages will be displayed on the area below the text field and the `Sign In` button.  
-If you want to write all currently taken data back to the attendance spreadsheet, press the `Save` button, and if you're done signing in, press the `Save and Return to Setup` button to write back to the attendance spreadsheet and return to the previous (setup) screen.  
+Confirmation and error messages will be displayed in the area below the radio buttons.  
 
-**VERY IMPORTANT: Make sure you do not have your attendance spreadsheet open while attempting to write to it (`Save` or `Save and Return to Setup`). The write will fail and data may be lost.**
+The **Save** button will save the current attendance record to the spreadsheet.
+*Note: if the `autosave` setting is set to `true` in [`config.ini`](config.ini), clicking the **Sign In/Out** button will also save to the spreadsheet.*
 
-![unacounted-for staff list](resources/images/instructions/unaccounted_staff.png)
+The **Save and Exit** button will save the current attendance record to the spreadsheet and exit the program. If there are staff members who haven't signed in, you'll be asked to confirm that you want to mark them as absent before proceeding.
 
-Clicking on `View Unaccounted-for Staff Members` will bring up a list of all staff members listed in the attendance file that have not yet signed in in this session, listed by bunk. Clicking on the name of a staff member in this list will bring up additional options for them.
+The **Save and Restart** button will save the current attendance record to the spreadsheet and restart the program. If there are staff members who haven't signed in, you'll be asked to confirm that you want to mark them as absent before proceeding.
+*Note: if the `rolloverTime` setting exists in [`config.ini`](config.ini), the program will automatically save and restart at the configured time. Staff members who haven't signed in will be marked as absent without a confirmation in this case.*
 
-![additional staff sign-in options](resources/images/instructions/manual_sign_in.png)
+**VERY IMPORTANT: Make sure you do not have your attendance spreadsheet open while attempting to write to it (*Save*, *Save and Exit*, or *Save and Restart*). The write will fail and data may be lost.**
 
-Clicking on the `Sign In`, `Shmira`, or `Day Off` buttons in this window will sign in the listed staff member either normally, as on shmira, or as on a day off, respectively.
+![On-Camp Staff list](resources/images/instructions/on_camp_staff.png)
+
+Clicking on **Show On-Camp Staff** will pop up a list of all staff members and visitors listed in the attendance file that are currently on camp, listed by bunk/position. Clicking on the name of a person in this list will cause a dropdown to appear that allows you to manually sign them out.
+
+![Manual Sign-Out dropdown](resources/images/instructions/manual_sign_out.png)
+
+Clicking on any of the buttons in the dropdown will sign the staff member or visitor out with the curfew of the selected button. *(This is the same functionality as typing the person's name into the ID box, selecting the same curfew radio button, and clicking the **Sign In/Out** button.)*
+
+![Off-Camp Staff list](resources/images/instructions/off_camp_staff.png)
+
+Clicking on **Show On-Camp Staff** will pop up a list of all staff members listed in the attendance file that are currently off of camp, listed by bunk/position. Clicking on the name of a person in this list will cause a dropdown to appear that allows you to manually sign them in.
+
+![Manual Sign-Out dropdown](resources/images/instructions/manual_sign_in.png)
+
+Clicking on any of the buttons in the dropdown will sign the staff member in. *(This is the same functionality as typing the person's name into the ID box and clicking the **Sign In/Out** button.)*
 
 ---
 

@@ -1527,8 +1527,8 @@ public class SignInPane extends GridPane {
 				// if the popup should be shown and there are still unaccounted staff, confirm that user still wants to exit
 				if (alertPopup && !noUnaccountedStaff()) {
 					Alert saveAndExitConf = new Alert(AlertType.CONFIRMATION, "There are still staff members that haven't signed in.\nAre you sure you want to proceed?");
-					saveAndExitConf.setHeaderText("Save and Exit Confirmation");
-					saveAndExitConf.setTitle("Save and Exit Confirmation");
+					saveAndExitConf.setHeaderText("Save Confirmation");
+					saveAndExitConf.setTitle("Save Confirmation");
 					saveAndExitConf.getDialogPane().getStylesheets().add(getClass().getResource(settings.get("filePaths", "cssPath", String.class)).toExternalForm());
 					saveAndExitConf.getDialogPane().lookupButton(ButtonType.CANCEL).setId("red");
 					saveAndExitConf.initOwner(saveAndExit.getScene().getWindow());
