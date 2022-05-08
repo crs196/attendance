@@ -165,7 +165,7 @@ Clicking on any of the buttons in the dropdown will sign the staff member in. *(
 
 ## Changelog
 
-### *Version 2.0 (to be released 5/8/2022)*
+### *Version 2.0 (released 5/8/2022)*
 
 Much has changed since `v1.3`. This is not a fully-comprehensive list of changes.
 
