@@ -11,7 +11,7 @@
   - [*Configuration File*](#configuration-file)
   - [*Application Use*](#application-use)
 - [Changelog](#changelog)
-  - [*Version 2.0 (to be released 5/8/2022)*](#version-20-to-be-released-582022)
+  - [*Version 2.0 (released 5/8/2022)*](#version-20-released-582022)
   - [*Version 1.3 (released 3/12/2021)*](#version-13-released-3122021)
   - [*Version 1.2 (released 2/11/2021)*](#version-12-released-2112021)
   - [*Version 1.1 (released 8/7/2020)*](#version-11-released-872020)
@@ -145,14 +145,6 @@ The **Save and Restart** button will save the current attendance record to the s
 
 **VERY IMPORTANT: Make sure you do not have your attendance spreadsheet open while attempting to write to it (*Save*, *Save and Exit*, or *Save and Restart*). The write will fail and data may be lost.**
 
-![On-Camp Staff list](resources/images/instructions/on_camp_staff.png)
-
-Clicking on **Show On-Camp Staff** will pop up a list of all staff members and visitors listed in the attendance file that are currently on camp, listed by bunk/position. Clicking on the name of a person in this list will cause a dropdown to appear that allows you to manually sign them out.
-
-![Manual Sign-Out dropdown](resources/images/instructions/manual_sign_out.png)
-
-Clicking on any of the buttons in the dropdown will sign the staff member or visitor out with the curfew of the selected button. *(This is the same functionality as typing the person's name into the ID box, selecting the same curfew radio button, and clicking the **Sign In/Out** button.)*
-
 ![Off-Camp Staff list](resources/images/instructions/off_camp_staff.png)
 
 Clicking on **Show On-Camp Staff** will pop up a list of all staff members listed in the attendance file that are currently off of camp, listed by bunk/position. Clicking on the name of a person in this list will cause a dropdown to appear that allows you to manually sign them in.
@@ -165,7 +157,7 @@ Clicking on any of the buttons in the dropdown will sign the staff member in. *(
 
 ## Changelog
 
-### *Version 2.0 (to be released 5/8/2022)*
+### *Version 2.0 (released 5/8/2022)*
 
 Much has changed since `v1.3`. This is not a fully-comprehensive list of changes.
 
