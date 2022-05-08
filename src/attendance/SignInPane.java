@@ -39,6 +39,7 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
+import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
@@ -59,6 +60,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
+import javafx.stage.Popup;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 
@@ -66,8 +68,6 @@ public class SignInPane extends GridPane {
 
 	private Stage stage;
 
-	// TODO: might need to have two separate curfews for "day off day 1" and "day off day 2"
-	// TODO:  currently either day 2 people get marked incorrectly on time or day 1 people get marked incorrectly late
 	private LocalDateTime leavingCampCurfew, nightOffCurfew, dayOffDay1Curfew, dayOffDay2Curfew, rolloverTime;
 	private File attendanceFile;
 	private Ini settings;
@@ -138,7 +138,7 @@ public class SignInPane extends GridPane {
 			Alert fileNotAccessible = new Alert(AlertType.ERROR, "Unable to access \"" + attendanceFile.getName()
 					+ "\"\nPlease choose a different file.");
 			fileNotAccessible.setTitle("Attendance File Not Accessible");
-			fileNotAccessible.getDialogPane().getStylesheets().add(Attendance.class.getResource(settings.get("filePaths", "cssFile", String.class)).toExternalForm());
+			fileNotAccessible.getDialogPane().getStylesheets().add(Attendance.class.getResource(settings.get("filePaths", "cssPath", String.class)).toExternalForm());
 			fileNotAccessible.getDialogPane().lookupButton(ButtonType.OK).setId("red");
 			fileNotAccessible.initOwner(stage);
 			fileNotAccessible.showAndWait();
@@ -234,7 +234,7 @@ public class SignInPane extends GridPane {
 					+ "- 12 hour time with or without a leading zero, with or without a time separator, with or without a space between the minutes and the meridiem, "
 					+ "with or without the \"M\" in the meridiem");
 			invalidCurfewTime.setTitle("Invalid Time Format");
-			invalidCurfewTime.getDialogPane().getStylesheets().add(Attendance.class.getResource(settings.get("filePaths", "cssFile", String.class)).toExternalForm());
+			invalidCurfewTime.getDialogPane().getStylesheets().add(Attendance.class.getResource(settings.get("filePaths", "cssPath", String.class)).toExternalForm());
 			invalidCurfewTime.getDialogPane().lookupButton(ButtonType.OK).setId("red");
 			invalidCurfewTime.showAndWait();
 			
@@ -265,7 +265,7 @@ public class SignInPane extends GridPane {
 			Alert fileNotAccessible = new Alert(AlertType.ERROR, "Unable to access \"" + infoFileName + 
 					"\" file.\nPlease create this file in the " + infoPath.substring(0, infoPath.lastIndexOf("/")) + " directory.");
 			fileNotAccessible.setTitle("Info File Not Accessible");
-			fileNotAccessible.getDialogPane().getStylesheets().add(Attendance.class.getResource(settings.get("filePaths", "cssFile", String.class)).toExternalForm());
+			fileNotAccessible.getDialogPane().getStylesheets().add(Attendance.class.getResource(settings.get("filePaths", "cssPath", String.class)).toExternalForm());
 			fileNotAccessible.getDialogPane().lookupButton(ButtonType.OK).setId("red");
 			fileNotAccessible.showAndWait();
 			
@@ -720,7 +720,7 @@ public class SignInPane extends GridPane {
 			public void handle(ActionEvent arg0) {
 				Alert infoDialog = new Alert(AlertType.NONE, infoText, ButtonType.CLOSE);
 				infoDialog.setTitle("Credits and Instructions — Sign-in");
-				infoDialog.getDialogPane().getStylesheets().add(getClass().getResource(settings.get("filePaths", "cssFile", String.class)).toExternalForm());
+				infoDialog.getDialogPane().getStylesheets().add(getClass().getResource(settings.get("filePaths", "cssPath", String.class)).toExternalForm());
 				infoDialog.getDialogPane().lookupButton(ButtonType.CLOSE).setId("red");
 				infoDialog.initOwner(info.getScene().getWindow());
 				infoDialog.initModality(Modality.NONE);
@@ -739,7 +739,7 @@ public class SignInPane extends GridPane {
 					// alert the user of such
 					Alert noCurfewSelected = new Alert(AlertType.WARNING, "No curfew type selected. Please select a curfew type to proceed.");
 					noCurfewSelected.setTitle("Curfew Type Not Selected");
-					noCurfewSelected.getDialogPane().getStylesheets().add(getClass().getResource(settings.get("filePaths", "cssFile", String.class)).toExternalForm());
+					noCurfewSelected.getDialogPane().getStylesheets().add(getClass().getResource(settings.get("filePaths", "cssPath", String.class)).toExternalForm());
 					noCurfewSelected.getDialogPane().lookupButton(ButtonType.OK).setId("red");
 					noCurfewSelected.initOwner(stage);
 					noCurfewSelected.showAndWait();
@@ -1097,7 +1097,7 @@ public class SignInPane extends GridPane {
 
 				// set up scene
 				offCampScene.setRoot(scrollPane);
-				offCampScene.getStylesheets().add(Attendance.class.getResource(settings.get("filePaths", "cssFile", String.class)).toExternalForm());
+				offCampScene.getStylesheets().add(Attendance.class.getResource(settings.get("filePaths", "cssPath", String.class)).toExternalForm());
 
 				// only need to do these things if the stage isn't currently on screen
 				if (!offCampStage.isShowing()) {
@@ -1105,7 +1105,7 @@ public class SignInPane extends GridPane {
 					offCampStage.setScene(offCampScene);
 					offCampStage.setMinWidth(scrollPane.getMinWidth());
 					offCampStage.setMaxHeight(scrollPane.getMaxHeight());
-					offCampStage.setTitle("Signed-Out Staff");
+					offCampStage.setTitle("Off-Camp Staff");
 					offCampStage.getIcons().add(new Image(settings.get("filePaths", "iconPath", String.class)));
 					offCampStage.centerOnScreen();
 					offCampStage.show();
@@ -1203,38 +1203,41 @@ public class SignInPane extends GridPane {
 							staffNameBox.getChildren().add(staffMember);
 							bunkBox.getChildren().add(staffNameBox);
 
-							// when a staff member is clicked, open a popup window to allow user to
-							//  mark them as on shmira or a day off or sign in normally
+							// when a staff member is clicked, open a popup window to allow user to sign them in normally
 							staffMember.setOnAction(new EventHandler<ActionEvent>() {
-
+								
 								@Override
 								public void handle(ActionEvent event) {
-									Alert options = new Alert(AlertType.NONE, "Sign this staff member in:",
-											new ButtonType("Sign In", ButtonData.OTHER),
-											ButtonType.CANCEL);
-									options.setTitle("Manual Sign-In");
-									options.setHeaderText(staffMember.getText());
-									options.getDialogPane().getStylesheets().add(getClass().getResource(settings.get("filePaths", "cssFile", String.class)).toExternalForm());
-									options.getDialogPane().lookupButton(ButtonType.CANCEL).setId("red");
-									options.initOwner(staffMember.getScene().getWindow());
-									options.showAndWait();
+									// create popup and button, add button to popup
+									Popup popup = new Popup();
+									popup.setAutoHide(true);
+									Button popupSignIn = new Button("Sign In");
+									VBox popupButtons = new VBox(8, popupSignIn);
+									popupButtons.setPadding(new Insets(4, 8, 8, 8));
+									popup.getContent().add(popupButtons);
 									
-									// create cell style to be used when signing staff member in for day off or shmira
-									XSSFCellStyle onTime = workbook.createCellStyle();
-									java.awt.Color onTimeColor = Color.decode(settings.get("sheetFormat", "onTimeColor", String.class));
-									onTime.setFillForegroundColor(new XSSFColor(onTimeColor, new DefaultIndexedColorMap()));
-									onTime.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+									// locate popup on screen
+									Point2D point = staffMember.localToScreen(0, 0); // get location of button in screen space
+									popup.show(offCampStage);
+									popup.setY(point.getY() + staffMember.getHeight()); // y location is just below name
+									popup.setX(point.getX()  + (staffMember.getWidth() - popup.getWidth()) / 2); // center popup below name
+									
+									// set button action
+									popupSignIn.setOnAction(new EventHandler<ActionEvent>() {
 
-									if (options.getResult().getText().equals("Sign In")) {
-										// staff member should be signed in normally
-										// do this by writing the staff member's name into the entry box and firing the sign-in button
-										
-										idField.setText(staffMember.getText());
-										signIn.fire();
-									}
-
-									// refresh both additional lists
-									offCampList.fire();
+										@Override
+										public void handle(ActionEvent arg0) {
+											
+											// sign staff member in by writing the staff member's name into the entry box and firing the sign-in button	
+											idField.setText(staffMember.getText());
+											signIn.fire();
+											popup.hide(); // hide the button
+		
+											// refresh both additional lists
+											offCampList.fire();
+											
+										}	
+									});
 								}
 							});
 						}
@@ -1289,9 +1292,9 @@ public class SignInPane extends GridPane {
 				// if the popup should be shown and there are still unaccounted staff, confirm that user still wants to exit
 				if (alertPopup && !noUnaccountedStaff()) {
 					Alert saveAndExitConf = new Alert(AlertType.CONFIRMATION, "There are still staff members that haven't signed in.\nAre you sure you want to proceed?");
-					saveAndExitConf.setHeaderText("Save and Exit Confirmation");
-					saveAndExitConf.setTitle("Save and Exit Confirmation");
-					saveAndExitConf.getDialogPane().getStylesheets().add(getClass().getResource(settings.get("filePaths", "cssFile", String.class)).toExternalForm());
+					saveAndExitConf.setHeaderText("Save Confirmation");
+					saveAndExitConf.setTitle("Save Confirmation");
+					saveAndExitConf.getDialogPane().getStylesheets().add(getClass().getResource(settings.get("filePaths", "cssPath", String.class)).toExternalForm());
 					saveAndExitConf.getDialogPane().lookupButton(ButtonType.CANCEL).setId("red");
 					saveAndExitConf.initOwner(saveAndExit.getScene().getWindow());
 					saveAndExitConf.showAndWait();
@@ -1392,7 +1395,7 @@ public class SignInPane extends GridPane {
 				Alert alert = new Alert(AlertType.CONFIRMATION, "Are you sure you want to exit and lose all unsaved data?\n"
 						+ "Click \"OK\" to exit and \"Cancel\" to return to sign-in.");
 				alert.setTitle("Exit Confirmation");
-				alert.getDialogPane().getStylesheets().add(getClass().getResource(settings.get("filePaths", "cssFile", String.class)).toExternalForm());
+				alert.getDialogPane().getStylesheets().add(getClass().getResource(settings.get("filePaths", "cssPath", String.class)).toExternalForm());
 				alert.getDialogPane().lookupButton(ButtonType.CANCEL).setId("red");
 				alert.initOwner(stage);
 				alert.showAndWait();
@@ -1401,9 +1404,7 @@ public class SignInPane extends GridPane {
 					Platform.exit();
 					System.exit(0);
 				}
-
 			}
 		});
 	}
-
 }
