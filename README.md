@@ -104,13 +104,13 @@ To change an option, simply replace the text to the right of an `=` to what you'
     - With or without a space between the time and meridiem indicators (e.g. `5p`, `5 p`)
     - With or without the "M"/"m" in a meridiem indicator (e.g. `3a`, `3am`)
 - `onTimeColor`: the color that the spreadsheet cell should be colored when a staff member signs in on time.
-  - *Default:* `#b7e1cd` <img valign='middle' alt='#b7e1cd' src='https://readme-swatches.vercel.app/b7e1cd'/>
+  - *Default:* `#b7e1cd` <img valign='middle' alt='#b7e1cd' src='https://readme-swatches.vercel.app/b7e1cd?style=round'/>
 - `lateColor`: the color that the spreadsheet cell should be colored when a staff member signs in late.
-  -  *Default:* `#ff3599` <img valign='middle' alt='#ffe599' src='https://readme-swatches.vercel.app/ffe599'/>
+  -  *Default:* `#ff3599` <img valign='middle' alt='#ffe599' src='https://readme-swatches.vercel.app/ffe599?style=round'/>
 - `absentColor`: the color that the spreadsheet cell should be colored when a staff member hasn't signed in or a visitor hasn't signed out.
-  -  *Default:* `#ea9999` <img valign='middle' alt='#ea9999' src='https://readme-swatches.vercel.app/ea9999'/>
+  -  *Default:* `#ea9999` <img valign='middle' alt='#ea9999' src='https://readme-swatches.vercel.app/ea9999?style=round'/>
 - `excusedColor`: the color that the spreadsheet cell should be colored when a staff member has signed out on the first day of their day off and may not return tonight.
-  -  *Default:* `#00a7e1` <img valign='middle' alt='#00a7e1' src='https://readme-swatches.vercel.app/00a7e1'/>
+  -  *Default:* `#00a7e1` <img valign='middle' alt='#00a7e1' src='https://readme-swatches.vercel.app/00a7e1?style=round'/>
   -  *Constraints for all four colors:* must be a valid hex color code (case-insensitive).
 
 **Settings you probably don't need to change:**
@@ -147,7 +147,7 @@ The **Save and Restart** button will save the current attendance record to the s
 
 ![Off-Camp Staff list](resources/images/instructions/off_camp_staff.png)
 
-Clicking on **Show On-Camp Staff** will pop up a list of all staff members listed in the attendance file that are currently off of camp, listed by bunk/position. Clicking on the name of a person in this list will cause a dropdown to appear that allows you to manually sign them in.
+Clicking on **Show On-Camp Staff** will pop up a list of all staff members listed in the attendance file that are currently on camp, listed by bunk/position. Clicking on the name of a person in this list will cause a dropdown to appear that allows you to manually sign them in.
 
 ![Manual Sign-Out dropdown](resources/images/instructions/manual_sign_in.png)
 
