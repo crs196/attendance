@@ -155,7 +155,7 @@ Clicking on any of the buttons in the dropdown will sign the staff member or vis
 
 ![Off-Camp Staff list](resources/images/instructions/off_camp_staff.png)
 
-Clicking on **Show On-Camp Staff** will pop up a list of all staff members listed in the attendance file that are currently off of camp, listed by bunk/position. Clicking on the name of a person in this list will cause a dropdown to appear that allows you to manually sign them in.
+Clicking on **Show On-Camp Staff** will pop up a list of all staff members listed in the attendance file that are currently on camp, listed by bunk/position. Clicking on the name of a person in this list will cause a dropdown to appear that allows you to manually sign them in.
 
 ![Manual Sign-Out dropdown](resources/images/instructions/manual_sign_in.png)
 
