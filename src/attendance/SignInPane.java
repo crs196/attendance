@@ -68,7 +68,7 @@ public class SignInPane extends GridPane {
 
 	private Stage stage;
 
-	private LocalDateTime leavingCampCurfew, nightOffCurfew, dayOffDay1Curfew, dayOffDay2Curfew, rolloverTime;
+	private LocalDateTime nightOutCurfew, extendedNightOffCurfew, dayOffDay1Curfew, dayOffDay2Curfew, rolloverTime;
 	private File attendanceFile;
 	private Ini settings;
 
@@ -110,8 +110,8 @@ public class SignInPane extends GridPane {
 		stage = s;
 		
 		// set instance variables
-		leavingCampCurfew = curfewTime(settings.get("times", "leavingCampCurfew"));
-		nightOffCurfew = curfewTime(settings.get("times", "nightOffCurfew"));
+		nightOutCurfew = curfewTime(settings.get("times", "nightOutCurfew"));
+		extendedNightOffCurfew = curfewTime(settings.get("times", "extendedNightOffCurfew"));
 		rolloverTime = curfewTime(settings.get("times", "rolloverTime"));
 		// set both day off curfews
 		dayOffDay1Curfew = curfewTime(settings.get("times", "dayOffCurfew"));
@@ -307,9 +307,9 @@ public class SignInPane extends GridPane {
 							visitor = true; // it's a visitor
 							pending = true; // they're still on-camp
 						} else if (yesterday.getRow(i).getCell(timeInCol) != null) {
-							// if time in col exists and is "Day \nOff", "Leaving \nCamp", or "Night \nOff"
+							// if time in col exists and is "Day \nOff", "Night \nOut", or "Extended \nNight Off"
 							String timeOut = yesterday.getRow(i).getCell(timeInCol).getStringCellValue().toLowerCase();
-							pending = timeOut.equals("day \noff") || timeOut.equals("night \noff") || timeOut.equals("leaving \ncamp"); // they're still off camp
+							pending = timeOut.equals("day \noff") || timeOut.equals("extended \nnight off") || timeOut.equals("night \nout"); // they're still off camp
 						}
 					}
 				}
@@ -339,10 +339,10 @@ public class SignInPane extends GridPane {
 						ct = CurfewType.VISITOR;
 					} else {
 						switch (yesterday.getRow(i).getCell(timeInCol).getStringCellValue().toLowerCase()) {
-							case "leaving \ncamp":
+							case "night \nout":
 								ct = CurfewType.NORMAL;
 								break;
-							case "night \noff":
+							case "extended \nnight off":
 								ct = CurfewType.NIGHT_OFF;
 								break;
 							case "day \noff":
@@ -475,10 +475,10 @@ public class SignInPane extends GridPane {
 					ct = CurfewType.VISITOR;
 				} else {
 					switch (attendanceSheet.getRow(i).getCell(timeInCol).getStringCellValue().toLowerCase()) {
-						case "leaving \ncamp":
+						case "night \nout":
 							ct = CurfewType.NORMAL;
 							break;
-						case "night \noff":
+						case "extended \nnight off":
 							ct = CurfewType.NIGHT_OFF;
 							break;
 						case "day \noff":
@@ -528,17 +528,17 @@ public class SignInPane extends GridPane {
 	// initializes column trackers, writes curfew times to respective cells
 	private void initializeAttendanceSheet() {
 		
-		// write leaving camp curfew time to row 2 in today's column if different than what's already there
+		// write night out curfew time to row 2 in today's column if different than what's already there
 		if (attendanceSheet.getRow(1).getCell(8) == null)
-			attendanceSheet.getRow(1).createCell(8).setCellValue(leavingCampCurfew.format(DateTimeFormatter.ofPattern("h:mm a")));
-		else if (!(attendanceSheet.getRow(1).getCell(8).getStringCellValue().equals(leavingCampCurfew.format(DateTimeFormatter.ofPattern("h:mm a")))))
-			attendanceSheet.getRow(1).getCell(8).setCellValue(leavingCampCurfew.format(DateTimeFormatter.ofPattern("h:mm a")));
+			attendanceSheet.getRow(1).createCell(8).setCellValue(nightOutCurfew.format(DateTimeFormatter.ofPattern("h:mm a")));
+		else if (!(attendanceSheet.getRow(1).getCell(8).getStringCellValue().equals(nightOutCurfew.format(DateTimeFormatter.ofPattern("h:mm a")))))
+			attendanceSheet.getRow(1).getCell(8).setCellValue(nightOutCurfew.format(DateTimeFormatter.ofPattern("h:mm a")));
 		
-		// write night off curfew time to row 3 in today's column if different than what's already there
+		// write extended night off curfew time to row 3 in today's column if different than what's already there
 		if (attendanceSheet.getRow(2).getCell(8) == null)
-			attendanceSheet.getRow(2).createCell(8).setCellValue(nightOffCurfew.format(DateTimeFormatter.ofPattern("h:mm a")));
-		else if (!(attendanceSheet.getRow(2).getCell(8).getStringCellValue().equals(nightOffCurfew.format(DateTimeFormatter.ofPattern("h:mm a")))))
-			attendanceSheet.getRow(2).getCell(8).setCellValue(nightOffCurfew.format(DateTimeFormatter.ofPattern("h:mm a")));
+			attendanceSheet.getRow(2).createCell(8).setCellValue(extendedNightOffCurfew.format(DateTimeFormatter.ofPattern("h:mm a")));
+		else if (!(attendanceSheet.getRow(2).getCell(8).getStringCellValue().equals(extendedNightOffCurfew.format(DateTimeFormatter.ofPattern("h:mm a")))))
+			attendanceSheet.getRow(2).getCell(8).setCellValue(extendedNightOffCurfew.format(DateTimeFormatter.ofPattern("h:mm a")));
 		
 		// write day off curfew time to row 4 in today's column if different than what's already there
 		if (attendanceSheet.getRow(3).getCell(8) == null)
@@ -580,19 +580,19 @@ public class SignInPane extends GridPane {
 		// curfew times
 		
 		// normal
-		Label normalCurfewLabel = new Label("Leaving Camp Curfew:");
+		Label normalCurfewLabel = new Label("Night Out Curfew:");
 		Label normalCurfewTimeLabel = new Label();
-		normalCurfewTimeLabel.setText(leavingCampCurfew.format(DateTimeFormatter.ofPattern("h:mm a")));
+		normalCurfewTimeLabel.setText(nightOutCurfew.format(DateTimeFormatter.ofPattern("h:mm a")));
 		HBox normalCurfewBox = new HBox(this.getHgap());
 		normalCurfewLabel.setMinWidth(USE_PREF_SIZE);
 		normalCurfewTimeLabel.setMinWidth(USE_PREF_SIZE);
 		normalCurfewBox.setAlignment(Pos.CENTER);
 		normalCurfewBox.getChildren().addAll(normalCurfewLabel, normalCurfewTimeLabel);
 		
-		// night off
-		Label nightOffCurfewLabel = new Label("Night off Curfew: ");
+		// extended night off
+		Label nightOffCurfewLabel = new Label("Extended Night Off Curfew: ");
 		Label nightOffCurfewTimeLabel = new Label();
-		nightOffCurfewTimeLabel.setText(nightOffCurfew.format(DateTimeFormatter.ofPattern("h:mm a")));
+		nightOffCurfewTimeLabel.setText(extendedNightOffCurfew.format(DateTimeFormatter.ofPattern("h:mm a")));
 		HBox nightOffCurfewBox = new HBox(this.getHgap());
 		nightOffCurfewLabel.setMinWidth(USE_PREF_SIZE);
 		nightOffCurfewTimeLabel.setMinWidth(USE_PREF_SIZE);
@@ -600,7 +600,7 @@ public class SignInPane extends GridPane {
 		nightOffCurfewBox.getChildren().addAll(nightOffCurfewLabel, nightOffCurfewTimeLabel);
 		
 		// day off
-		Label dayOffCurfewLabel = new Label("Day off Curfew: ");
+		Label dayOffCurfewLabel = new Label("Day Off Curfew: ");
 		Label dayOffCurfewTimeLabel = new Label();
 		dayOffCurfewTimeLabel.setText(dayOffDay1Curfew.format(DateTimeFormatter.ofPattern("h:mm a")));
 		HBox dayOffCurfewBox = new HBox(this.getHgap());
@@ -657,8 +657,8 @@ public class SignInPane extends GridPane {
 		
 		// curfew selection radio buttons
 		ToggleGroup curfewTimeSelection = new ToggleGroup();
-		RadioButton normal = new RadioButton("Leaving \nCamp");
-		RadioButton nightOff = new RadioButton("Night \nOff");
+		RadioButton normal = new RadioButton("Night \nOut");
+		RadioButton nightOff = new RadioButton("Extended \nNight Off");
 		RadioButton dayOff = new RadioButton("Day \nOff");
 		RadioButton visitor = new RadioButton("Visitor");
 		normal.setToggleGroup(curfewTimeSelection);
@@ -667,6 +667,7 @@ public class SignInPane extends GridPane {
 		visitor.setToggleGroup(curfewTimeSelection);
 		
 		HBox timeSelectionBox = new HBox(this.getHgap());
+		timeSelectionBox.setAlignment(Pos.CENTER_RIGHT);
 		timeSelectionBox.getChildren().addAll(normal, nightOff, dayOff, visitor);
 		
 		VBox idBox = new VBox(this.getVgap());
@@ -840,10 +841,10 @@ public class SignInPane extends GridPane {
 				LocalDateTime curfewUsed = null;
 				switch (sm.getCurfewType()) {
 					case NORMAL:
-						curfewUsed = leavingCampCurfew;
+						curfewUsed = nightOutCurfew;
 						break;
 					case NIGHT_OFF:
-						curfewUsed = nightOffCurfew;
+						curfewUsed = extendedNightOffCurfew;
 						break;
 					case DAY_OFF_DAY_1:
 						curfewUsed = dayOffDay1Curfew;
@@ -984,10 +985,10 @@ public class SignInPane extends GridPane {
 				// set the curfew type of the staff member unless it's already set
 				if (sm.getCurfewType() == CurfewType.NONE) {
 					switch (((RadioButton)curfewTimeSelection.getSelectedToggle()).getText().toLowerCase()) {
-						case "leaving \ncamp":
+						case "night \nout":
 							sm.setCurfewType(CurfewType.NORMAL);
 							break;
-						case "night \noff":
+						case "extended \nnight off":
 							sm.setCurfewType(CurfewType.NIGHT_OFF);
 							break;
 						case "day \noff":
@@ -1406,8 +1407,8 @@ public class SignInPane extends GridPane {
 									Popup popup = new Popup();
 									popup.setAutoHide(true);
 									
-									Button popupLeaving = new Button("Leaving Camp");
-									Button popupNightOff = new Button("Night Off");
+									Button popupLeaving = new Button("Night Out");
+									Button popupNightOff = new Button("Extended Night Off");
 									Button popupDayOff = new Button("Day Off");
 									Button popupVisitor = new Button("Visitor");
 									popupLeaving.setMaxWidth(Double.MAX_VALUE);
@@ -1462,7 +1463,7 @@ public class SignInPane extends GridPane {
 									
 									// set button event handlers
 									popupLeaving.setOnAction(new ButtonHandler(normal)); // select normal curfew
-									popupNightOff.setOnAction(new ButtonHandler(nightOff)); // select night off curfew
+									popupNightOff.setOnAction(new ButtonHandler(nightOff)); // select extended night off curfew
 									popupDayOff.setOnAction(new ButtonHandler(dayOff)); // select day off curfew
 									popupVisitor.setOnAction(new ButtonHandler(visitor)); // select visitor
 								}

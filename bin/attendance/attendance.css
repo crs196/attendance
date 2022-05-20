@@ -66,23 +66,23 @@
 
 #header {
 	-fx-font-family: "Toonish";
-	-fx-font-size: 50px;
+	-fx-font-size: 60px;
 }
 
 .label {
 	-fx-font-family: "Montserrat Medium";
 	-fx-text-fill: white;
-	-fx-font-size: 16px;
+	-fx-font-size: 14px;
 }
 
 #bunk-label {
 	-fx-font-family: "Toonish";
 	-fx-text-fill: white;
-	-fx-font-size: 20px;
+	-fx-font-size: 18px;
 }
 
 .text-area {
-	-fx-font-size: 20px;
+	-fx-font-size: 18px;
 	-fx-font-family: "Montserrat Medium";
 	-fx-text-fill: white;
 	-fx-background-color: #212153;
@@ -99,17 +99,17 @@
 .dialog-pane .label {
 	-fx-font-family: "Montserrat Medium";
 	-fx-text-fill: white;
-	-fx-font-size: 14px;
+	-fx-font-size: 12px;
 }
 
 .dialog-pane:header .header-panel .label {
-	-fx-font-size: 22px;
+	-fx-font-size: 20px;
 	-fx-text-fill: white;
 }
 
 .button {
 	-fx-font-family: "Montserrat Medium";
-	-fx-font-size: 14px;
+	-fx-font-size: 12px;
 	-fx-text-fill: white;
 	-fx-background-color: linear-gradient(#da885b, #f36a26);
 }
@@ -121,7 +121,7 @@
 .radio-button {
 	-fx-font-family: "Montserrat Medium";
 	-fx-text-fill: white;
-	-fx-font-size: 14px;
+	-fx-font-size: 12px;
 }
 
 .info {
@@ -140,7 +140,7 @@
 
 #list-button {
 	-fx-font-family: "Montserrat Medium";
-	-fx-font-size: 16px;
+	-fx-font-size: 14px;
 	-fx-text-fill: white;
 	-fx-background-color: transparent;
 }
