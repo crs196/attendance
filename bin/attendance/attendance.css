@@ -1,36 +1,36 @@
 /* for use outside of eclipse
 @font-face {
-	src: url("/resources/fonts/AdobeGaramondRegular.otf");
+	src: url("/resources/fonts/Toonish.ttf");
 }
 
 @font-face {
-    src: url("/resources/fonts/nexa-rust.sans-black.otf");
+    src: url("/resources/fonts/MontserratMedium.ttf");
 } 
 */
 /* for use in eclipse */
 @font-face {
-	src: url("../../resources/fonts/AdobeGaramondRegular.otf");
+	src: url("../../resources/fonts/Toonish.ttf");
 }
 
 @font-face {
-    src: url("../../resources/fonts/nexa-rust.sans-black.otf");
+    src: url("../../resources/fonts/MontserratMedium.ttf");
 }
 
 
-/* osrui colors: red – #be1e2d; blue – #005baa; green - #64964b */
+/* harlam colors: orange - #f36a26; blue - #212153 */
 
 .root {
-	-fx-background-color: #005baa;
+	-fx-background-color: #212153;
 }
 
 .scroll-pane {
-	-fx-background: #005baa;
+	-fx-background: #212153;
 	-fx-hbar-policy: never;
 }
 
 .scroll-bar .increment-button ,
 .scroll-bar .decrement-button {
-    -fx-background-color: #005baa;
+    -fx-background-color: #212153;
     -fx-background-radius: 0;
     -fx-padding: 0;
 
@@ -43,61 +43,61 @@
 }
 
 .scroll-bar .thumb {
-    -fx-background-color: #e5a9a9;
+    -fx-background-color: #f3c7a6;
     -fx-background-radius: 5;
 }
 
 .scroll-bar .thumb:hover {
-	-fx-background-color: #d2646b;
+	-fx-background-color: #da885b;
 }
 
 .scroll-bar .thumb:pressed {
-	-fx-background-color: #be1e2d;
+	-fx-background-color: #f36a26;
 }
 
 .scroll-bar .track {
-	-fx-background-color: #005baa;
-	-fx-border-color: #005baa;
+	-fx-background-color: #212153;
+	-fx-border-color: #212153;
 }
 
 .dialog-pane:header .header-panel {
-	-fx-background-color: #005baa;
+	-fx-background-color: #212153;
 }
 
 #header {
-	-fx-font-family: "Nexa Rust Sans Black";
+	-fx-font-family: "Toonish";
 	-fx-font-size: 50px;
 }
 
 .label {
-	-fx-font-family: "AGaramond";
+	-fx-font-family: "Montserrat Medium";
 	-fx-text-fill: white;
 	-fx-font-size: 16px;
 }
 
 #bunk-label {
-	-fx-font-family: "Nexa Rust Sans Black";
+	-fx-font-family: "Toonish";
 	-fx-text-fill: white;
 	-fx-font-size: 20px;
 }
 
 .text-area {
 	-fx-font-size: 20px;
-	-fx-font-family: "AGaramond";
+	-fx-font-family: "Montserrat Medium";
 	-fx-text-fill: white;
-	-fx-background-color: #005baa;
+	-fx-background-color: #212153;
 }
 
 .text-area .content {
-	-fx-background-color: #005baa;
+	-fx-background-color: #212153;
 }
 
 .text-area:focused .content {
-	-fx-background-color: #005baa;
+	-fx-background-color: #212153;
 }
 
 .dialog-pane .label {
-	-fx-font-family: "AGaramond";
+	-fx-font-family: "Montserrat Medium";
 	-fx-text-fill: white;
 	-fx-font-size: 14px;
 }
@@ -108,26 +108,18 @@
 }
 
 .button {
-	-fx-font-family: "AGaramond";
+	-fx-font-family: "Montserrat Medium";
 	-fx-font-size: 14px;
 	-fx-text-fill: white;
-	-fx-background-color: linear-gradient(#9ecb94, #64964b);
+	-fx-background-color: linear-gradient(#da885b, #f36a26);
 }
 
 .button:hover {
-	-fx-background-color: linear-gradient(#64964b, #9ecb94);
-}
-
-#red.button {
-	-fx-background-color: linear-gradient(#d2646b, #be1e2d);
-}
-
-#red.button:hover {
-	-fx-background-color: linear-gradient(#be1e2d, #d2646b);
+	-fx-background-color: linear-gradient(#f36a26, #da885b);
 }
 
 .radio-button {
-	-fx-font-family: "AGaramond";
+	-fx-font-family: "Montserrat Medium";
 	-fx-text-fill: white;
 	-fx-font-size: 14px;
 }
@@ -135,19 +127,19 @@
 .info {
 	-fx-font-family: "Monospaced";
 	-fx-font-weight: bolder;
-	-fx-background-color: #005baa;
-	-fx-border-color: #ffffff;
+	-fx-background-color: #212153;
+	-fx-border-color: white;
 	-fx-border-radius: 100px;
 }
 
 .info:hover {
 	-fx-text-fill: #c8c8c8;
 	-fx-border-color: #c8c8c8;
-	-fx-background-color: #005baa;
+	-fx-background-color: #212153;
 }
 
 #list-button {
-	-fx-font-family: "AGaramond";
+	-fx-font-family: "Montserrat Medium";
 	-fx-font-size: 16px;
 	-fx-text-fill: white;
 	-fx-background-color: transparent;

@@ -139,7 +139,6 @@ public class SignInPane extends GridPane {
 					+ "\"\nPlease choose a different file.");
 			fileNotAccessible.setTitle("Attendance File Not Accessible");
 			fileNotAccessible.getDialogPane().getStylesheets().add(Attendance.class.getResource(settings.get("filePaths", "cssPath", String.class)).toExternalForm());
-			fileNotAccessible.getDialogPane().lookupButton(ButtonType.OK).setId("red");
 			fileNotAccessible.initOwner(stage);
 			fileNotAccessible.showAndWait();
 			
@@ -235,7 +234,6 @@ public class SignInPane extends GridPane {
 					+ "with or without the \"M\" in the meridiem");
 			invalidCurfewTime.setTitle("Invalid Time Format");
 			invalidCurfewTime.getDialogPane().getStylesheets().add(Attendance.class.getResource(settings.get("filePaths", "cssPath", String.class)).toExternalForm());
-			invalidCurfewTime.getDialogPane().lookupButton(ButtonType.OK).setId("red");
 			invalidCurfewTime.showAndWait();
 			
 			Platform.exit();
@@ -266,7 +264,6 @@ public class SignInPane extends GridPane {
 					"\" file.\nPlease create this file in the " + infoPath.substring(0, infoPath.lastIndexOf("/")) + " directory.");
 			fileNotAccessible.setTitle("Info File Not Accessible");
 			fileNotAccessible.getDialogPane().getStylesheets().add(Attendance.class.getResource(settings.get("filePaths", "cssPath", String.class)).toExternalForm());
-			fileNotAccessible.getDialogPane().lookupButton(ButtonType.OK).setId("red");
 			fileNotAccessible.showAndWait();
 			
 			Platform.exit();
@@ -562,7 +559,7 @@ public class SignInPane extends GridPane {
 		this.setPadding(new Insets(30));
 
 		// header
-		Label title = new Label("Sign In, Out");
+		Label title = new Label("Sign In/Out");
 		title.setId("header");
 		SignInPane.setHalignment(title, HPos.CENTER);
 		this.add(title, 0, 0, 2, 1);
@@ -687,10 +684,6 @@ public class SignInPane extends GridPane {
 		Button save = new Button("Save");
 		Button saveAndRestart = new Button("Save and Restart");
 		Button saveAndExit = new Button("Save and Exit");
-		
-		save.setId("red");
-		saveAndRestart.setId("red");
-		saveAndExit.setId("red");
 
 		save.setMinWidth(USE_PREF_SIZE);
 		saveAndRestart.setMinWidth(USE_PREF_SIZE);
@@ -732,7 +725,6 @@ public class SignInPane extends GridPane {
 				Alert infoDialog = new Alert(AlertType.NONE, infoText, ButtonType.CLOSE);
 				infoDialog.setTitle("Credits and Instructions — Sign-in");
 				infoDialog.getDialogPane().getStylesheets().add(getClass().getResource(settings.get("filePaths", "cssPath", String.class)).toExternalForm());
-				infoDialog.getDialogPane().lookupButton(ButtonType.CLOSE).setId("red");
 				infoDialog.initOwner(info.getScene().getWindow());
 				infoDialog.initModality(Modality.NONE);
 				infoDialog.setResizable(true);
@@ -751,7 +743,6 @@ public class SignInPane extends GridPane {
 					Alert noCurfewSelected = new Alert(AlertType.WARNING, "No curfew type selected. Please select a curfew type to proceed.");
 					noCurfewSelected.setTitle("Curfew Type Not Selected");
 					noCurfewSelected.getDialogPane().getStylesheets().add(getClass().getResource(settings.get("filePaths", "cssPath", String.class)).toExternalForm());
-					noCurfewSelected.getDialogPane().lookupButton(ButtonType.OK).setId("red");
 					noCurfewSelected.initOwner(stage);
 					noCurfewSelected.showAndWait();
 					return; // don't proceed with signing staff member in/out
@@ -1530,7 +1521,6 @@ public class SignInPane extends GridPane {
 					saveAndExitConf.setHeaderText("Save Confirmation");
 					saveAndExitConf.setTitle("Save Confirmation");
 					saveAndExitConf.getDialogPane().getStylesheets().add(getClass().getResource(settings.get("filePaths", "cssPath", String.class)).toExternalForm());
-					saveAndExitConf.getDialogPane().lookupButton(ButtonType.CANCEL).setId("red");
 					saveAndExitConf.initOwner(saveAndExit.getScene().getWindow());
 					saveAndExitConf.showAndWait();
 					
@@ -1632,7 +1622,6 @@ public class SignInPane extends GridPane {
 						+ "Click \"OK\" to exit and \"Cancel\" to return to sign-in.");
 				alert.setTitle("Exit Confirmation");
 				alert.getDialogPane().getStylesheets().add(getClass().getResource(settings.get("filePaths", "cssPath", String.class)).toExternalForm());
-				alert.getDialogPane().lookupButton(ButtonType.CANCEL).setId("red");
 				alert.initOwner(stage);
 				alert.showAndWait();
 
