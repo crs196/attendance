@@ -114,6 +114,7 @@ public class SignInPane extends GridPane {
 		extendedNightOffCurfew = curfewTime(settings.get("times", "extendedNightOffCurfew"));
 		rolloverTime = curfewTime(settings.get("times", "rolloverTime"));
 		// set both day off curfews
+		// TODO: do I need to change this since Harlam's day off curfew is after midnight?
 		dayOffDay1Curfew = curfewTime(settings.get("times", "dayOffCurfew"));
 		if(dayOffDay1Curfew.toLocalDate().isEqual(LocalDate.now())) { // if the day off curfew is today
 			dayOffDay2Curfew = dayOffDay1Curfew; // it's actually the curfew for people on the 2nd day of their day off
