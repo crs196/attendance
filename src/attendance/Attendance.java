@@ -39,7 +39,10 @@ public class Attendance extends Application {
 		String iconPath = settings.get("filePaths", "iconPath");
 		
 		// create sign in pane and scene
-		GridPane siPane = null;
+		GridPane siPane = null; 
+		// TODO: create a different parent class for GatePane and OzeretPane to remove
+		//        all of the duplicate code between the classes
+		
 		String mode = settings.get("settings", "mode").toLowerCase(); // get what mode to run in
 		if (mode.equals("gate")) // gate mode: create gate pane
 			siPane = new GatePane(primaryStage, settings);

@@ -425,7 +425,6 @@ public class OzeretPane extends GridPane {
 		left     = (int) attendanceSheet.getRow(5).getCell(8).getNumericCellValue();
 		returned = (int) attendanceSheet.getRow(6).getCell(8).getNumericCellValue();
 		stillOut = (int) attendanceSheet.getRow(7).getCell(8).getNumericCellValue();
-		visitors = (int) attendanceSheet.getRow(9).getCell(8).getNumericCellValue();
 		
 		// then, read through the staff members and create any written there with the same data
 		for (int i = attendanceSheet.getFirstRowNum() + 1; i < attendanceSheet.getLastRowNum() + 1; i++) {
@@ -702,7 +701,6 @@ public class OzeretPane extends GridPane {
 		});
 
 		// set sign-in button behavior
-		// TODO: update for ozeret mode behavior
 		signIn.setOnAction(new EventHandler<ActionEvent>() {
 			
 			public void handle(ActionEvent event) {
@@ -797,11 +795,11 @@ public class OzeretPane extends GridPane {
 			public void signInAndCheckTime(StaffMember sm) {
 				// set which curfew they used to sign out
 				LocalDateTime curfewUsed = null;
-				switch (sm.getCurfewType()) {
-					case NORMAL:
+				switch (((RadioButton)curfewTimeSelection.getSelectedToggle()).getText().toLowerCase()) {
+					case "standard":
 						curfewUsed = nightOutCurfew;
 						break;
-					case DAY_OFF_DAY_1:
+					case "day off":
 						curfewUsed = dayOffCurfew;
 						break;
 					default:
@@ -851,7 +849,6 @@ public class OzeretPane extends GridPane {
 				attendanceSheet.getRow(5).getCell(8).setCellValue(left);
 				attendanceSheet.getRow(6).getCell(8).setCellValue(returned);
 				attendanceSheet.getRow(7).getCell(8).setCellValue(stillOut);
-				attendanceSheet.getRow(9).getCell(8).setCellValue(visitors);
 			}
 			
 			// given a visitor who needs to sign out
@@ -934,20 +931,6 @@ public class OzeretPane extends GridPane {
 					newRow = attendanceSheet.getRow(staffRowNum);
 				
 				sm.setTodayRow(staffRowNum++); // set what row this staff member is in and increment counter
-				// set the curfew type of the staff member unless it's already set
-				if (sm.getCurfewType() == CurfewType.NONE) {
-					switch (((RadioButton)curfewTimeSelection.getSelectedToggle()).getText().toLowerCase()) {
-						case "night \nout":
-							sm.setCurfewType(CurfewType.NORMAL);
-							break;
-						case "extended \nnight off":
-							sm.setCurfewType(CurfewType.NIGHT_OFF);
-							break;
-						case "day \noff":
-							sm.setCurfewType(CurfewType.DAY_OFF_DAY_1);
-							break;
-					}
-				}
 				
 				// set identity information
 				
@@ -985,7 +968,6 @@ public class OzeretPane extends GridPane {
 				attendanceSheet.getRow(5).getCell(8).setCellValue(left);
 				attendanceSheet.getRow(6).getCell(8).setCellValue(returned);
 				attendanceSheet.getRow(7).getCell(8).setCellValue(stillOut);
-				attendanceSheet.getRow(9).getCell(8).setCellValue(visitors);
 			}
 			
 			// given a staff member, decrements the number in their on-time column
