@@ -10,13 +10,13 @@ public enum CurfewType {
 	NORMAL {
 		@Override
 		String writeByType() {
-			return "Leaving \nCamp";
+			return "Night \nOff";
 		}
 	},
 	NIGHT_OFF {
 		@Override
 		String writeByType() {
-			return "Night \nOff";
+			return "Extended \nNight Off";
 		}
 	},
 	DAY_OFF_DAY_1 {
@@ -35,6 +35,12 @@ public enum CurfewType {
 		@Override
 		String writeByType() {
 			return "Visitor";
+		}
+	},
+	BUNK {
+		@Override
+		String writeByType() {
+			return "Not in Bunk";
 		}
 	};
 	

@@ -185,6 +185,8 @@ public class OzeretPane extends GridPane {
 		initializeAttendanceSheet(); // get locations of columns from header row
 		
 		setup();
+		
+		listEveryoneForToday(); // list every staff member in the key sheet in today's sheet
 	}
 	
 	// takes the string entered as curfew time and converts it to the date and time of curfew
@@ -548,7 +550,7 @@ public class OzeretPane extends GridPane {
 		this.setPadding(new Insets(30));
 
 		// header
-		Label title = new Label("Sign In/Out");
+		Label title = new Label("Sign In");
 		title.setId("header");
 		GatePane.setHalignment(title, HPos.CENTER);
 		this.add(title, 0, 0, 2, 1);
@@ -630,7 +632,7 @@ public class OzeretPane extends GridPane {
 		TextField idField = new TextField();
 		HBox.setHgrow(idField, Priority.ALWAYS);
 		
-		Button signIn = new Button("Sign In/Out");
+		Button signIn = new Button("Sign In");
 		signIn.setDefaultButton(true);
 		HBox.setHgrow(signIn, Priority.ALWAYS);
 		signIn.setMaxWidth(Double.MAX_VALUE);
@@ -700,6 +702,7 @@ public class OzeretPane extends GridPane {
 		});
 
 		// set sign-in button behavior
+		// TODO: update for ozeret mode behavior
 		signIn.setOnAction(new EventHandler<ActionEvent>() {
 			
 			public void handle(ActionEvent event) {
@@ -1008,7 +1011,7 @@ public class OzeretPane extends GridPane {
 				// if there are no staff left unaccounted, print a message saying so and leave this handle method
 				if (noUnaccountedStaff()) {
 					if (!offCampStage.isShowing())
-						confirmation.setText("There's currently no one off-camp to sign in");
+						confirmation.setText("There's currently no one still out to sign in");
 					else
 						offCampStage.close();
 					return;
@@ -1165,8 +1168,14 @@ public class OzeretPane extends GridPane {
 									// create popup and button, add button to popup
 									Popup popup = new Popup();
 									popup.setAutoHide(true);
-									Button popupSignIn = new Button("Sign In");
-									VBox popupButtons = new VBox(8, popupSignIn);
+									Button popupSignInStandard = new Button("Sign In—Standard");
+									Button popupSignInDayOff = new Button("Sign In—Day Off");
+									popupSignInStandard.setMaxWidth(Double.MAX_VALUE);
+									popupSignInDayOff.setMaxWidth(Double.MAX_VALUE);
+									
+									
+									VBox popupButtons = new VBox(8, popupSignInStandard, popupSignInDayOff);
+									popupButtons.setAlignment(Pos.CENTER);
 									popupButtons.setPadding(new Insets(4, 8, 8, 8));
 									popup.getContent().add(popupButtons);
 									
@@ -1177,13 +1186,31 @@ public class OzeretPane extends GridPane {
 									popup.setX(point.getX()  + (staffMember.getWidth() - popup.getWidth()) / 2); // center popup below name
 									
 									// set button action
-									popupSignIn.setOnAction(new EventHandler<ActionEvent>() {
+									popupSignInStandard.setOnAction(new EventHandler<ActionEvent>() {
 
 										@Override
 										public void handle(ActionEvent arg0) {
 											
 											// sign staff member in by writing the staff member's name into the entry box and firing the sign-in button	
 											idField.setText(staffMember.getText());
+											normal.setSelected(true);
+											signIn.fire();
+											popup.hide(); // hide the button
+		
+											// refresh both additional lists
+											offCampList.fire();
+											
+										}	
+									});
+									
+									popupSignInDayOff.setOnAction(new EventHandler<ActionEvent>() {
+
+										@Override
+										public void handle(ActionEvent arg0) {
+											
+											// sign staff member in by writing the staff member's name into the entry box and firing the sign-in button	
+											idField.setText(staffMember.getText());
+											dayOff.setSelected(true);
 											signIn.fire();
 											popup.hide(); // hide the button
 		
@@ -1358,5 +1385,63 @@ public class OzeretPane extends GridPane {
 				}
 			}
 		});
+	}
+	
+	
+	// lists every staff member in the key sheet in today's sheet so that they get tracked as being out
+	//  and can be signed in later
+	private void listEveryoneForToday() {
+		
+		// Night Off Curfew and Visitors, don't matter here
+		attendanceSheet.getRow(2).getCell(8).setCellValue("N/A");;
+		attendanceSheet.getRow(9).getCell(8).setCellValue("N/A");;
+		
+		// iterate through all staff members in the key sheet
+		for (StaffMember sm : staffList.values()) {
+			
+			// create new row at the bottom of the spreadsheet
+			XSSFRow newRow = null;
+			if (staffRowNum > attendanceSheet.getLastRowNum())
+				newRow = attendanceSheet.createRow(staffRowNum);
+			else
+				newRow = attendanceSheet.getRow(staffRowNum);
+			
+			sm.setTodayRow(staffRowNum++); // set what row this staff member is in and increment counter
+			// set the curfew type of the staff member to BUNK (special case for ozeret mode)
+			sm.setCurfewType(CurfewType.BUNK);
+			
+			// set identity information
+			
+			newRow.createCell(bunkCol).setCellValue(sm.getBunk());	// set the bunk
+			newRow.createCell(nameCol).setCellValue(sm.getName());	// set the name
+			newRow.createCell(idCol).setCellValue(sm.getID()); 		// set the ID
+			
+			XSSFCellStyle absent = workbook.createCellStyle();
+			java.awt.Color absentColor = Color.decode(settings.get("sheetFormat", "absentColor", String.class));
+			absent.setFillForegroundColor(new XSSFColor(absentColor, new DefaultIndexedColorMap()));
+			absent.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+			
+			XSSFCellStyle rightBorder = workbook.createCellStyle();
+			rightBorder.setBorderRight(BorderStyle.THIN);
+			
+			newRow.getCell(idCol).setCellStyle(rightBorder);
+			
+			// set time out column to current time
+			newRow.createCell(timeOutCol).setCellValue("N/A");
+			
+			// set time in column to curfew name and color with absent/day off color
+			newRow.createCell(timeInCol).setCellValue(sm.getCurfewType().writeByType());
+			newRow.getCell(timeInCol).setCellStyle(absent);
+			
+			// increment counts of people who have left camp and are still out of camp
+			left++;
+			stillOut++;
+			// write all summary stats to sheet
+			attendanceSheet.getRow(5).getCell(8).setCellValue(left);
+			attendanceSheet.getRow(6).getCell(8).setCellValue(returned);
+			attendanceSheet.getRow(7).getCell(8).setCellValue(stillOut);
+			
+			sm.signOut(); // mark staff member as signed out (for tracking purposes elsewhere)
+		}
 	}
 }
