@@ -44,7 +44,7 @@ public class Attendance extends Application {
 		if (mode.equals("gate")) // gate mode: create gate pane
 			siPane = new GatePane(primaryStage, settings);
 		else if (mode.equals("ozeret")) // ozeret mode: create ozeret pane
-			siPane = null; // TODO: create OzeretPane
+			siPane = new OzeretPane(primaryStage, settings);
 			
 		if (siPane != null) { // if a valid mode was specified
 			Scene siScene = new Scene(siPane);
