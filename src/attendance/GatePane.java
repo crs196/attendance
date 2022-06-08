@@ -64,7 +64,7 @@ import javafx.stage.Popup;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 
-public class SignInPane extends GridPane {
+public class GatePane extends GridPane {
 
 	private Stage stage;
 
@@ -92,7 +92,7 @@ public class SignInPane extends GridPane {
 	// used to track whether the "sign in/out" should also write to the excel file
 	private boolean autosave;
 
-	public SignInPane(Stage s, Ini set) {
+	public GatePane(Stage s, Ini set) {
 		super();
 		
 		// no people have left or returned just yet
@@ -564,7 +564,7 @@ public class SignInPane extends GridPane {
 		// header
 		Label title = new Label("Sign In/Out");
 		title.setId("header");
-		SignInPane.setHalignment(title, HPos.CENTER);
+		GatePane.setHalignment(title, HPos.CENTER);
 		this.add(title, 0, 0, 2, 1);
 
 
