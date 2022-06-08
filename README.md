@@ -10,7 +10,10 @@
     - [*Daily Attendance Template Sheet*](#daily-attendance-template-sheet)
   - [*Configuration File*](#configuration-file)
   - [*Application Use*](#application-use)
+    - [*Gate Operation Mode*](#gate-operation-mode)
+    - [*Ozeret Operation Mode*](#ozeret-operation-mode)
 - [Changelog](#changelog)
+  - [*Version 2.1 (released 6/7/2022)*](#version-21-released-672022)
   - [*Version 2.0 (released 5/8/2022)*](#version-20-released-582022)
   - [*Version 1.3 (released 3/12/2021)*](#version-13-released-3122021)
   - [*Version 1.2 (released 2/11/2021)*](#version-12-released-2112021)
@@ -52,7 +55,9 @@ The **ID** column holds the ID that staff members sign in with (e.g. a number ti
 
 The **On Time**, **Late**, and **Absent** columns gather the respective summary statistics about how many times each staff member has been on time, late, or absent, respectively.  
 
-Each row of the sheet represents a person (staff member or visitor). All people that might sign in or out should be listed in the sheet. For visitors, you can either list a generic "visitor" name, as I do, or update the name to match the visitor badge ID given to each visitor as they arrive.
+Each row of the sheet represents a person (staff member or visitor). All people that might sign in or out should be listed in the sheet. For visitors, you can either list a generic "visitor" name, as I do, or update the name to match the visitor badge ID given to each visitor as they arrive.*
+
+**If this spreadsheet is being used for the* Ozeret *mode of the software, visitors won't need to be listed*
 
 The staff member's name should be in the **Name** column, their bunk or position in the **Position** or **Bunk** column (depending on which you're using), and their ID in the **ID** column. The **On Time**, **Late**, and **Absent** columns can either be empty or have a number in them (an empty cell is treated as if it has a 0 in it).  
 
@@ -83,6 +88,9 @@ To change an option, simply replace the text to the right of an `=` to what you'
 - `autosave`: determines whether the **"Sign In/Out"** button also saves to the spreadsheet.
   - *Default:* `true`
   - *Constraints:* must be either `true` (autosave is on) or `false` (autosave is off).
+- `mode`: determines what mode the software runs in (i.e. whether it tracks staff signing in and out or just staff signing in)
+  - *Default:* `gate`
+  - *Constraints:* must be either `gate` (tracks signing in and out) or `ozeret` (only tracks signing in)
 - `attendanceFilePath`: the path to the file that you created above as an attendance file.
   - *Default:* `resources/files/Sample_Attendance_File.xlsx`
   - *Constraints:* must be a valid filepath to a `*.xlsx` file.
@@ -127,9 +135,11 @@ To change an option, simply replace the text to the right of an `=` to what you'
 
 ### *Application Use*
 
-![Main Application Window](resources/images/instructions/sign_in_window.png)
+#### *Gate Operation Mode*
 
-This is the main window of the application. In order to sign a staff member out or a visitor in, type/scan/enter their name or ID into the text field, select the radio button for the correct curfew, and click the **Sign In/Out** button or press Enter. 
+![Main Application Window (Gate Mode)](resources/images/instructions/gate_sign_in_window.png)
+
+This is the main window of the application when it is in "gate" mode. In order to sign a staff member out or a visitor in, type/scan/enter their name or ID into the text field, select the radio button for the correct curfew, and click the **Sign In/Out** button or press Enter. 
 
 In order to sign a staff member in or a visitor out, simply type/scan/enter their name or ID into the text field, and click the **Sign In/Out** button or press Enter. There's no need to select the same radio button as previously.
 
@@ -161,9 +171,23 @@ Clicking on **Show On-Camp Staff** will pop up a list of all staff members liste
 
 Clicking on any of the buttons in the dropdown will sign the staff member in. *(This is the same functionality as typing the person's name into the ID box and clicking the **Sign In/Out** button.)*
 
+#### *Ozeret Operation Mode*
+
+![Main Application Window (Ozeret Mode)](resources/images/instructions/ozeret_sign_in_window.png)
+
+This is the main window of the application when it is in "ozeret" mode. This mode largely functions the same as "gate" mode, so only the differences will be highlighted here. Since staff only sign in when in "ozeret" mode, the curfew time must be selected when signing a staff member in, instead of when signing them out.
+
+The **Show Still-Out Staff** button functions identically to the **Show Off-Camp Staff** button in "gate" mode.
+
 ---
 
 ## Changelog
+
+### *Version 2.1 (released 6/7/2022)*
+
+- Added the concept of modes to the software in order to fluidly switch between only signing people in and signing them both in and out.
+  - The functionality to sign people in and out is now called "gate" mode.
+  - The functionality to only sign people in is now called "ozeret" mode.
 
 ### *Version 2.0 (released 5/8/2022)*
 
