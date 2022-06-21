@@ -580,7 +580,7 @@ public class OzeretPane extends GridPane {
 		normalCurfewBox.getChildren().addAll(normalCurfewLabel, normalCurfewTimeLabel);
 		
 		// day off
-		Label dayOffCurfewLabel = new Label("Day Off Curfew: ");
+		Label dayOffCurfewLabel = new Label("Shabbat Curfew: ");
 		Label dayOffCurfewTimeLabel = new Label();
 		dayOffCurfewTimeLabel.setText(dayOffCurfew.format(DateTimeFormatter.ofPattern("h:mm a")));
 		HBox dayOffCurfewBox = new HBox(this.getHgap());
@@ -601,7 +601,7 @@ public class OzeretPane extends GridPane {
 		// curfew selection radio buttons
 		ToggleGroup curfewTimeSelection = new ToggleGroup();
 		RadioButton normal = new RadioButton("Standard");
-		RadioButton dayOff = new RadioButton("Day Off");
+		RadioButton dayOff = new RadioButton("Shabbat");
 		normal.setToggleGroup(curfewTimeSelection);
 		dayOff.setToggleGroup(curfewTimeSelection);
 				
@@ -799,7 +799,7 @@ public class OzeretPane extends GridPane {
 					case "standard":
 						curfewUsed = nightOutCurfew;
 						break;
-					case "day off":
+					case "shabbat":
 						curfewUsed = dayOffCurfew;
 						break;
 					default:
@@ -1068,7 +1068,7 @@ public class OzeretPane extends GridPane {
 						return false;
 					else if (sm.isSignedOut() && !sm.isSignedIn()) // staff member's signed out but not in. only ok if on a day off
 						// is on a day off if their time in column says so
-						if (!attendanceSheet.getRow(sm.getTodayRow()).getCell(timeInCol).getStringCellValue().equalsIgnoreCase("day off"))
+						if (!attendanceSheet.getRow(sm.getTodayRow()).getCell(timeInCol).getStringCellValue().equalsIgnoreCase("shabbat"))
 							return false;
 
 				return true;
@@ -1101,7 +1101,7 @@ public class OzeretPane extends GridPane {
 							return false;
 						} else if (sm.isSignedOut() && !sm.isSignedIn()) {// staff member's signed out but not in. only ok if on a day off
 							// is on a day off if their time in column says so
-							if (!attendanceSheet.getRow(sm.getTodayRow()).getCell(timeInCol).getStringCellValue().equalsIgnoreCase("day off")) {
+							if (!attendanceSheet.getRow(sm.getTodayRow()).getCell(timeInCol).getStringCellValue().equalsIgnoreCase("shabbat")) {
 								return false;
 							}
 						}
@@ -1132,7 +1132,7 @@ public class OzeretPane extends GridPane {
 
 						if ((!sm.isSignedOut() && sm.isSignedIn()) 
 								|| ((sm.isSignedOut() && !sm.isSignedIn()) 
-										&& (!attendanceSheet.getRow(sm.getTodayRow()).getCell(timeInCol).getStringCellValue().equalsIgnoreCase("day off")))) {
+										&& (!attendanceSheet.getRow(sm.getTodayRow()).getCell(timeInCol).getStringCellValue().equalsIgnoreCase("shabbat")))) {
 
 							Button staffMember = new Button(sm.getName());
 							staffMember.setId("list-button");
@@ -1150,13 +1150,16 @@ public class OzeretPane extends GridPane {
 									// create popup and button, add button to popup
 									Popup popup = new Popup();
 									popup.setAutoHide(true);
-									Button popupSignInStandard = new Button("Sign In—Standard");
-									Button popupSignInDayOff = new Button("Sign In—Day Off");
+									Button popupSignInStandard = new Button("Standard Sign In");
+									Button popupSignInShabbat = new Button("Shabbat Sign In");
+									Button popupSignInShmira = new Button("Shmira");
+									Button popupSignInDayOff = new Button("Day Off");
 									popupSignInStandard.setMaxWidth(Double.MAX_VALUE);
+									popupSignInShabbat.setMaxWidth(Double.MAX_VALUE);
+									popupSignInShmira.setMaxWidth(Double.MAX_VALUE);
 									popupSignInDayOff.setMaxWidth(Double.MAX_VALUE);
 									
-									
-									VBox popupButtons = new VBox(8, popupSignInStandard, popupSignInDayOff);
+									VBox popupButtons = new VBox(8, popupSignInStandard, popupSignInShabbat, popupSignInShmira, popupSignInDayOff);
 									popupButtons.setAlignment(Pos.CENTER);
 									popupButtons.setPadding(new Insets(4, 8, 8, 8));
 									popup.getContent().add(popupButtons);
@@ -1185,7 +1188,7 @@ public class OzeretPane extends GridPane {
 										}	
 									});
 									
-									popupSignInDayOff.setOnAction(new EventHandler<ActionEvent>() {
+									popupSignInShabbat.setOnAction(new EventHandler<ActionEvent>() {
 
 										@Override
 										public void handle(ActionEvent arg0) {
@@ -1200,6 +1203,95 @@ public class OzeretPane extends GridPane {
 											offCampList.fire();
 											
 										}	
+									});
+									
+									popupSignInShmira.setOnAction(new EventHandler<ActionEvent>() {
+										
+										@Override
+										public void handle(ActionEvent arg0) {
+											
+											// create new row at the bottom of the spreadsheet
+											XSSFRow newRow = attendanceSheet.getRow(sm.getTodayRow());
+											
+											// set identity information
+											
+											newRow.createCell(bunkCol).setCellValue(sm.getBunk());	// set the bunk
+											newRow.createCell(nameCol).setCellValue(sm.getName());	// set the name
+											newRow.createCell(idCol).setCellValue(sm.getID()); 		// set the ID
+											
+											// set cell styles for cell border, day off, other
+											XSSFCellStyle onTimeStyle = workbook.createCellStyle();
+											java.awt.Color absentColor = Color.decode(settings.get("sheetFormat", "onTimeColor", String.class));
+											onTimeStyle.setFillForegroundColor(new XSSFColor(absentColor, new DefaultIndexedColorMap()));
+											onTimeStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+											
+											XSSFCellStyle rightBorder = workbook.createCellStyle();
+											rightBorder.setBorderRight(BorderStyle.THIN);
+											
+											newRow.getCell(idCol).setCellStyle(rightBorder);
+											
+											// set time in column to shmira and color with on-time color
+											newRow.createCell(timeInCol).setCellValue("Shmira");
+											newRow.getCell(timeInCol).setCellStyle(onTimeStyle);
+											
+											// update counts of people who are still out and have come back
+											stillOut--;
+											returned++;
+											// write all summary stats to sheet
+											attendanceSheet.getRow(5).getCell(8).setCellValue(left);
+											attendanceSheet.getRow(6).getCell(8).setCellValue(returned);
+											attendanceSheet.getRow(7).getCell(8).setCellValue(stillOut);
+											
+											confirmation.setText(sm.getName() + " is on shmira");
+											
+											sm.signIn(); // mark staff member as signed in
+											popup.hide(); // hide popup
+											offCampList.fire(); // refresh list
+										}
+									});
+									
+									popupSignInDayOff.setOnAction(new EventHandler<ActionEvent>() {
+										
+										@Override
+										public void handle(ActionEvent arg0) {
+											
+											// create new row at the bottom of the spreadsheet
+											XSSFRow newRow = attendanceSheet.getRow(sm.getTodayRow());
+											// set identity information
+											
+											newRow.createCell(bunkCol).setCellValue(sm.getBunk());	// set the bunk
+											newRow.createCell(nameCol).setCellValue(sm.getName());	// set the name
+											newRow.createCell(idCol).setCellValue(sm.getID()); 		// set the ID
+											
+											// set cell styles for cell border, day off, other
+											XSSFCellStyle onTimeStyle = workbook.createCellStyle();
+											java.awt.Color absentColor = Color.decode(settings.get("sheetFormat", "onTimeColor", String.class));
+											onTimeStyle.setFillForegroundColor(new XSSFColor(absentColor, new DefaultIndexedColorMap()));
+											onTimeStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+											
+											XSSFCellStyle rightBorder = workbook.createCellStyle();
+											rightBorder.setBorderRight(BorderStyle.THIN);
+											
+											newRow.getCell(idCol).setCellStyle(rightBorder);
+											
+											// set time in column to day off and color with on-time color
+											newRow.createCell(timeInCol).setCellValue("Day Off");
+											newRow.getCell(timeInCol).setCellStyle(onTimeStyle);
+											
+											// update counts of people who are still out and have come back
+											stillOut--;
+											returned++;
+											// write all summary stats to sheet
+											attendanceSheet.getRow(5).getCell(8).setCellValue(left);
+											attendanceSheet.getRow(6).getCell(8).setCellValue(returned);
+											attendanceSheet.getRow(7).getCell(8).setCellValue(stillOut);
+											
+											confirmation.setText(sm.getName() + " is on a day off");
+											
+											sm.signIn(); // mark staff member as signed in
+											popup.hide(); // hide popup
+											offCampList.fire(); // refresh list
+										}
 									});
 								}
 							});
@@ -1295,7 +1387,7 @@ public class OzeretPane extends GridPane {
 						return false;
 					else if (sm.isSignedOut() && !sm.isSignedIn()) // staff member's signed out but not in. only ok if on a day off
 						// is on a day off if their time in column says so
-						if (!attendanceSheet.getRow(sm.getTodayRow()).getCell(timeInCol).getStringCellValue().equalsIgnoreCase("day off"))
+						if (!attendanceSheet.getRow(sm.getTodayRow()).getCell(timeInCol).getStringCellValue().equalsIgnoreCase("shabbat"))
 							return false;
 					return true;
 			}
@@ -1313,7 +1405,7 @@ public class OzeretPane extends GridPane {
 						absent = true;
 					else if (sm.isSignedOut() && !sm.isSignedIn()) // staff member's signed out but not in. only ok if on a day off
 						// is on a day off if their time in column says so
-						if (!attendanceSheet.getRow(sm.getTodayRow()).getCell(timeInCol).getStringCellValue().equalsIgnoreCase("day off"))
+						if (!attendanceSheet.getRow(sm.getTodayRow()).getCell(timeInCol).getStringCellValue().equalsIgnoreCase("shabbat"))
 							absent = true;
 					
 					//  increment "absent" column
