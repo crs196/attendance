@@ -173,7 +173,7 @@ public class SignInPane extends GridPane {
 			
 			// sets the initial value of staffRowNum to be the first row
 			//  that doesn't have a staff member already written into it
-			while (attendanceSheet.getRow(++staffRowNum).getCell(idCol) != null);
+			while (attendanceSheet.getRow(staffRowNum + 1) != null && attendanceSheet.getRow(++staffRowNum).getCell(idCol) != null);
 			
 			// read from yesterday's sheet if it exists and start off today's sheet with that data
 			readFromYesterdaySheet();
@@ -1392,8 +1392,8 @@ public class SignInPane extends GridPane {
 			public void handle(WindowEvent event) {
 				event.consume(); // consume window-close event
 
-				Alert alert = new Alert(AlertType.CONFIRMATION, "Are you sure you want to exit and lose all unsaved data?\n"
-						+ "Click \"OK\" to exit and \"Cancel\" to return to sign-in.");
+				Alert alert = new Alert(AlertType.CONFIRMATION, "Are you sure you want to exit?\n"
+						+ "Click \"OK\" to save and exit and \"Cancel\" to return to sign-in.");
 				alert.setTitle("Exit Confirmation");
 				alert.getDialogPane().getStylesheets().add(getClass().getResource(settings.get("filePaths", "cssPath", String.class)).toExternalForm());
 				alert.getDialogPane().lookupButton(ButtonType.CANCEL).setId("red");
@@ -1401,6 +1401,7 @@ public class SignInPane extends GridPane {
 				alert.showAndWait();
 
 				if (alert.getResult().getButtonData() == ButtonData.OK_DONE) {
+					save.fire();
 					Platform.exit();
 					System.exit(0);
 				}
