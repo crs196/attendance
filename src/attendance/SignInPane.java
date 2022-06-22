@@ -336,9 +336,11 @@ public class SignInPane extends GridPane {
 					
 					// get keyRow of staff member by searching through keyRow for ID
 					for (int j = keySheet.getFirstRowNum() + 1; j < keySheet.getLastRowNum() + 1; j++) {
-						if (keySheet.getRow(j) != null && keySheet.getRow(j).getCell(keyIDCol) != null 
-								&& keySheet.getRow(j).getCell(keyIDCol).getStringCellValue().equals(id)) {
-							keyRow = j;	
+						if (keySheet.getRow(j) != null && keySheet.getRow(j).getCell(keyIDCol) != null) {
+							if ((keySheet.getRow(j).getCell(keyIDCol).getCellType() == CellType.STRING && keySheet.getRow(j).getCell(keyIDCol).getStringCellValue().equals(id))
+									|| (keySheet.getRow(j).getCell(keyIDCol).getCellType() == CellType.NUMERIC && ((int)keySheet.getRow(j).getCell(keyIDCol).getNumericCellValue() + "").equals(id))) {
+								keyRow = j;	
+							}
 						}
 					}
 					
@@ -473,9 +475,11 @@ public class SignInPane extends GridPane {
 				
 				// get keyRow of staff member by searching through keyRow for ID
 				for (int j = keySheet.getFirstRowNum() + 1; j < keySheet.getLastRowNum() + 1; j++) {
-					if (keySheet.getRow(j) != null && keySheet.getRow(j).getCell(keyIDCol) != null 
-							&& keySheet.getRow(j).getCell(keyIDCol).getStringCellValue().equals(id)) {
-						keyRow = j;	
+					if (keySheet.getRow(j) != null && keySheet.getRow(j).getCell(keyIDCol) != null) {
+						if ((keySheet.getRow(j).getCell(keyIDCol).getCellType() == CellType.STRING && keySheet.getRow(j).getCell(keyIDCol).getStringCellValue().equals(id))
+								|| (keySheet.getRow(j).getCell(keyIDCol).getCellType() == CellType.NUMERIC && (keySheet.getRow(j).getCell(keyIDCol).getNumericCellValue() + "").equals(id))) {
+							keyRow = j;	
+						}
 					}
 				}
 				
@@ -527,7 +531,7 @@ public class SignInPane extends GridPane {
 				name = keySheet.getRow(i).getCell(keyNameCol) != null ? keySheet.getRow(i).getCell(keyNameCol).getStringCellValue() : "";
 				id   = keySheet.getRow(i).getCell(keyIDCol) != null   ? (keySheet.getRow(i).getCell(keyIDCol).getCellType() == CellType.STRING 
 																			? keySheet.getRow(i).getCell(keyIDCol).getStringCellValue()
-																				: keySheet.getRow(i).getCell(keyIDCol).getNumericCellValue() + "") : "";
+																				: (int)keySheet.getRow(i).getCell(keyIDCol).getNumericCellValue() + "") : "";
 				
 				// put staff member into the hashmap unless it already exists
 				if (staffList.get(id) == null) staffList.put(id, new StaffMember(bunk, name, id, false, false, CurfewType.NONE, i));
