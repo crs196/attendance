@@ -523,11 +523,11 @@ public class SignInPane extends GridPane {
 			if (keySheet.getRow(i) != null) {
 			
 				// get name, bunk, and ID (check whether ID is a string or a number)
-				bunk = keySheet.getRow(i).getCell(keyBunkCol).getStringCellValue();
-				name = keySheet.getRow(i).getCell(keyNameCol).getStringCellValue();
-				id = keySheet.getRow(i).getCell(keyIDCol).getCellType() == CellType.STRING 
-						? keySheet.getRow(i).getCell(keyIDCol).getStringCellValue()
-								: keySheet.getRow(i).getCell(keyIDCol).getNumericCellValue() + "";
+				bunk = keySheet.getRow(i).getCell(keyBunkCol) != null ? keySheet.getRow(i).getCell(keyBunkCol).getStringCellValue() : "";
+				name = keySheet.getRow(i).getCell(keyNameCol) != null ? keySheet.getRow(i).getCell(keyNameCol).getStringCellValue() : "";
+				id   = keySheet.getRow(i).getCell(keyIDCol) != null   ? (keySheet.getRow(i).getCell(keyIDCol).getCellType() == CellType.STRING 
+																			? keySheet.getRow(i).getCell(keyIDCol).getStringCellValue()
+																				: keySheet.getRow(i).getCell(keyIDCol).getNumericCellValue() + "") : "";
 				
 				// put staff member into the hashmap unless it already exists
 				if (staffList.get(id) == null) staffList.put(id, new StaffMember(bunk, name, id, false, false, CurfewType.NONE, i));
