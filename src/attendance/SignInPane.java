@@ -220,8 +220,10 @@ public class SignInPane extends GridPane {
 		if (twelveHrMatcher.find()) { // if the curfew string matches 12-hr time
 			
 			hour = Integer.parseInt(twelveHrMatcher.group(1)); // set hour variable to input hour
-			if (twelveHrMatcher.group(3).toLowerCase().equals("p"))
+			if (twelveHrMatcher.group(3).toLowerCase().equals("p") && hour != 12)
 				hour += 12; // if the time is PM, add 12 to convert to 24-hour time
+			else if (twelveHrMatcher.group(3).toLowerCase().equals("a") && hour == 12)
+				hour -= 12;
 			
 			// set minute variable to input minute (if only 2 groups, minute is 0)
 			minute = twelveHrMatcher.group(2) != null ? Integer.parseInt(twelveHrMatcher.group(2)) : 0;
