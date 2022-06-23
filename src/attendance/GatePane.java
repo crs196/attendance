@@ -164,16 +164,20 @@ public class GatePane extends GridPane {
 		absentCol = 5;	// column F: absent
 		
 		keySheet = workbook.getSheet("Key"); // get key sheet
+		if (keySheet == null) keySheet = workbook.getSheetAt(0); // if there is no sheet named "Key", the key sheet is the first sheet
 		
 		attendanceSheet = workbook.getSheet(LocalDate.now().format(DateTimeFormatter.ofPattern("MM-dd-yyyy"))); // get sheet with today's date
 		if (attendanceSheet == null) { // no sheet with today's date exists
 			int templateIndex = workbook.getSheetIndex("Daily Attendance Template"); // get index for template sheet
 			// create copy of template with today's date as the name
-			attendanceSheet = workbook.cloneSheet(templateIndex, LocalDate.now().format(DateTimeFormatter.ofPattern("MM-dd-yyyy")));
+			if (templateIndex != -1) // sheet named daily attendance template exists
+				attendanceSheet = workbook.cloneSheet(templateIndex, LocalDate.now().format(DateTimeFormatter.ofPattern("MM-dd-yyyy")));
+			else // the template is the last sheet in the workbook
+				attendanceSheet = workbook.cloneSheet(workbook.getNumberOfSheets() - 1, LocalDate.now().format(DateTimeFormatter.ofPattern("MM-dd-yyyy")));
 			
 			// sets the initial value of staffRowNum to be the first row
 			//  that doesn't have a staff member already written into it
-			while (attendanceSheet.getRow(++staffRowNum).getCell(idCol) != null);
+			while (attendanceSheet.getRow(staffRowNum + 1) != null && attendanceSheet.getRow(++staffRowNum).getCell(idCol) != null);
 			
 			// read from yesterday's sheet if it exists and start off today's sheet with that data
 			readFromYesterdaySheet();
@@ -183,7 +187,7 @@ public class GatePane extends GridPane {
 			
 			// sets the initial value of staffRowNum to be the first row
 			//  that doesn't have a staff member already written into it
-			while (attendanceSheet.getRow(++staffRowNum).getCell(idCol) != null);
+			while (attendanceSheet.getRow(staffRowNum + 1) != null && attendanceSheet.getRow(++staffRowNum).getCell(idCol) != null);
 		}
 		
 		workbook.setSheetOrder(attendanceSheet.getSheetName(), 1); // move today's sheet to second position in workbook (key sheet is first)
